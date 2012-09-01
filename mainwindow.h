@@ -4,8 +4,10 @@
 #include <QMainWindow>
 
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
+
+class PlayList;
 
 class MainWindow : public QMainWindow
 {
@@ -14,6 +16,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    void setPlaylist(PlayList *p);
 
 protected:
     void closeEvent(QCloseEvent *e);

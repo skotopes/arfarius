@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "playlist.h"
+
 #include <QCloseEvent>
 #include <QDebug>
 
@@ -16,6 +18,11 @@ MainWindow::~MainWindow()
 {
     qDebug() << "Main destroyed";
     delete ui;
+}
+
+void MainWindow::setPlaylist(PlayList *p)
+{
+    ui->playList->setModel(p);
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
