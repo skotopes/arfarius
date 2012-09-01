@@ -20,7 +20,7 @@
    <string>wmp</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QMainWindow  { background-color: rgb(77, 77, 77) }</string>
+   <string notr="true">QMainWindow  { background-color: rgb(83, 83, 83) }</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">

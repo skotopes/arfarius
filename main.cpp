@@ -1,14 +1,11 @@
-#include <QApplication>
+#include "application.h"
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    Application a(argc, argv);
     a.setApplicationName("wmp");
-    a.setQuitOnLastWindowClosed(true);
+    a.main_window->show();
 
-    MainWindow w;
-    w.show();
-    
     return a.exec();
 }
