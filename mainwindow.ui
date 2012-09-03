@@ -16,6 +16,9 @@
     <height>400</height>
    </size>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>wmp</string>
   </property>
@@ -31,7 +34,17 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QTableView" name="playList"/>
+     <widget class="QTableView" name="playList">
+      <property name="showGrid">
+       <bool>false</bool>
+      </property>
+      <attribute name="horizontalHeaderStretchLastSection">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="buttonsLayout">

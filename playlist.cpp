@@ -1,15 +1,10 @@
 #include "playlist.h"
+#include <QMimeData>
+#include <QDebug>
 
 PlayList::PlayList(QObject *parent) :
     QAbstractTableModel(parent)
 {
-//    QSqlTableModel *model = new QSqlTableModel(parentObject, database);
-//    model->setTable("employee");
-//    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-//    model->select();
-//    model->setHeaderData(0, Qt::Horizontal, tr("Name"));
-//    model->setHeaderData(1, Qt::Horizontal, tr("Salary"));
-
 }
 
 int PlayList::rowCount(const QModelIndex & /*parent*/) const

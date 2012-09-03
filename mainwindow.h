@@ -21,6 +21,8 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *e);
+    void dragEnterEvent(QDragEnterEvent *);
+    void dropEvent(QDropEvent *);
     
 private:
     Ui::MainWindow *ui;
