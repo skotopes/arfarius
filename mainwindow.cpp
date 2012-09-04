@@ -5,8 +5,6 @@
 
 #include <QCloseEvent>
 #include <QDebug>
-#include <QList>
-#include <QUrl>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -40,13 +38,14 @@ void MainWindow::closeEvent(QCloseEvent *e)
 void MainWindow::dragEnterEvent(QDragEnterEvent *e)
 {
     qDebug() << e->mimeData()->formats();
-    if (e->mimeData()->hasFormat("text/uri-list"))
+    if (e->mimeData()->hasUrls())
         e->acceptProposedAction();
 }
 
 void MainWindow::dropEvent(QDropEvent *e)
 {
-    QList<QUrl> urls =  e->mimeData()->urls();
+    QList<QUrl> urls = e->mimeData()->urls();
     qDebug() << urls;
     e->acceptProposedAction();
+    emit droppedUrls(urls);
 }

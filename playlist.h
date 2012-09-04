@@ -2,11 +2,16 @@
 #define PLAYLIST_H
 
 #include <QAbstractTableModel>
+#include <QList>
+#include <QUrl>
+
+class PlayListItem;
 
 class PlayList : public QAbstractTableModel
 {
     Q_OBJECT
 public:
+
     explicit PlayList(QObject *parent = 0);
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
@@ -15,9 +20,10 @@ public:
 signals:
     
 public slots:
-    
-private:
+    void appendUrls(QList<QUrl> urls);
 
+private:
+    QList<PlayListItem *> items;
 };
 
 #endif // PLAYLIST_H

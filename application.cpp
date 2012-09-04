@@ -26,6 +26,7 @@ Application::Application(int argc, char *argv[])
     platform_support->setDockOverlay(0);
 
     connect(platform_support, SIGNAL( dockClicked() ), main_window, SLOT( show() ));
+    connect(main_window, SIGNAL( droppedUrls(QList<QUrl>) ), playlist, SLOT( appendUrls(QList<QUrl>) ));
 }
 
 Application::~Application()

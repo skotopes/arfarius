@@ -17,7 +17,9 @@ SOURCES += main.cpp\
     application.cpp \
     RtAudio.cpp \
     player.cpp \
-    playlist.cpp
+    playlist.cpp \
+    playlistitem.cpp \
+    avfile.cpp
 
 HEADERS  += mainwindow.h \
     histogramwidget.h \
@@ -25,17 +27,24 @@ HEADERS  += mainwindow.h \
     RtAudio.h \
     RtError.h \
     player.h \
-    playlist.h
+    playlist.h \
+    playlistitem.h \
+    avfile.h
 
 FORMS    += mainwindow.ui
 
 RESOURCES += \
     assets.qrc
 
+LIBS += -lavformat -lavutil -lavcodec
+
 macx {
-    QMAKE_LFLAGS += -framework Cocoa -framework CoreAudio -lpthread
+    LIBS += -framework Cocoa -framework CoreAudio -lpthread
     ICON = wmp.icns
     OBJECTIVE_SOURCES += macsupport.mm
     HEADERS += macsupport.h
     DEFINES += __MACOSX_CORE__
 }
+
+OTHER_FILES += \
+    README.md
