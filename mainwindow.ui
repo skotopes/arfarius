@@ -35,6 +35,9 @@
     </property>
     <item>
      <widget class="QTableView" name="playList">
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectRows</enum>
+      </property>
       <property name="showGrid">
        <bool>false</bool>
       </property>

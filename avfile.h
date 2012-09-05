@@ -11,7 +11,7 @@ public:
     virtual ~AVFile();
 
     void open(const char *);
-    bool isAudio();
+    void close();
 
 private:
     AVFormatContext *formatCtx;

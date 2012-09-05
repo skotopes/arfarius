@@ -15,6 +15,7 @@ public:
     QUrl    source;
     QString artist;
     QString name;
+    bool    hasTag;
 };
 
 #endif // PLAYLISTITEM_H

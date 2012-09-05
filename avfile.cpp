@@ -2,82 +2,71 @@
 #include "avexception.h"
 
 extern "C" {
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 }
+
+#include <QDebug>
 
 static volatile bool ffmpeginit = false;
 
 AVFile::AVFile() :
     formatCtx(0), codecCtx(0), audioStream(-1)
 {
+    qDebug() << "AVFile: created" << this;
     if (!ffmpeginit) {
-       avcodec_register_all();
-       av_register_all();
-       ffmpeginit = true;
+        av_register_all();
+        avcodec_register_all();
+        ffmpeginit = true;
     }
 }
 
 AVFile::~AVFile()
 {
-    if (formatCtx)
-        avformat_free_context(formatCtx);
+    close();
+    qDebug() << "AVFile: destroyed" << this;
 }
 
 void AVFile::open(const char *url)
 {
+    if (formatCtx)
+        throw AVException("Programming error: i already did it");
+
     if (avformat_open_input(&formatCtx, url, 0, 0) < 0)
         throw AVException("Unable to open media");
 
-    if (av_find_stream_info(formatCtx) < 0)
+    if (avformat_find_stream_info(formatCtx, 0) < 0)
         throw AVException("Unable to find streams in media");
 
-    for (unsigned int i=0; i<formatCtx->nb_streams; i++)
-        if(formatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
-            audioStream=i;
+    for (unsigned int i=0; i<formatCtx->nb_streams; i++) {
+        if (formatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audioStream = i;
             break;
         }
+    }
 
-    //    if(audioStream==-1)
-//       return -3; // FFmpeg: audio stream not found
+    if (audioStream < 0)
+        throw AVException("No audio stream found");
 
-//    aCodecCtx=aFormatCtx->streams[audioStream]->codec;
-//    aCodec=avcodec_find_decoder(aCodecCtx->codec_id);
+    codecCtx = formatCtx->streams[audioStream]->codec;
+    AVCodec *codec = avcodec_find_decoder(codecCtx->codec_id);
 
-//    if(aCodec==NULL)
-//       return -4; // Unsupported codec
+    if (!codec)
+        throw AVException("Could not find codec");
 
-//    if(avcodec_open(aCodecCtx, aCodec)<0)
-//       return -5; // Cannot open codec
+    if (avcodec_open2(codecCtx, codec, 0) < 0)
+        throw AVException("Could not open codec");
 
-//    o_buff->ctx.filename = aFormatCtx->filename;
-//    o_buff->ctx.author = aFormatCtx->author;
-//    o_buff->ctx.title = aFormatCtx->title;
-//    o_buff->ctx.album = aFormatCtx->album;
-//    o_buff->ctx.copyright = aFormatCtx->copyright;
-//    o_buff->ctx.comment = aFormatCtx->comment;
-//    o_buff->ctx.genre = aFormatCtx->genre;
-//    o_buff->ctx.year = aFormatCtx->year;
-//    o_buff->ctx.channels = aCodecCtx->channels;
-//    o_buff->ctx.sample_rate = aCodecCtx->sample_rate;
-//    o_buff->ctx.sample_fmt = aCodecCtx->sample_fmt;
-//    o_buff->ctx.codec_name = aCodec->name;
-//    o_buff->ctx.codec_name_long = aCodec->long_name;
-
-//    if (aCodecCtx->sample_rate != outgoingSamplerate || aCodecCtx->channels != outgoingChannels) {
-//       need_resampler = true;
-//       aResample = av_audio_resample_init(outgoingChannels, aCodecCtx->channels,
-//                              outgoingSamplerate, aCodecCtx->sample_rate,
-//                              SAMPLE_FMT_S16, aCodecCtx->sample_fmt,
-//                              16, 10, 0, 0.8);
-//       if (!aResample)
-//          return -6;
-//    } else {
-//       need_resampler = false;
-//    }
 }
 
-bool AVFile::isAudio()
+void AVFile::close()
 {
-    return (audioStream == -1) ? false : true;
+    if (codecCtx) {
+        avcodec_close(codecCtx);
+        codecCtx = 0;
+    }
+
+    if (formatCtx) {
+        avformat_close_input(&formatCtx);
+    }
 }

@@ -57,7 +57,6 @@ QVariant PlayList::headerData(int section, Qt::Orientation orientation,
     }
 }
 
-
 void PlayList::appendUrls(QList<QUrl> urls)
 {
     QList<QUrl>::iterator i;
@@ -67,15 +66,13 @@ void PlayList::appendUrls(QList<QUrl> urls)
             AVFile f;
             // Prepare for ultimate combo
             f.open((*i).toString().toLocal8Bit().constData());
-            // now we ready
-            if (f.isAudio()) {
-                PlayListItem *p = new PlayListItem(*i);
-                beginInsertRows(QModelIndex(), items.count(), items.count() + 1);
-                items.append(p);
-                endInsertRows();
-            }
+            // Now we ready
+            PlayListItem *p = new PlayListItem(*i);
+            beginInsertRows(QModelIndex(), items.count(), items.count());
+            items.append(p);
+            endInsertRows();
         } catch (AVException &e) {
-            qDebug() << "PlayList:" << e.what();
+            qDebug() << "PlayList: skipping" << (*i) << "because:" << e.what();
         }
     }
 }
