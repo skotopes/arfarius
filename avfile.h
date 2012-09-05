@@ -3,6 +3,9 @@
 
 #include <string>
 
+struct AVFormatContext;
+struct AVCodecContext;
+
 class AVFile
 {
 public:
@@ -10,9 +13,12 @@ public:
     virtual ~AVFile();
 
     void open(std::string url);
+    bool isAudio();
 
 private:
-
+    AVFormatContext *formatCtx;
+    AVCodecContext *codecCtx;
+    int audioStream;
 };
 
 #endif // AVFILE_H

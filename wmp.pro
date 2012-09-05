@@ -29,7 +29,8 @@ HEADERS  += mainwindow.h \
     player.h \
     playlist.h \
     playlistitem.h \
-    avfile.h
+    avfile.h \
+    avexception.h
 
 FORMS    += mainwindow.ui
 

@@ -21,8 +21,7 @@ int PlayList::columnCount(const QModelIndex & /*parent*/) const
 
 QVariant PlayList::data(const QModelIndex &index, int role) const
 {
-    if (role == Qt::DisplayRole)
-    {
+    if (role == Qt::DisplayRole) {
         PlayListItem *i = items[index.row()];
         if (index.column() == 0) {
             return i->source.path();
@@ -31,9 +30,31 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         } else if (index.column() == 2) {
             return i->name;
         }
+    } else if (role == Qt::DisplayRole) {
+
     }
     return QVariant();
 }
+
+QVariant PlayList::headerData(int section, Qt::Orientation orientation,
+                                     int role) const
+{
+    if (role != Qt::DisplayRole)
+        return QVariant();
+
+    if (orientation == Qt::Horizontal){
+        if (section == 0) {
+            return "Source";
+        } else if (section == 1) {
+            return "Artist";
+        } else if (section == 2) {
+            return "Name";
+        }
+    } else {
+        return QString("Row %1").arg(section);
+    }
+}
+
 
 void PlayList::appendUrls(QList<QUrl> urls)
 {
