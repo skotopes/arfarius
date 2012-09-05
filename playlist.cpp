@@ -1,5 +1,8 @@
 #include "playlist.h"
+
 #include "playlistitem.h"
+#include "avexception.h"
+#include "avfile.h"
 
 #include <QMimeData>
 #include <QDebug>
@@ -11,7 +14,7 @@ PlayList::PlayList(QObject *parent) :
 
 int PlayList::rowCount(const QModelIndex & /*parent*/) const
 {
-   return items.count();
+    return items.count();
 }
 
 int PlayList::columnCount(const QModelIndex & /*parent*/) const
@@ -30,14 +33,13 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         } else if (index.column() == 2) {
             return i->name;
         }
-    } else if (role == Qt::DisplayRole) {
-
     }
+
     return QVariant();
 }
 
 QVariant PlayList::headerData(int section, Qt::Orientation orientation,
-                                     int role) const
+                              int role) const
 {
     if (role != Qt::DisplayRole)
         return QVariant();
@@ -60,12 +62,20 @@ void PlayList::appendUrls(QList<QUrl> urls)
 {
     QList<QUrl>::iterator i;
     for (i = urls.begin(); i != urls.end(); ++i) {
-        PlayListItem *p = new PlayListItem(*i);
-        p->populateSource();
-        if (p->isVlaid()) {
-            beginInsertRows(QModelIndex(), items.count(), items.count() + 1);
-            items.append(p);
-            endInsertRows();
+        // validate media
+        try {
+            AVFile f;
+            // Prepare for ultimate combo
+            f.open((*i).toString().toLocal8Bit().constData());
+            // now we ready
+            if (f.isAudio()) {
+                PlayListItem *p = new PlayListItem(*i);
+                beginInsertRows(QModelIndex(), items.count(), items.count() + 1);
+                items.append(p);
+                endInsertRows();
+            }
+        } catch (AVException &e) {
+            qDebug() << "PlayList:" << e.what();
         }
     }
 }

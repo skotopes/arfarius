@@ -12,9 +12,6 @@ public:
     PlayListItem(QUrl s);
     virtual ~PlayListItem();
 
-    void populateSource();
-    bool isVlaid();
-
     QUrl    source;
     QString artist;
     QString name;

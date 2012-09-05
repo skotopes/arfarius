@@ -20,17 +20,19 @@ AVFile::AVFile() :
 
 AVFile::~AVFile()
 {
-    avformat_free_context(formatCtx);
+    if (formatCtx)
+        avformat_free_context(formatCtx);
 }
 
-void AVFile::open(std::string url)
+void AVFile::open(const char *url)
 {
-    int ret;
-    ret = avformat_open_input(&formatCtx, url.c_str(), 0, 0);
-    if (ret < 0)
-        throw new AVException("Unable to open media");
+    if (avformat_open_input(&formatCtx, url, 0, 0) < 0)
+        throw AVException("Unable to open media");
 
-    for(unsigned int i=0; i<formatCtx->nb_streams; i++)
+    if (av_find_stream_info(formatCtx) < 0)
+        throw AVException("Unable to find streams in media");
+
+    for (unsigned int i=0; i<formatCtx->nb_streams; i++)
         if(formatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
             audioStream=i;
             break;

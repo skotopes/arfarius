@@ -1,8 +1,6 @@
 #ifndef AVFILE_H
 #define AVFILE_H
 
-#include <string>
-
 struct AVFormatContext;
 struct AVCodecContext;
 
@@ -12,7 +10,7 @@ public:
     AVFile();
     virtual ~AVFile();
 
-    void open(std::string url);
+    void open(const char *);
     bool isAudio();
 
 private:
