@@ -30,6 +30,7 @@ HEADERS  += mainwindow.h \
     playlist.h \
     playlistitem.h \
     avfile.h \
+    memring.h \
     avexception.h
 
 FORMS    += mainwindow.ui
@@ -37,7 +38,7 @@ FORMS    += mainwindow.ui
 RESOURCES += \
     assets.qrc
 
-LIBS += -lavformat -lavutil -lavcodec
+LIBS += -lavformat -lavutil -lavcodec -lswresample
 
 macx {
     LIBS += -framework Cocoa -framework CoreAudio -lpthread
