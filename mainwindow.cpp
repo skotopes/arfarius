@@ -12,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     qDebug() << "Main created";
     ui->setupUi(this);
+
+    connect(ui->playButton, SIGNAL( clicked() ), this, SIGNAL( playPause() ));
 }
 
 MainWindow::~MainWindow()

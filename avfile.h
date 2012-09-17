@@ -2,6 +2,8 @@
 #define AVFILE_H
 
 #include <stddef.h>
+#include "avcondition.h"
+#include "avthread.h"
 
 struct AVFormatContext;
 struct AVCodecContext;
@@ -9,14 +11,16 @@ struct SwrContext;
 
 template<typename T> class MemRing;
 
-class AVFile
+
+class AVFile : private AVThread
 {
 public:
     AVFile();
     virtual ~AVFile();
 
     void open(const char *);
-    void runDecoder();
+    void startDecoder();
+    void run();
     void close();
 
     size_t pull(float * buffer, size_t size);
@@ -27,9 +31,11 @@ private:
     SwrContext *swrCtx;
     int audioStream;
     MemRing<float> *ring;
+    AVCondition conditon;
 
     void allocRing();
     void allocSWR();
+    void fillRing(float * buffer, size_t size);
 };
 
 #endif // AVFILE_H

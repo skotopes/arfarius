@@ -41,8 +41,7 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
 QVariant PlayList::headerData(int section, Qt::Orientation orientation,
                               int role) const
 {
-    if (role != Qt::DisplayRole)
-        return QVariant();
+    Q_UNUSED(role)
 
     if (orientation == Qt::Horizontal){
         if (section == 0) {
@@ -52,9 +51,11 @@ QVariant PlayList::headerData(int section, Qt::Orientation orientation,
         } else if (section == 2) {
             return "Name";
         }
-    } else {
+    } else if (orientation == Qt::Vertical) {
         return QString("Row %1").arg(section);
     }
+
+    return QVariant();
 }
 
 void PlayList::appendUrls(QList<QUrl> urls)
@@ -75,4 +76,14 @@ void PlayList::appendUrls(QList<QUrl> urls)
             qDebug() << "PlayList: skipping" << (*i) << "because:" << e.what();
         }
     }
+}
+
+QUrl PlayList::getFirst()
+{
+    return items.first()->source;
+}
+
+int PlayList::itemsCount()
+{
+    return items.count();
 }

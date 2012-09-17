@@ -13,7 +13,7 @@ extern "C" {
 static volatile bool ffmpeginit = false;
 
 AVFile::AVFile() :
-    formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0)
+    formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon()
 {
     qDebug() << "AVFile: created" << this;
     if (!ffmpeginit) {
@@ -26,11 +26,14 @@ AVFile::AVFile() :
 AVFile::~AVFile()
 {
     close();
+    join();
     qDebug() << "AVFile: destroyed" << this;
 }
 
 void AVFile::open(const char *url)
 {
+    qDebug() << "AVFile: trying to open" << url;
+
     if (formatCtx)
         throw AVException("Programming error: i already did it");
 
@@ -53,29 +56,36 @@ void AVFile::open(const char *url)
         throw AVException("Could not open codec");
 
     allocRing();
-    allocSWR();
 }
 
-void AVFile::runDecoder()
+void AVFile::startDecoder()
 {
-    int len = 0;
-    int got_frame = 0;
+    create();
+}
 
+void AVFile::run()
+{
+    AVFrame frame;
+    int got_frame;
+
+    AVPacket packet;
     int packet_size;
     uint8_t *packet_data;
 
-    AVFrame frame;
-    AVPacket packet;
+    DECLARE_ALIGNED(16,uint8_t,shadow)[AVCODEC_MAX_AUDIO_FRAME_SIZE * 4];
 
     while (av_read_frame(formatCtx, &packet) == 0) {
         if (packet.stream_index == audioStream) {
+            // make shure that we will be able to free it later
             packet_size = packet.size;
             packet_data = packet.data;
+
+            // decode frames till packet contains data
             while (packet.size > 0) {
                 avcodec_get_frame_defaults(&frame);
-                len = avcodec_decode_audio4(codecCtx, &frame, &got_frame, &packet);
+                int len = avcodec_decode_audio4(codecCtx, &frame, &got_frame, &packet);
                 if (len < 0) {
-                    break;
+                    break; // probably corrupted packet
                 }
 
                 packet.data += len;
@@ -83,62 +93,105 @@ void AVFile::runDecoder()
 
                 if (got_frame) {
                     got_frame = 0;
-                    // do some magic
+
                     int decoded_size = av_samples_get_buffer_size(NULL, codecCtx->channels, frame.nb_samples, codecCtx->sample_fmt, 1);
-                    uint8_t *decoded_data = frame.data[0];
-                    qDebug() << "Got frame:" << frame.nb_samples << " with size: " << decoded_size;
+
+                    // TODO: stream params can be changed on the fly, add moare checks
+                    if (!swrCtx &&
+                            codecCtx->channel_layout != av_get_default_channel_layout(2) ||
+                            codecCtx->sample_fmt != AV_SAMPLE_FMT_FLT ||
+                            codecCtx->sample_rate != 44100) {
+                        allocSWR();
+                    }
+
+                    if (swrCtx) {
+                        uint8_t *shadow_array[] = { shadow };
+                        const uint8_t *input_array[] = { frame.data[0] };
+                        // todo: check original code^ some nasty shit inside
+                        int ret = swr_convert(swrCtx, shadow_array, AVCODEC_MAX_AUDIO_FRAME_SIZE, input_array, decoded_size);
+                        if (ret > 0) {
+                            fillRing(reinterpret_cast<float *>(shadow), ret*2/4);
+                        }
+                    } else {
+                        fillRing(reinterpret_cast<float *>(frame.data[0]), decoded_size);
+                    }
                 }
             }
+
+            // restore original size and pointer
             packet.size = packet_size;
             packet.data = packet_data;
         }
+
+        // free packet data, reuse structure
         av_free_packet(&packet);
     }
 }
 
 void AVFile::close()
 {
-    // Free codec context
     if (codecCtx) {
         avcodec_close(codecCtx);
-        av_freep(&codecCtx); // todo: check that context freed properly
+        av_freep(&codecCtx); // free context
         codecCtx = 0;
     }
-    // Free format context and close file and so on
+
     if (formatCtx) {
         avformat_close_input(&formatCtx);
     }
-    // free swr context
+
     if (swrCtx) {
         swr_free(&swrCtx);
     }
-    // reset audio stream
+
     audioStream = -1;
-    // free memory ring
+
     if (ring) {
         delete ring;
     }
-    // object now ready to be reused
 }
 
 size_t AVFile::pull(float * buffer, size_t size)
 {
-    return ring->pull(buffer, size);
+    if (!ring)
+        return 0;
+
+    size_t ret = ring->pull(buffer, size);
+    conditon.signal();
+    return ret;
 }
 
 void AVFile::allocRing()
 {
-    ring = new MemRing<float>(44100 * 8 * codecCtx->channels);
+    ring = new MemRing<float>(44100 * 8 * 2);
     if (!ring)
         throw AVException("Unable to allocate ring");
 }
 
+
 void AVFile::allocSWR()
 {
     swrCtx = swr_alloc_set_opts(0, av_get_default_channel_layout(2), AV_SAMPLE_FMT_FLT, 44100,
-                       codecCtx->channel_layout, codecCtx->sample_fmt, codecCtx->sample_rate,
-                       0, 0);
+                                codecCtx->channel_layout, codecCtx->sample_fmt, codecCtx->sample_rate,
+                                0, 0);
+
     if (!swrCtx)
         throw AVException("Unable to allocate swresample context");
+
     swr_init(swrCtx);
+}
+
+void AVFile::fillRing(float * buffer, size_t size)
+{
+//    qDebug() << "AVFile: pushing data to the ring" << size
+//             << "ring free space:" << ring->writeSpace()
+//             << "ring used space:" << ring->readSpace();
+
+    while (ring->writeSpace() < size) {
+        conditon.lock();
+        conditon.wait(); // magic
+        conditon.unlock();
+    }
+
+    ring->push(buffer, size);
 }

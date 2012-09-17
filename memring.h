@@ -15,9 +15,12 @@ public:
         _buff(0), _w_ptr(0), _r_ptr(0),
         _size(0), _size_mask(0)
     {
+        if (!size)
+            throw AVException("memRing: wat?");
+
         size += 1; // reserve at least 1 element for internal purposes
         size_t power_of_two = 1;
-        for (; (1 << power_of_two) < size; power_of_two++) ;
+        for (; (1u << power_of_two) < size; power_of_two++) ;
 
         _size = _size_mask = 1 << power_of_two;
         _size_mask -= 1;

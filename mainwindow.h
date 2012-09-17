@@ -14,7 +14,6 @@ class PlayList;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -31,6 +30,7 @@ private:
 
 signals:
     void droppedUrls(QList<QUrl> urls);
+    void playPause();
 };
 
 #endif // MAINWINDOW_H

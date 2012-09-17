@@ -19,7 +19,10 @@ SOURCES += main.cpp\
     player.cpp \
     playlist.cpp \
     playlistitem.cpp \
-    avfile.cpp
+    avfile.cpp \
+    avthread.cpp \
+    avmutex.cpp \
+    avcondition.cpp
 
 HEADERS  += mainwindow.h \
     histogramwidget.h \
@@ -31,7 +34,10 @@ HEADERS  += mainwindow.h \
     playlistitem.h \
     avfile.h \
     memring.h \
-    avexception.h
+    avexception.h \
+    avthread.h \
+    avmutex.h \
+    avcondition.h
 
 FORMS    += mainwindow.ui
 
