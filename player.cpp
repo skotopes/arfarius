@@ -58,7 +58,7 @@ void Player::openStream()
     try {
         dac.openStream( &parameters, NULL, RTAUDIO_FLOAT32,
                         sampleRate, &bufferFrames,
-                        &Player::callback, reinterpret_cast<void *>(this) );
+                        &Player::callback, this );
     } catch ( RtError& e ) {
         qDebug() << "Player: open stream error, " << e.what();
         return;

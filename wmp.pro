@@ -46,8 +46,6 @@ RESOURCES += \
 
 LIBS += -lavformat -lavutil -lavcodec -lswresample
 
-QMAKE_CXXFLAGS += -O0 -fstack-protector-all -ggdb
-
 macx {
     LIBS += -framework Cocoa -framework CoreAudio -lpthread
     ICON = wmp.icns

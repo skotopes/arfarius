@@ -84,7 +84,7 @@ void AVFile::run()
     uint8_t *packet_data;
     av_init_packet(&packet);
 
-    DECLARE_ALIGNED(16,uint8_t,shadow)[AVCODEC_MAX_AUDIO_FRAME_SIZE * 4];
+    uint8_t * shadow = reinterpret_cast<uint8_t*>(av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE * 4));
 
     qDebug() << "AVFile::run() reading frames";
     while (av_read_frame(formatCtx, &packet) == 0) {
@@ -129,6 +129,7 @@ void AVFile::run()
         // free packet data, reuse structure
         av_free_packet(&packet);
     }
+    av_free(shadow);
     qDebug() << "AVFile::run() done";
 }
 
