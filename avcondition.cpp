@@ -1,7 +1,7 @@
 #include "avcondition.h"
 
 AVCondition::AVCondition() :
-    condition()
+    AVMutex(), condition()
 {
     pthread_cond_init(&condition, NULL);
 }

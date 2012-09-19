@@ -16,6 +16,7 @@ AVFile::AVFile() :
     AVThread(), formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon()
 {
     qDebug() << "AVFile: created" << this;
+
     if (!ffmpeginit) {
         av_register_all();
         avcodec_register_all();
@@ -74,6 +75,7 @@ void AVFile::startDecoder()
 void AVFile::run()
 {
     qDebug() << "AVFile::run()";
+
     AVFrame frame;
     int got_frame;
 

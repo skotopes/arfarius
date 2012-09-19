@@ -81,7 +81,10 @@ void PlayList::appendUrls(QList<QUrl> urls)
 
 bool PlayList::hasNext()
 {
-    return true;
+    if (items.count() > 0)
+        return true;
+    else
+        return false;
 }
 
 QUrl PlayList::getNext()
