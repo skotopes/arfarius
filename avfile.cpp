@@ -162,10 +162,8 @@ size_t AVFile::pull(float * buffer, size_t size)
     if (!ring)
         return 0;
 
-    conditon.lock();
     size_t ret = ring->pull(buffer, size);
     conditon.signal();
-    conditon.unlock();
 
     return ret;
 }
@@ -195,11 +193,11 @@ void AVFile::allocSWR()
 void AVFile::fillRing(float * buffer, size_t size)
 {
 //    qDebug() << "AVFile::fillRing();";
-    conditon.lock();
     while (ring->writeSpace() < size) {
+        conditon.lock();
         conditon.wait(); // magic
+        conditon.unlock();
     }
 
     ring->push(buffer, size);
-    conditon.unlock();
 }
