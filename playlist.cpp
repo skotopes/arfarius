@@ -41,7 +41,8 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
 QVariant PlayList::headerData(int section, Qt::Orientation orientation,
                               int role) const
 {
-    Q_UNUSED(role)
+    if (role != Qt::DisplayRole)
+        return QVariant();
 
     if (orientation == Qt::Horizontal){
         if (section == 0) {
@@ -78,7 +79,12 @@ void PlayList::appendUrls(QList<QUrl> urls)
     }
 }
 
-QUrl PlayList::getFirst()
+bool PlayList::hasNext()
+{
+    return true;
+}
+
+QUrl PlayList::getNext()
 {
     return items.first()->source;
 }

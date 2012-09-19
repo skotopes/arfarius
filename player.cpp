@@ -103,9 +103,8 @@ void Player::playPause()
         startStream();
         state = Player::PLAY;
     } else {
-        // TODO: get playlist item and play it
-        if (playlist->itemsCount() > 0) {
-            QUrl u = playlist->getFirst();
+        if (playlist->hasNext()) {
+            QUrl u = playlist->getNext();
             current = new AVFile();
             current->open(u.toString().toLocal8Bit().constData());
             current->startDecoder();
