@@ -19,9 +19,10 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
 
-    bool hasNext();
-    QUrl getNext();
-    int itemsCount();
+    PlayListItem * getCurrent();
+
+    bool next();
+    bool prev();
 
 signals:
 
@@ -30,6 +31,7 @@ public slots:
 
 private:
     QList<PlayListItem *> items;
+    int current;
 };
 
 #endif // PLAYLIST_H

@@ -20,17 +20,18 @@ Application::Application(int argc, char *argv[])
     main_window->setPlaylist(playlist);
     player->setPlaylist(playlist);
 
-    // TODO: remove it
-    platform_support->setDockBadge("trolo");
     platform_support->setCustomBorderColor(QColor(83,83,83));
     platform_support->setCustomTitleColor(QColor(226,226,226));
     platform_support->installCustomFrame();
-    platform_support->setDockOverlay(0);
 
     // Connect signals
     connect(platform_support, SIGNAL( dockClicked() ), main_window, SLOT( show() ));
+    connect(platform_support, SIGNAL( playPause() ), player, SLOT( playPause() ));
+
     connect(main_window, SIGNAL( droppedUrls(QList<QUrl>) ), playlist, SLOT( appendUrls(QList<QUrl>) ));
     connect(main_window, SIGNAL( playPause() ), player, SLOT( playPause() ));
+
+    connect(player, SIGNAL( stateChanged(Player::State) ), main_window, SLOT( updateState(Player::State) ));
 }
 
 Application::~Application()

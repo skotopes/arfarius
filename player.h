@@ -12,15 +12,15 @@ class Player : public QObject
 {
     Q_OBJECT
 
+public:
     enum State {
         STOP,
         PLAY,
         PAUSE
     };
 
-public:
     explicit Player(QObject *parent = 0);
-    ~Player();
+    virtual ~Player();
 
     void setPlaylist(PlayList *p);
 
@@ -28,6 +28,7 @@ private:
     State state;
     PlayList *playlist;
     AVFile *current;
+    volatile bool current_connected;
     RtAudio dac;
     RtAudio::StreamParameters parameters;
     unsigned int sampleRate;
@@ -38,10 +39,15 @@ private:
     void stopStream();
     void closeStream();
 
+    void updateState(Player::State);
+    void updateCurrent();
+    void disconnectCurrent();
+
     static int callback( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
                     double streamTime, RtAudioStreamStatus status, void *userData );
 
 signals:
+    void stateChanged(Player::State);
 
 public slots:
     void playPause();

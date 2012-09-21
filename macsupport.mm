@@ -2,7 +2,7 @@
 #include <QDebug>
 #include <QColor>
 #include <QWidget>
-#include <QApplication>
+  #include <QApplication>
 
 #import <Cocoa/Cocoa.h>
 #import <objc/runtime.h>
@@ -30,22 +30,27 @@ void dockClickHandler(id self, SEL _cmd)
 }
 
 MacSupport::MacSupport() {
+    qDebug() << "MacSupport::MacSupport()";
     Class cls = [[[NSApplication sharedApplication] delegate] class];
 
     if (!class_addMethod(cls, @selector(applicationShouldHandleReopen:hasVisibleWindows:), (IMP) dockClickHandler, "v@:"))
         NSLog(@"MyPrivate::MyPrivate() : class_addMethod failed!");
 
     ms_instance = this;
-    qDebug() << "MacSupport: constructor";
 }
 
 MacSupport::~MacSupport() {
-    qDebug() << "MacSupport: destructor";
+    qDebug() << "MacSupport::~MacSupport()";
 }
 
 void MacSupport::emitDockClick() {
-    qDebug() << "MacSupport: dockClicked";
+    qDebug() << "MacSupport::emitDockClick()";
     emit dockClicked();
+}
+
+void MacSupport::emitMediaKeys()
+{
+    qDebug() << "MacSupport::emitMediaKeys()";
 }
 
 void MacSupport::setDockBadge(const QString & badgeText)

@@ -12,6 +12,7 @@ public:
     MacSupport();
     virtual ~MacSupport();
     void emitDockClick();
+    void emitMediaKeys();
 
 public slots:
     void setDockBadge(const QString & badgeText);
@@ -25,6 +26,9 @@ public slots:
 
 signals:
     void dockClicked();
+    void playPause();
+    void next(bool state);
+    void prev(bool state);
 };
 
 #endif

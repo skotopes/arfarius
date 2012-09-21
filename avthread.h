@@ -12,6 +12,8 @@ public:
     bool create();
     bool join();
 
+    inline bool isRunning() { return running; }
+
 protected:
     virtual void run()=0;
 

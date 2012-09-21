@@ -8,7 +8,7 @@
 #include <QDebug>
 
 PlayList::PlayList(QObject *parent) :
-    QAbstractTableModel(parent), items()
+    QAbstractTableModel(parent), items(), current(-1)
 {
 }
 
@@ -27,11 +27,11 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole) {
         PlayListItem *i = items[index.row()];
         if (index.column() == 0) {
-            return i->source.path();
+            return i->getUrl();
         } else if (index.column() == 1) {
-            return i->artist;
+            return i->getArtist();
         } else if (index.column() == 2) {
-            return i->name;
+            return i->getName();
         }
     }
 
@@ -59,40 +59,40 @@ QVariant PlayList::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
+PlayListItem * PlayList::getCurrent()
+{
+    if (current < 0)
+        return 0;
+
+    return items[current];
+}
+
 void PlayList::appendUrls(QList<QUrl> urls)
 {
     QList<QUrl>::iterator i;
     for (i = urls.begin(); i != urls.end(); ++i) {
-        // validate media
-        try {
-            AVFile f;
-            // Prepare for ultimate combo
-            f.open((*i).toString().toLocal8Bit().constData());
-            // Now we ready
-            PlayListItem *p = new PlayListItem(*i);
+        PlayListItem *p = new PlayListItem(*i);
+        if (p->isValid()) {
             beginInsertRows(QModelIndex(), items.count(), items.count());
             items.append(p);
             endInsertRows();
-        } catch (AVException &e) {
-            qDebug() << "PlayList: skipping" << (*i) << "because:" << e.what();
         }
     }
 }
 
-bool PlayList::hasNext()
+bool PlayList::next()
 {
-    if (items.count() > 0)
-        return true;
-    else
+    if (!items.count() || current == (items.count() - 1) )
         return false;
+    current ++;
+    return true;
 }
 
-QUrl PlayList::getNext()
+bool PlayList::prev()
 {
-    return items.first()->source;
+    if (current < 1)
+        return false;
+    current --;
+    return true;
 }
 
-int PlayList::itemsCount()
-{
-    return items.count();
-}

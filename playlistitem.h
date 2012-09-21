@@ -12,10 +12,17 @@ public:
     PlayListItem(QUrl s);
     virtual ~PlayListItem();
 
+    bool isValid();
+    inline QString getUrl() { return source.toString(); }
+    inline QString getArtist() { return artist; }
+    inline QString getName() { return name; }
+
+private:
     QUrl    source;
     QString artist;
     QString name;
     bool    hasTag;
+
 };
 
 #endif // PLAYLISTITEM_H

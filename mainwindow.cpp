@@ -51,3 +51,20 @@ void MainWindow::dropEvent(QDropEvent *e)
     e->acceptProposedAction();
     emit droppedUrls(urls);
 }
+
+void MainWindow::updateState(Player::State s)
+{
+    switch (s) {
+    case Player::PLAY:
+        ui->playButton->setIcon(QIcon(":/images/pause.png"));
+        break;
+    case Player::PAUSE:
+        ui->playButton->setIcon(QIcon(":/images/play.png"));
+        break;
+    case Player::STOP:
+        ui->playButton->setIcon(QIcon(":/images/play.png"));
+        break;
+    default:
+        break;
+    }
+}

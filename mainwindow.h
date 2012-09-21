@@ -5,6 +5,8 @@
 #include <QList>
 #include <QUrl>
 
+#include "player.h"
+
 namespace Ui {
     class MainWindow;
 }
@@ -31,6 +33,10 @@ private:
 signals:
     void droppedUrls(QList<QUrl> urls);
     void playPause();
+
+public slots:
+    void updateState(Player::State);
+
 };
 
 #endif // MAINWINDOW_H

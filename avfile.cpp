@@ -13,7 +13,7 @@ extern "C" {
 static volatile bool ffmpeginit = false;
 
 AVFile::AVFile() :
-    AVThread(), formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon()
+    AVThread(), formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon(), do_shutdown(false)
 {
     qDebug() << "AVFile: created" << this;
 
@@ -72,6 +72,13 @@ void AVFile::startDecoder()
     create();
 }
 
+void AVFile::stopDecoder()
+{
+    qDebug() << "AVFile::stopDecoder()";
+    do_shutdown = true;
+    join();
+}
+
 void AVFile::run()
 {
     qDebug() << "AVFile::run()";
@@ -128,6 +135,9 @@ void AVFile::run()
 
         // free packet data, reuse structure
         av_free_packet(&packet);
+
+        if (do_shutdown)
+            break;
     }
     av_free(shadow);
     qDebug() << "AVFile::run() done";

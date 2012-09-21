@@ -20,6 +20,8 @@ public:
 
     void open(const char *);
     void startDecoder();
+    inline bool isDecoderRunning() { return isRunning(); }
+    void stopDecoder();
     void run();
     void close();
 
@@ -32,6 +34,7 @@ private:
     int audioStream;
     MemRing<float> *ring;
     AVCondition conditon;
+    volatile bool do_shutdown;
 
     void allocRing();
     void allocSWR();

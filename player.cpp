@@ -1,11 +1,14 @@
 #include "player.h"
+
 #include "playlist.h"
+#include "playlistitem.h"
 #include "avfile.h"
 
 #include <QDebug>
 
 Player::Player(QObject *parent) :
-    QObject(parent), state(Player::STOP), playlist(0), current(0), dac(), parameters(), sampleRate(0), bufferFrames(0)
+    QObject(parent), state(Player::STOP), playlist(0), current(0), current_connected(false),
+    dac(), parameters(), sampleRate(0), bufferFrames(0)
 {
     openStream();
 }
@@ -29,8 +32,11 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
     Player *me = reinterpret_cast<Player *>(userData);
     float *buffer = reinterpret_cast<float *>(outputBuffer);
 
-    if (me->current) {
-        me->current->pull(buffer, nBufferFrames * 2);
+    if (me->current_connected) {
+        size_t ret = me->current->pull(buffer, nBufferFrames * 2);
+        if (ret < nBufferFrames * 2 && !me->current->isDecoderRunning()) {
+            me->next();
+        }
     }
 
     return 0;
@@ -53,7 +59,7 @@ void Player::openStream()
     parameters.firstChannel = 0;
 
     sampleRate = 44100;
-    bufferFrames = 64;
+    bufferFrames = 512;
 
     try {
         dac.openStream( &parameters, NULL, RTAUDIO_FLOAT32,
@@ -71,10 +77,9 @@ void Player::startStream()
     try {
         dac.startStream();
     } catch ( RtError& e ) {
-        qDebug() << "Player: start stream error, " << e.what();
+        qDebug() << "Player::startStream()"<< "RtError:" << e.what();
         return;
     }
-
 }
 
 void Player::stopStream()
@@ -94,42 +99,74 @@ void Player::closeStream()
         dac.closeStream();
 }
 
+void Player::updateState(Player::State s)
+{
+    state = s;
+    emit stateChanged(state);
+}
+
+void Player::updateCurrent()
+{
+    PlayListItem *i = playlist->getCurrent();
+
+    if (i) {
+        current = new AVFile();
+        current->open(i->getUrl().toLocal8Bit().constData());
+        current->startDecoder();
+        current_connected = true;
+    }
+}
+
+void Player::disconnectCurrent()
+{
+    if (current) {
+        if (current->isDecoderRunning())
+            current->stopDecoder();
+        current_connected = false;
+        delete current; current = 0;
+    }
+}
+
 void Player::playPause()
 {
     if (state == Player::PLAY) {
         stopStream();
-        state = Player::PAUSE;
+        updateState(Player::PAUSE);
     } else if (state == Player::PAUSE) {
         startStream();
-        state = Player::PLAY;
+        updateState(Player::PLAY);
     } else {
-        if (playlist->hasNext()) {
-            QUrl u = playlist->getNext();
-            current = new AVFile();
-            current->open(u.toString().toLocal8Bit().constData());
-            current->startDecoder();
+        if (playlist->next()) {
+            updateCurrent();
             startStream();
-            state = Player::PLAY;
+            updateState(Player::PLAY);
         }
     }
 }
+
 
 void Player::stop()
 {
     if (state == Player::STOP)
         return;
 
+    disconnectCurrent();
     stopStream();
-    delete current;
-    current = 0;
+    updateState(Player::STOP);
 }
 
 void Player::next()
 {
-
+    if (playlist->next())
+        updateCurrent();
+    else
+        stop();
 }
 
 void Player::prev()
 {
-
+    if (playlist->prev())
+        updateCurrent();
+    else
+        stop();
 }

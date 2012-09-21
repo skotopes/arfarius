@@ -69,8 +69,8 @@
          </size>
         </property>
         <property name="icon">
-         <iconset resource="assets.qrc">
-          <normaloff>:/player/play.png</normaloff>:/player/play.png</iconset>
+         <iconset resource="assets/assets.qrc">
+          <normaloff>:/images/play.png</normaloff>:/images/play.png</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -124,7 +124,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="assets.qrc"/>
+  <include location="assets/assets.qrc"/>
  </resources>
  <connections/>
 </ui>
