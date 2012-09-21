@@ -3,13 +3,15 @@
 #include "playlist.h"
 #include "playlistitem.h"
 #include "avfile.h"
+#include "avmutex.h"
 
 #include <QDebug>
 
 Player::Player(QObject *parent) :
-    QObject(parent), state(Player::STOP), playlist(0), current(0), current_connected(false),
+    QObject(parent), state(Player::STOP), playlist(0), current(0), current_mutex(0),
     dac(), parameters(), sampleRate(0), bufferFrames(0)
 {
+    current_mutex = new AVMutex();
     openStream();
 }
 
@@ -18,8 +20,8 @@ Player::~Player()
     stopStream();
     closeStream();
 
-    if (current)
-        delete current;
+    delete current;
+    delete current_mutex;
 }
 
 int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
@@ -32,12 +34,14 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
     Player *me = reinterpret_cast<Player *>(userData);
     float *buffer = reinterpret_cast<float *>(outputBuffer);
 
-    if (me->current_connected) {
+    me->current_mutex->lock();
+    if (me->current) {
         size_t ret = me->current->pull(buffer, nBufferFrames * 2);
         if (ret < nBufferFrames * 2 && !me->current->isDecoderRunning()) {
             me->next();
         }
     }
+    me->current_mutex->unlock();
 
     return 0;
 }
@@ -107,13 +111,14 @@ void Player::updateState(Player::State s)
 
 void Player::updateCurrent()
 {
+    disconnectCurrent();
+
     PlayListItem *i = playlist->getCurrent();
 
     if (i) {
         current = new AVFile();
         current->open(i->getUrl().toLocal8Bit().constData());
         current->startDecoder();
-        current_connected = true;
     }
 }
 
@@ -122,13 +127,16 @@ void Player::disconnectCurrent()
     if (current) {
         if (current->isDecoderRunning())
             current->stopDecoder();
-        current_connected = false;
+
+        current_mutex->lock();
         delete current; current = 0;
+        current_mutex->unlock();
     }
 }
 
 void Player::playPause()
 {
+    qDebug() << "Player::playPause()";
     if (state == Player::PLAY) {
         stopStream();
         updateState(Player::PAUSE);
@@ -144,9 +152,9 @@ void Player::playPause()
     }
 }
 
-
 void Player::stop()
 {
+    qDebug() << "Player::stop()";
     if (state == Player::STOP)
         return;
 
@@ -157,6 +165,7 @@ void Player::stop()
 
 void Player::next()
 {
+    qDebug() << "Player::next()";
     if (playlist->next())
         updateCurrent();
     else
@@ -165,6 +174,7 @@ void Player::next()
 
 void Player::prev()
 {
+    qDebug() << "Player::prev()";
     if (playlist->prev())
         updateCurrent();
     else

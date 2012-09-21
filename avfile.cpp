@@ -76,6 +76,8 @@ void AVFile::stopDecoder()
 {
     qDebug() << "AVFile::stopDecoder()";
     do_shutdown = true;
+    ring->reset();
+    conditon.signal();
     join();
 }
 
@@ -136,8 +138,10 @@ void AVFile::run()
         // free packet data, reuse structure
         av_free_packet(&packet);
 
-        if (do_shutdown)
+        if (do_shutdown) {
             break;
+            do_shutdown = false;
+        }
     }
     av_free(shadow);
     qDebug() << "AVFile::run() done";
@@ -168,7 +172,6 @@ void AVFile::close()
 
 size_t AVFile::pull(float * buffer, size_t size)
 {
-//    qDebug() << "AVFile::pull()";
     if (!ring)
         return 0;
 

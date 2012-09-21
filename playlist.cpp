@@ -82,17 +82,29 @@ void PlayList::appendUrls(QList<QUrl> urls)
 
 bool PlayList::next()
 {
-    if (!items.count() || current == (items.count() - 1) )
+    if (!items.count())
         return false;
-    current ++;
-    return true;
+
+    if (current == (items.count() - 1)) {
+        current = -1;
+        return false;
+    } else {
+        current ++;
+        return true;
+    }
 }
 
 bool PlayList::prev()
 {
-    if (current < 1)
+    if (current < 0 || !items.count())
         return false;
-    current --;
-    return true;
+
+    if (current < 1) {
+        current = -1;
+        return false;
+    } else {
+        current --;
+        return true;
+    }
 }
 

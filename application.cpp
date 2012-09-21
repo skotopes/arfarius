@@ -30,6 +30,8 @@ Application::Application(int argc, char *argv[])
 
     connect(main_window, SIGNAL( droppedUrls(QList<QUrl>) ), playlist, SLOT( appendUrls(QList<QUrl>) ));
     connect(main_window, SIGNAL( playPause() ), player, SLOT( playPause() ));
+    connect(main_window, SIGNAL( next() ), player, SLOT( next() ));
+    connect(main_window, SIGNAL( prev() ), player, SLOT( prev() ));
 
     connect(player, SIGNAL( stateChanged(Player::State) ), main_window, SLOT( updateState(Player::State) ));
 }

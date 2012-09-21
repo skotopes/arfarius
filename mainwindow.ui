@@ -69,8 +69,37 @@
          </size>
         </property>
         <property name="icon">
-         <iconset resource="assets/assets.qrc">
+         <iconset resource="assets.qrc">
           <normaloff>:/images/play.png</normaloff>:/images/play.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>38</width>
+          <height>38</height>
+         </size>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="prevButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="icon">
+         <iconset resource="assets.qrc">
+          <normaloff>:/images/prev.png</normaloff>:/images/prev.png</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -99,6 +128,35 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QPushButton" name="nextButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="icon">
+         <iconset resource="assets.qrc">
+          <normaloff>:/images/next.png</normaloff>:/images/next.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>38</width>
+          <height>38</height>
+         </size>
+        </property>
+        <property name="flat">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -124,7 +182,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="assets/assets.qrc"/>
+  <include location="assets.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -14,6 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     connect(ui->playButton, SIGNAL( clicked() ), this, SIGNAL( playPause() ));
+    connect(ui->prevButton, SIGNAL( clicked() ), this, SIGNAL( prev() ));
+    connect(ui->nextButton, SIGNAL( clicked() ), this, SIGNAL( next() ));
 }
 
 MainWindow::~MainWindow()

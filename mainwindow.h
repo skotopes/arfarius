@@ -33,6 +33,8 @@ private:
 signals:
     void droppedUrls(QList<QUrl> urls);
     void playPause();
+    void next();
+    void prev();
 
 public slots:
     void updateState(Player::State);

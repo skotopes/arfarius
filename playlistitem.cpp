@@ -25,4 +25,3 @@ bool PlayListItem::isValid()
 
     return true;
 }
-

@@ -7,6 +7,7 @@
 
 class PlayList;
 class AVFile;
+class AVMutex;
 
 class Player : public QObject
 {
@@ -28,7 +29,7 @@ private:
     State state;
     PlayList *playlist;
     AVFile *current;
-    volatile bool current_connected;
+    AVMutex *current_mutex;
     RtAudio dac;
     RtAudio::StreamParameters parameters;
     unsigned int sampleRate;
