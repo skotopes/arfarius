@@ -13,14 +13,20 @@ public:
     virtual ~PlayListItem();
 
     bool isValid();
+
+    inline void setPos(int p) { pos = p; }
+    inline int getPos() { return pos; }
     inline QString getUrl() { return source.toString(); }
+    inline QString getUrlLocalFile() { return source.toLocalFile(); }
+    inline QString getUrlLast() { return source.toLocalFile(); }
     inline QString getArtist() { return artist; }
-    inline QString getName() { return name; }
+    inline QString getTitle() { return title; }
 
 private:
+    int     pos;
     QUrl    source;
     QString artist;
-    QString name;
+    QString title;
     bool    hasTag;
 
 };

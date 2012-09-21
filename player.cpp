@@ -3,15 +3,14 @@
 #include "playlist.h"
 #include "playlistitem.h"
 #include "avfile.h"
-#include "avmutex.h"
 
 #include <QDebug>
 
 Player::Player(QObject *parent) :
-    QObject(parent), state(Player::STOP), playlist(0), current(0), current_mutex(0),
+    QObject(parent), state(Player::STOP), playlist(0),
+    track_current(0), track_next(0), track_change(false),
     dac(), parameters(), sampleRate(0), bufferFrames(0)
 {
-    current_mutex = new AVMutex();
     openStream();
 }
 
@@ -20,8 +19,9 @@ Player::~Player()
     stopStream();
     closeStream();
 
-    delete current;
-    delete current_mutex;
+
+    delete track_current;
+    delete track_next;
 }
 
 int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
@@ -34,14 +34,23 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
     Player *me = reinterpret_cast<Player *>(userData);
     float *buffer = reinterpret_cast<float *>(outputBuffer);
 
-    me->current_mutex->lock();
-    if (me->current) {
-        size_t ret = me->current->pull(buffer, nBufferFrames * 2);
-        if (ret < nBufferFrames * 2 && !me->current->isDecoderRunning()) {
+    if (me->track_current) {
+        size_t ret = me->track_current->pull(buffer, nBufferFrames * 2);
+
+        if (ret < nBufferFrames * 2 && !me->track_current->isDecoderRunning()) {
             me->next();
         }
     }
-    me->current_mutex->unlock();
+
+    if (me->track_change) {
+        if (me->track_current && me->track_current->isDecoderRunning())
+            me->track_current->stopDecoder();
+
+        delete me->track_current;
+        me->track_current = me->track_next;
+        me->track_next = 0;
+        me->track_change = false;
+    }
 
     return 0;
 }
@@ -54,7 +63,8 @@ void Player::setPlaylist(PlayList *p)
 void Player::openStream()
 {
     if ( dac.getDeviceCount() < 1 ) {
-        return; // todo show error dialog
+        qDebug() << "Player::openStream()" << "No output found";
+        return;
     }
 
     // TODO: load it from setting please
@@ -70,10 +80,8 @@ void Player::openStream()
                         sampleRate, &bufferFrames,
                         &Player::callback, this );
     } catch ( RtError& e ) {
-        qDebug() << "Player: open stream error, " << e.what();
-        return;
+        qDebug() << "Player::openStream()" << "RtError" << e.what();
     }
-
 }
 
 void Player::startStream()
@@ -89,11 +97,9 @@ void Player::startStream()
 void Player::stopStream()
 {
     try {
-        // Stop the stream
         dac.stopStream();
-    }
-    catch (RtError& e) {
-        qDebug() << e.what();
+    } catch (RtError& e) {
+        qDebug() << "Player::stopStream()" << "RtError:" << e.what();
     }
 }
 
@@ -111,27 +117,20 @@ void Player::updateState(Player::State s)
 
 void Player::updateCurrent()
 {
-    disconnectCurrent();
-
     PlayListItem *i = playlist->getCurrent();
 
     if (i) {
-        current = new AVFile();
-        current->open(i->getUrl().toLocal8Bit().constData());
-        current->startDecoder();
+        track_next = new AVFile();
+        track_next->open(i->getUrl().toLocal8Bit().constData());
+        track_next->startDecoder();
+        track_change = true;
     }
 }
 
 void Player::disconnectCurrent()
 {
-    if (current) {
-        if (current->isDecoderRunning())
-            current->stopDecoder();
-
-        current_mutex->lock();
-        delete current; current = 0;
-        current_mutex->unlock();
-    }
+    track_next = 0;
+    track_change = true;
 }
 
 void Player::playPause()

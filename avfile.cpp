@@ -95,7 +95,6 @@ void AVFile::run()
 
     uint8_t * shadow = reinterpret_cast<uint8_t*>(av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE * 4));
 
-    qDebug() << "AVFile::run() reading frames";
     while (av_read_frame(formatCtx, &packet) == 0) {
         if (packet.stream_index == audioStream) {
             // make shure that we will be able to free it later
@@ -128,19 +127,21 @@ void AVFile::run()
                         fillRing(reinterpret_cast<float *>(frame.data[0]), frame.nb_samples * 2);
                     }
                 }
+                // hurry up, no time to decode one more frame
+                if (do_shutdown)
+                    break;
             }
 
             // restore original size and pointer
             packet.size = packet_size;
             packet.data = packet_data;
         }
-
         // free packet data, reuse structure
         av_free_packet(&packet);
-
+        // complete decoding thread shutdown
         if (do_shutdown) {
-            break;
             do_shutdown = false;
+            break;
         }
     }
     av_free(shadow);

@@ -44,7 +44,8 @@ FORMS    += mainwindow.ui
 RESOURCES += \
     assets.qrc
 
-LIBS += -lavformat -lavutil -lavcodec -lswresample
+LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag
+#INCLUDEPATH += /usr/local/include/taglib
 
 macx {
     LIBS += -framework Cocoa -framework CoreAudio -lpthread
