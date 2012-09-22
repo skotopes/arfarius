@@ -12,13 +12,13 @@ Player::Player(QObject *parent) :
     dac(), parameters(), sampleRate(0), bufferFrames(0)
 {
     openStream();
+    qRegisterMetaType<Player::State>("Player::State");
 }
 
 Player::~Player()
 {
     stopStream();
     closeStream();
-
 
     delete track_current;
     delete track_next;
@@ -38,7 +38,12 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
         size_t ret = me->track_current->pull(buffer, nBufferFrames * 2);
 
         if (ret < nBufferFrames * 2 && !me->track_current->isDecoderRunning()) {
-            me->next();
+            if (me->playlist->next()) {
+                me->updateCurrent();
+            } else {
+                me->updateState(Player::STOP);
+                return 1;
+            }
         }
     }
 
@@ -112,6 +117,7 @@ void Player::closeStream()
 void Player::updateState(Player::State s)
 {
     state = s;
+    qDebug() << "Player::updateState()" << "state changed to:" << s;
     emit stateChanged(state);
 }
 
@@ -159,6 +165,7 @@ void Player::stop()
 
     disconnectCurrent();
     stopStream();
+    qDebug() << "Player::stop() end";
     updateState(Player::STOP);
 }
 

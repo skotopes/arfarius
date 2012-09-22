@@ -1,10 +1,9 @@
 #include "playlist.h"
 
 #include "playlistitem.h"
-#include "avexception.h"
-#include "avfile.h"
 
 #include <QMimeData>
+#include <QColor>
 #include <QDebug>
 
 PlayList::PlayList(QObject *parent) :
@@ -33,6 +32,8 @@ QVariant PlayList::data(const QModelIndex &index, int role) const
         } else if (index.column() == 2) {
             return i->getTitle();
         }
+    } else if (role == Qt::BackgroundRole && index.row() == current) {
+        return QVariant(QColor(Qt::green));
     }
 
     return QVariant();
@@ -61,6 +62,7 @@ QVariant PlayList::headerData(int section, Qt::Orientation orientation,
 
 PlayListItem * PlayList::getCurrent()
 {
+
     if (current < 0)
         return 0;
 
@@ -88,11 +90,15 @@ bool PlayList::next()
     if (!items.count())
         return false;
 
+    int c = current;
     if (current == (items.count() - 1)) {
         current = -1;
+        emit dataChanged(createIndex(c, 0), createIndex(c,2));
         return false;
     } else {
         current ++;
+        emit dataChanged(createIndex(c,0), createIndex(c,2));
+        emit dataChanged(createIndex(current,0), createIndex(current,2));
         return true;
     }
 }
@@ -102,11 +108,15 @@ bool PlayList::prev()
     if (current < 0 || !items.count())
         return false;
 
+    int c = current;
     if (current < 1) {
         current = -1;
+        emit dataChanged(createIndex(c,0), createIndex(c,2));
         return false;
     } else {
         current --;
+        emit dataChanged(createIndex(c,0), createIndex(c,2));
+        emit dataChanged(createIndex(current,0), createIndex(current,2));
         return true;
     }
 }
