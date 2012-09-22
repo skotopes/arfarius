@@ -4,11 +4,12 @@
 #include "playlistitem.h"
 #include "avfile.h"
 
+#include <QMutex>
 #include <QDebug>
 
 Player::Player(QObject *parent) :
     QObject(parent), state(Player::STOP), playlist(0),
-    track_current(0), track_next(0), track_change(false),
+    track_current(0), track_mutex(new QMutex(QMutex::Recursive)),
     dac(), parameters(), sampleRate(0), bufferFrames(0)
 {
     openStream();
@@ -21,7 +22,6 @@ Player::~Player()
     closeStream();
 
     delete track_current;
-    delete track_next;
 }
 
 int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
@@ -34,28 +34,14 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
     Player *me = reinterpret_cast<Player *>(userData);
     float *buffer = reinterpret_cast<float *>(outputBuffer);
 
+    me->track_mutex->lock();
     if (me->track_current) {
         size_t ret = me->track_current->pull(buffer, nBufferFrames * 2);
-
         if (ret < nBufferFrames * 2 && !me->track_current->isDecoderRunning()) {
-            if (me->playlist->next()) {
-                me->updateCurrent();
-            } else {
-                me->updateState(Player::STOP);
-                return 1;
-            }
+            me->next();
         }
     }
-
-    if (me->track_change) {
-        if (me->track_current && me->track_current->isDecoderRunning())
-            me->track_current->stopDecoder();
-
-        delete me->track_current;
-        me->track_current = me->track_next;
-        me->track_next = 0;
-        me->track_change = false;
-    }
+    me->track_mutex->unlock();
 
     return 0;
 }
@@ -126,17 +112,40 @@ void Player::updateCurrent()
     PlayListItem *i = playlist->getCurrent();
 
     if (i) {
-        track_next = new AVFile();
-        track_next->open(i->getUrl().toLocal8Bit().constData());
-        track_next->startDecoder();
-        track_change = true;
+        AVFile *tn, *to;
+
+        tn = new AVFile();
+        tn->open(i->getUrl().toLocal8Bit().constData());
+        tn->startDecoder();
+
+        track_mutex->lock();
+        to = track_current;
+        track_current = tn;
+        track_mutex->unlock();
+
+        if (to && to->isDecoderRunning())
+            to->stopDecoder();
+        delete to;
+
+        if (state == Player::PAUSE) {
+            startStream();
+            updateState(Player::PLAY);
+        }
     }
 }
 
 void Player::disconnectCurrent()
 {
-    track_next = 0;
-    track_change = true;
+    AVFile *to;
+
+    track_mutex->lock();
+    to = track_current;
+    track_current = 0;
+    track_mutex->unlock();
+
+    if (to) {
+        delete to;
+    }
 }
 
 void Player::playPause()
@@ -172,6 +181,9 @@ void Player::stop()
 void Player::next()
 {
     qDebug() << "Player::next()";
+    if (state == Player::STOP)
+        return;
+
     if (playlist->next())
         updateCurrent();
     else
@@ -181,6 +193,9 @@ void Player::next()
 void Player::prev()
 {
     qDebug() << "Player::prev()";
+    if (state == Player::STOP)
+        return;
+
     if (playlist->prev())
         updateCurrent();
     else
