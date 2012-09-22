@@ -18,20 +18,14 @@ int PlayList::rowCount(const QModelIndex & /*parent*/) const
 
 int PlayList::columnCount(const QModelIndex & /*parent*/) const
 {
-    return 3;
+    return PlayListItem::getColumnsCount();
 }
 
 QVariant PlayList::data(const QModelIndex &index, int role) const
 {
     if (role == Qt::DisplayRole) {
         PlayListItem *i = items[index.row()];
-        if (index.column() == 0) {
-            return i->getPos();
-        } else if (index.column() == 1) {
-            return i->getArtist();
-        } else if (index.column() == 2) {
-            return i->getTitle();
-        }
+        return i->getColumn(index.column());
     } else if (role == Qt::BackgroundRole && index.row() == current) {
         return QVariant(QColor(Qt::green));
     }
@@ -46,13 +40,7 @@ QVariant PlayList::headerData(int section, Qt::Orientation orientation,
         return QVariant();
 
     if (orientation == Qt::Horizontal){
-        if (section == 0) {
-            return "#";
-        } else if (section == 1) {
-            return "Artist";
-        } else if (section == 2) {
-            return "Title";
-        }
+        return PlayListItem::getColumnName(section);
     } else if (orientation == Qt::Vertical) {
         return QString("Row %1").arg(section);
     }
@@ -62,10 +50,8 @@ QVariant PlayList::headerData(int section, Qt::Orientation orientation,
 
 PlayListItem * PlayList::getCurrent()
 {
-
     if (current < 0)
         return 0;
-
     return items[current];
 }
 

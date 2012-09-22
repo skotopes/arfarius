@@ -14,20 +14,28 @@ public:
 
     bool isValid();
 
-    inline void setPos(int p) { pos = p; }
-    inline int getPos() { return pos; }
     inline QString getUrl() { return source.toString(); }
     inline QString getUrlLocalFile() { return source.toLocalFile(); }
-    inline QString getUrlLast() { return source.toLocalFile(); }
-    inline QString getArtist() { return artist; }
-    inline QString getTitle() { return title; }
+    inline void setPos(int p) { pos = p; }
+    inline int getPos() { return pos; }
+
+    QString getColumn(int col);
+    void setColumn(int col, QString value);
+
+    static int getColumnsCount();
+    static QString getColumnName(int col);
 
 private:
     int     pos;
     QUrl    source;
     QString artist;
     QString title;
+    QString album;
+    QString time;
     bool    hasTag;
+
+    void readTags();
+    void writeTags();
 
 };
 

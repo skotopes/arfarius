@@ -13,7 +13,8 @@ extern "C" {
 static volatile bool ffmpeginit = false;
 
 AVFile::AVFile() :
-    AVThread(), formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon(), do_shutdown(false)
+    AVThread(), formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon(),
+    do_shutdown(false), seek_to(-1)
 {
     qDebug() << "AVFile: created" << this;
 
@@ -81,6 +82,57 @@ void AVFile::stopDecoder()
     join();
 }
 
+void AVFile::close()
+{
+    qDebug() << "AVFile::close()";
+    if (codecCtx) {
+        avcodec_close(codecCtx);
+        codecCtx = 0;
+    }
+
+    if (formatCtx) {
+        avformat_close_input(&formatCtx);
+    }
+
+    if (swrCtx) {
+        swr_free(&swrCtx);
+    }
+
+    audioStream = -1;
+
+    if (ring) {
+        delete ring;
+    }
+}
+
+size_t AVFile::getDuration()
+{
+    return formatCtx->duration / AV_TIME_BASE;
+}
+
+void AVFile::seekToPosition(size_t p)
+{
+    seek_to = p;
+}
+
+void AVFile::seekToPercent(float p)
+{
+    if (0 < p < 1)
+        seek_to = formatCtx->duration * p;
+}
+
+size_t AVFile::pull(float * buffer, size_t size)
+{
+    if (!ring)
+        return 0;
+
+    size_t ret = ring->pull(buffer, size);
+    conditon.signal();
+
+    return ret;
+}
+
+// Protected
 void AVFile::run()
 {
     qDebug() << "AVFile::run()";
@@ -143,45 +195,17 @@ void AVFile::run()
             do_shutdown = false;
             break;
         }
+
+        if (seek_to > -1) {
+            av_seek_frame(formatCtx, audioStream, seek_to * AV_TIME_BASE, 0);
+            seek_to = -1;
+        }
     }
     av_free(shadow);
     qDebug() << "AVFile::run() done";
 }
 
-void AVFile::close()
-{
-    qDebug() << "AVFile::close()";
-    if (codecCtx) {
-        avcodec_close(codecCtx);
-        codecCtx = 0;
-    }
-
-    if (formatCtx) {
-        avformat_close_input(&formatCtx);
-    }
-
-    if (swrCtx) {
-        swr_free(&swrCtx);
-    }
-
-    audioStream = -1;
-
-    if (ring) {
-        delete ring;
-    }
-}
-
-size_t AVFile::pull(float * buffer, size_t size)
-{
-    if (!ring)
-        return 0;
-
-    size_t ret = ring->pull(buffer, size);
-    conditon.signal();
-
-    return ret;
-}
-
+// Private
 void AVFile::allocRing()
 {
     qDebug() << "AVFile::allocRing()";

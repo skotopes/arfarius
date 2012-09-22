@@ -38,7 +38,13 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
     if (me->track_current) {
         size_t ret = me->track_current->pull(buffer, nBufferFrames * 2);
         if (ret < nBufferFrames * 2 && !me->track_current->isDecoderRunning()) {
-            me->next();
+            if (me->playlist->next()) {
+                me->updateCurrent();
+            } else {
+                me->updateState(Player::STOP);
+                me->track_mutex->unlock();
+                return 1;
+            }
         }
     }
     me->track_mutex->unlock();

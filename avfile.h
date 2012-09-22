@@ -22,10 +22,16 @@ public:
     void startDecoder();
     inline bool isDecoderRunning() { return isRunning(); }
     void stopDecoder();
-    void run();
     void close();
 
+    size_t getDuration();
+    void seekToPosition(size_t p);
+    void seekToPercent(float p);
+
     size_t pull(float * buffer, size_t size);
+
+protected:
+    void run();
 
 private:
     AVFormatContext *formatCtx;
@@ -35,6 +41,7 @@ private:
     MemRing<float> *ring;
     AVCondition conditon;
     volatile bool do_shutdown;
+    volatile int seek_to;
 
     void allocRing();
     void allocSWR();
