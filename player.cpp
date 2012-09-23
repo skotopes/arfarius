@@ -37,7 +37,7 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
     me->track_mutex->lock();
     if (me->track_current) {
         size_t ret = me->track_current->pull(buffer, nBufferFrames * 2);
-        if (ret < nBufferFrames * 2 && !me->track_current->isDecoderRunning()) {
+        if (ret < nBufferFrames * 2 && me->track_current->isEOF()) {
             if (me->playlist->next()) {
                 me->updateCurrent();
             } else {
@@ -150,6 +150,7 @@ void Player::disconnectCurrent()
     track_mutex->unlock();
 
     if (to) {
+
         delete to;
     }
 }

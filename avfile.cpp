@@ -14,7 +14,7 @@ static volatile bool ffmpeginit = false;
 
 AVFile::AVFile() :
     AVThread(), formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon(),
-    do_shutdown(false), seek_to(-1)
+    do_shutdown(false), eof(false), seek_to(-1)
 {
     qDebug() << "AVFile: created" << this;
 
@@ -27,8 +27,9 @@ AVFile::AVFile() :
 
 AVFile::~AVFile()
 {
-    close();
+    stopDecoder();
     join();
+    close();
     qDebug() << "AVFile: destroyed" << this;
 }
 
@@ -136,6 +137,7 @@ size_t AVFile::pull(float * buffer, size_t size)
 void AVFile::run()
 {
     qDebug() << "AVFile::run()";
+    eof = false;
 
     AVFrame frame;
     int got_frame;
@@ -202,6 +204,7 @@ void AVFile::run()
         }
     }
     av_free(shadow);
+    eof = true;
     qDebug() << "AVFile::run() done";
 }
 

@@ -29,7 +29,7 @@ public:
     void seekToPercent(float p);
 
     size_t pull(float * buffer, size_t size);
-
+    bool isEOF() { return eof; }
 protected:
     void run();
 
@@ -41,6 +41,7 @@ private:
     MemRing<float> *ring;
     AVCondition conditon;
     volatile bool do_shutdown;
+    volatile bool eof;
     volatile int seek_to;
 
     void allocRing();
