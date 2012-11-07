@@ -39,7 +39,7 @@ void HistogramWidget::paintEvent(QPaintEvent *)
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)
 {
-    float p = width() / e->pos().x();
+    float p = (float) e->pos().x() / width();
     emit newPlayPointer(p);
     e->accept();
 }

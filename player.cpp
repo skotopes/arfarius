@@ -47,7 +47,7 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
             }
         }
 
-        if (streamTime > (me->streamTime + 1)) {
+        if (streamTime > (me->streamTime + .25)) {
             me->streamTime = streamTime;
             me->emitNewPlayPointer(me->track_current->getPositionPercent());
         }

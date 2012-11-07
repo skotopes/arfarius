@@ -114,14 +114,16 @@ size_t AVFile::getDuration()
 
 float AVFile::getPositionPercent()
 {
-    qDebug() << "AVFile::getPositionPercent()" << position * codecCtx->time_base.num / codecCtx->time_base.den / 326;
+    qDebug() << "AVFile::getPositionPercent()" << position * av_q2d(codecCtx->time_base) / 320;
     return ((float)position * codecCtx->time_base.num / codecCtx->time_base.den / 326 ) / (formatCtx->duration / AV_TIME_BASE);
 }
 
 void AVFile::seekToPositionPercent(float p)
 {
-    if (0 < p < 1)
+    if (0. < p && p < 1.) {
         seek_to = formatCtx->duration * p;
+        qDebug() << p << seek_to;
+    }
 }
 
 size_t AVFile::pull(float * buffer, size_t size)
@@ -209,7 +211,7 @@ void AVFile::run()
         }
 
         if (seek_to > -1) {
-            av_seek_frame(formatCtx, audioStream, seek_to * AV_TIME_BASE, 0);
+            av_seek_frame(formatCtx, -1, seek_to, 0);
             seek_to = -1;
         }
     }
@@ -222,7 +224,7 @@ void AVFile::run()
 void AVFile::allocRing()
 {
     qDebug() << "AVFile::allocRing()";
-    ring = new MemRing<float>(44100 * 2);
+    ring = new MemRing<float>(512 * 2 * 4);
     if (!ring)
         throw AVException("Unable to allocate ring");
 }
