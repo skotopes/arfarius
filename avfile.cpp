@@ -114,8 +114,8 @@ size_t AVFile::getDuration()
 
 float AVFile::getPositionPercent()
 {
-    qDebug() << "AVFile::getPositionPercent()" << position * av_q2d(codecCtx->time_base) / 320;
-    return ((float)position * codecCtx->time_base.num / codecCtx->time_base.den / 326 ) / (formatCtx->duration / AV_TIME_BASE);
+    AVStream * s = formatCtx->streams[audioStream];
+    return (float) av_rescale(position, AV_TIME_BASE * s->time_base.num, s->time_base.den) / formatCtx->duration;
 }
 
 void AVFile::seekToPositionPercent(float p)
