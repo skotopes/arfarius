@@ -33,6 +33,9 @@ Application::Application(int argc, char *argv[])
     connect(main_window, SIGNAL( next() ), player, SLOT( next() ));
     connect(main_window, SIGNAL( prev() ), player, SLOT( prev() ));
 
+    connect(main_window, SIGNAL( newPlayPointer(float) ), player, SLOT( setPlayPointer(float) ));
+    connect(player, SIGNAL( newPlayPointer(float) ), main_window, SLOT( updatePlayPointer(float) ));
+
     connect(player, SIGNAL( stateChanged(Player::State) ), main_window, SLOT( updateState(Player::State) ));
 }
 

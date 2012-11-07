@@ -31,12 +31,13 @@ private:
     QString artist;
     QString title;
     QString album;
-    QString time;
+    int     time;
     bool    hasTag;
 
     void readTags();
     void writeTags();
 
+    QString formatTime();
 };
 
 #endif // PLAYLISTITEM_H

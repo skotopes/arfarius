@@ -8,11 +8,10 @@
 #include <taglib/tag.h>
 
 #include <QFileInfo>
-#include <QTime>
 #include <QDebug>
 
 PlayListItem::PlayListItem(QUrl s) :
-    QObject(), pos(-1), source(s), artist(), title(), album(), time(), hasTag(false)
+    QObject(), pos(-1), source(s), artist(), title(), album(), time(-1), hasTag(false)
 {
 }
 
@@ -25,7 +24,7 @@ bool PlayListItem::isValid()
     try {
         AVFile f;
         f.open(getUrl().toLocal8Bit().constData());
-        time = QTime().addSecs(f.getDuration()).toString();
+        time = f.getDuration();
     } catch (AVException &e) {
         qDebug() << "PlayListItem::isValid() says NOO to "<< source << "because:" << e.what();
         return false;
@@ -50,7 +49,7 @@ QString PlayListItem::getColumn(int col)
     case 3:
         return album;
     case 4:
-        return time;
+        return formatTime();
     default:
         return "UNKNOWN";
     }
@@ -125,4 +124,18 @@ void PlayListItem::writeTags()
     t->setAlbum(album.toStdString());
 
     f.save();
+}
+
+QString PlayListItem::formatTime()
+{
+    int h,m,s;
+
+    s = time % 60;
+    m = time / 60 % 60;
+    h = time / 60 / 60;
+
+    if (h > 0)
+        return QString("%1:%2:%3").arg(h, 2).arg(m, 2, 10, QChar('0')).arg(s, 2, 10, QChar('0'));
+    else
+        return QString("%1:%2").arg(m, 2).arg(s, 2, 10, QChar('0'));
 }

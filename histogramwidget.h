@@ -11,9 +11,16 @@ public:
     
 protected:
     void paintEvent(QPaintEvent *event);
+    void mouseReleaseEvent(QMouseEvent *);
+
+private:
+    float play_pointer;
 
 public slots:
-    void setProgress(float p);
+    void updatePlayPointer(float p);
+
+signals:
+    void newPlayPointer(float p);
 };
 
 #endif // HISTOGRAMWIDGET_H

@@ -3,6 +3,7 @@
 #include "memring.h"
 
 extern "C" {
+#include <libavutil/avutil.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswresample/swresample.h>
@@ -14,7 +15,7 @@ static volatile bool ffmpeginit = false;
 
 AVFile::AVFile() :
     AVThread(), formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon(),
-    do_shutdown(false), eof(false), seek_to(-1)
+    do_shutdown(false), eof(false), position(0), seek_to(-1)
 {
     qDebug() << "AVFile: created" << this;
 
@@ -111,12 +112,13 @@ size_t AVFile::getDuration()
     return formatCtx->duration / AV_TIME_BASE;
 }
 
-void AVFile::seekToPosition(size_t p)
+float AVFile::getPositionPercent()
 {
-    seek_to = p;
+    qDebug() << "AVFile::getPositionPercent()" << position * codecCtx->time_base.num / codecCtx->time_base.den / 326;
+    return ((float)position * codecCtx->time_base.num / codecCtx->time_base.den / 326 ) / (formatCtx->duration / AV_TIME_BASE);
 }
 
-void AVFile::seekToPercent(float p)
+void AVFile::seekToPositionPercent(float p)
 {
     if (0 < p < 1)
         seek_to = formatCtx->duration * p;
@@ -180,6 +182,14 @@ void AVFile::run()
                     } else {
                         fillRing(reinterpret_cast<float *>(frame.data[0]), frame.nb_samples * 2);
                     }
+
+                    // update position
+                    if (frame.pts != AV_NOPTS_VALUE)
+                        position = frame.pts;
+                    else if (packet.pts != AV_NOPTS_VALUE)
+                        position = packet.pts;
+                    else
+                        position = 0;
                 }
                 // hurry up, no time to decode one more frame
                 if (do_shutdown)
@@ -212,7 +222,7 @@ void AVFile::run()
 void AVFile::allocRing()
 {
     qDebug() << "AVFile::allocRing()";
-    ring = new MemRing<float>(44100 * 8 * 2);
+    ring = new MemRing<float>(44100 * 2);
     if (!ring)
         throw AVException("Unable to allocate ring");
 }

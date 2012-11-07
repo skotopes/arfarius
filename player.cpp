@@ -46,6 +46,11 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
                 return 1;
             }
         }
+
+        if (streamTime > (me->streamTime + 1)) {
+            me->streamTime = streamTime;
+            me->emitNewPlayPointer(me->track_current->getPositionPercent());
+        }
     }
     me->track_mutex->unlock();
 
@@ -153,6 +158,20 @@ void Player::disconnectCurrent()
 
         delete to;
     }
+}
+
+void Player::emitNewPlayPointer(float p)
+{
+    emit newPlayPointer(p);
+}
+
+void Player::setPlayPointer(float p)
+{
+    track_mutex->lock();
+    if (!track_current->isEOF()) {
+        track_current->seekToPositionPercent(p);
+    }
+    track_mutex->unlock();
 }
 
 void Player::playPause()

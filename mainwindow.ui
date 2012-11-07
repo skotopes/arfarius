@@ -163,6 +163,9 @@ QPushButton {
           <height>50</height>
          </size>
         </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
        </widget>
       </item>
      </layout>

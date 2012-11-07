@@ -36,6 +36,7 @@ private:
     RtAudio::StreamParameters parameters;
     unsigned int sampleRate;
     unsigned int bufferFrames;
+    double streamTime;
 
     void openStream();
     void startStream();
@@ -46,13 +47,17 @@ private:
     void updateCurrent();
     void disconnectCurrent();
 
+    void emitNewPlayPointer(float p);
+
     static int callback( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
                     double streamTime, RtAudioStreamStatus status, void *userData );
 
 signals:
     void stateChanged(Player::State);
+    void newPlayPointer(float p);
 
 public slots:
+    void setPlayPointer(float p);
     void playPause();
     void stop();
     void next();

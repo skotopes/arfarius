@@ -36,9 +36,11 @@ signals:
     void next();
     void prev();
 
+    void newPlayPointer(float p);
+
 public slots:
     void updateState(Player::State);
-
+    void updatePlayPointer(float p);
 };
 
 #endif // MAINWINDOW_H
