@@ -40,7 +40,7 @@ signals:
 
 public slots:
     void updateState(Player::State);
-    void updatePlayPointer(float p);
+    void updatePlayProgress(AVFile::Progress);
 };
 
 #endif // MAINWINDOW_H

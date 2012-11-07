@@ -107,21 +107,29 @@ void AVFile::close()
     }
 }
 
-size_t AVFile::getDuration()
+float AVFile::getDuration()
 {
-    return formatCtx->duration / AV_TIME_BASE;
+    return (float) formatCtx->duration / AV_TIME_BASE;
 }
 
-float AVFile::getPositionPercent()
-{
+float AVFile::getPosition() {
     AVStream * s = formatCtx->streams[audioStream];
-    return (float) av_rescale(position, AV_TIME_BASE * s->time_base.num, s->time_base.den) / formatCtx->duration;
+    return (float) position * s->time_base.num / s->time_base.den;
+}
+
+AVFile::Progress AVFile::getProgress() {
+    AVFile::Progress p;
+    p.duration = getDuration();
+    p.position = getPosition();
+    qDebug() << "AVFile::getProgress()" << p.duration << p.position;
+    return p;
 }
 
 void AVFile::seekToPositionPercent(float p)
 {
     if (0. < p && p < 1.) {
-        seek_to = formatCtx->duration * p;
+        AVStream * s = formatCtx->streams[audioStream];
+        seek_to = av_rescale(formatCtx->duration * p, s->time_base.den, AV_TIME_BASE * s->time_base.num);
         qDebug() << p << seek_to;
     }
 }
@@ -211,7 +219,7 @@ void AVFile::run()
         }
 
         if (seek_to > -1) {
-            av_seek_frame(formatCtx, -1, seek_to, 0);
+            av_seek_frame(formatCtx, audioStream, seek_to, 0);
             seek_to = -1;
         }
     }

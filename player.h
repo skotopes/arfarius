@@ -5,6 +5,8 @@
 #include "RtAudio.h"
 #include "RtError.h"
 
+#include "avfile.h"
+
 class PlayList;
 class AVFile;
 class QMutex;
@@ -47,14 +49,14 @@ private:
     void updateCurrent();
     void disconnectCurrent();
 
-    void emitNewPlayPointer(float p);
+    void emitNewPlayProgress(AVFile::Progress p);
 
     static int callback( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
                     double streamTime, RtAudioStreamStatus status, void *userData );
 
 signals:
     void stateChanged(Player::State);
-    void newPlayPointer(float p);
+    void newPlayProgress(AVFile::Progress);
 
 public slots:
     void setPlayPointer(float p);

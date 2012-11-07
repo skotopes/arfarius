@@ -17,10 +17,8 @@ class AVFile : private AVThread
 {
 public:
     struct Progress {
-        uint64_t    s_position; // postion, samples
-        uint64_t    s_duration; // duraion, samples
-        float       p_position; // percent position
-        float       t_duration; // sec duration
+        float position;
+        float duration;
     };
 
     AVFile();
@@ -32,8 +30,9 @@ public:
     void stopDecoder();
     void close();
 
-    size_t getDuration();
-    float getPositionPercent();
+    float getDuration();
+    float getPosition();
+    Progress getProgress();
     void seekToPositionPercent(float p);
 
     size_t pull(float * buffer, size_t size);
@@ -52,7 +51,7 @@ private:
     volatile bool do_shutdown;
     volatile bool eof;
     volatile int64_t position;
-    volatile int seek_to;
+    volatile int64_t seek_to;
 
     void allocRing();
     void allocSWR();

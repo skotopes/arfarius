@@ -2,7 +2,6 @@
 
 #include "playlist.h"
 #include "playlistitem.h"
-#include "avfile.h"
 
 #include <QMutex>
 #include <QDebug>
@@ -49,7 +48,7 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
 
         if (streamTime > (me->streamTime + .25)) {
             me->streamTime = streamTime;
-            me->emitNewPlayPointer(me->track_current->getPositionPercent());
+            me->emitNewPlayProgress(me->track_current->getProgress());
         }
     }
     me->track_mutex->unlock();
@@ -160,9 +159,9 @@ void Player::disconnectCurrent()
     }
 }
 
-void Player::emitNewPlayPointer(float p)
+void Player::emitNewPlayProgress(AVFile::Progress p)
 {
-    emit newPlayPointer(p);
+    emit newPlayProgress(p);
 }
 
 void Player::setPlayPointer(float p)

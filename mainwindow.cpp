@@ -73,7 +73,7 @@ void MainWindow::updateState(Player::State s)
     }
 }
 
-void MainWindow::updatePlayPointer(float p)
+void MainWindow::updatePlayProgress(AVFile::Progress p)
 {
-    ui->histogram->updatePlayPointer(p);
+    ui->histogram->updatePlayProgress(p);
 }

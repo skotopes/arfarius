@@ -2,6 +2,7 @@
 #define HISTOGRAMWIDGET_H
 
 #include <QWidget>
+#include "avfile.h"
 
 class HistogramWidget : public QWidget
 {
@@ -14,10 +15,10 @@ protected:
     void mouseReleaseEvent(QMouseEvent *);
 
 private:
-    float play_pointer;
+    AVFile::Progress progress;
 
 public slots:
-    void updatePlayPointer(float p);
+    void updatePlayProgress(AVFile::Progress);
 
 signals:
     void newPlayPointer(float p);

@@ -2,12 +2,24 @@
 
 #include <QtGui>
 
-HistogramWidget::HistogramWidget(QWidget *parent)
-    : QWidget(parent), play_pointer(0)
+QString formatTime(size_t time)
 {
-//    QTimer *timer = new QTimer(this);
-//    connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-//    timer->start(1000);
+    int h,m,s;
+
+    s = time % 60;
+    m = time / 60 % 60;
+    h = time / 60 / 60;
+
+    if (h > 0)
+        return QString("%1:%2:%3").arg(h, 2).arg(m, 2, 10, QChar('0')).arg(s, 2, 10, QChar('0'));
+    else
+        return QString("%1:%2").arg(m, 2).arg(s, 2, 10, QChar('0'));
+}
+
+
+HistogramWidget::HistogramWidget(QWidget *parent)
+    : QWidget(parent), progress()
+{
 }
 
 void HistogramWidget::paintEvent(QPaintEvent *)
@@ -27,14 +39,14 @@ void HistogramWidget::paintEvent(QPaintEvent *)
     painter.drawLine(0, height()/2, width(), height()/2);
 
     painter.setPen(redColor);
-    int p = play_pointer * width();
+    int p = progress.position / progress.duration * width();
     painter.drawLine(p, 0, p, height());
 
     painter.setPen(lightGreenColor);
-    painter.drawText(0, height(), "00:00");
+    painter.drawText(0, height(), formatTime(progress.position));
 
     painter.setPen(lightRedColor);
-    painter.drawText(0, 10, "00:00");
+    painter.drawText(0, 10, formatTime(progress.duration));
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)
@@ -44,8 +56,8 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)
     e->accept();
 }
 
-void HistogramWidget::updatePlayPointer(float p)
+void HistogramWidget::updatePlayProgress(AVFile::Progress p)
 {
-    play_pointer = p;
+    progress = p;
     update();
 }

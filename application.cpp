@@ -10,6 +10,8 @@
 Application::Application(int argc, char *argv[])
     : QApplication(argc, argv), platform_support(0), main_window(0), player(0), playlist(0)
 {
+    qRegisterMetaType<AVFile::Progress>("AVFile::Progress");
+
     // Allocate
     platform_support = new MacSupport();
     main_window = new MainWindow();
@@ -34,7 +36,7 @@ Application::Application(int argc, char *argv[])
     connect(main_window, SIGNAL( prev() ), player, SLOT( prev() ));
 
     connect(main_window, SIGNAL( newPlayPointer(float) ), player, SLOT( setPlayPointer(float) ));
-    connect(player, SIGNAL( newPlayPointer(float) ), main_window, SLOT( updatePlayPointer(float) ));
+    connect(player, SIGNAL( newPlayProgress(AVFile::Progress) ), main_window, SLOT( updatePlayProgress(AVFile::Progress) ));
 
     connect(player, SIGNAL( stateChanged(Player::State) ), main_window, SLOT( updateState(Player::State) ));
 }
