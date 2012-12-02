@@ -13,6 +13,9 @@ MainWindow::MainWindow(QWidget *parent) :
     qDebug() << "Main created";
     ui->setupUi(this);
 
+    restoreGeometry(settings.value("MainWindow/geometry").toByteArray());
+    restoreState(settings.value("MainWindow/state").toByteArray());
+
     connect(ui->playButton, SIGNAL( clicked() ), this, SIGNAL( playPause() ));
     connect(ui->prevButton, SIGNAL( clicked() ), this, SIGNAL( prev() ));
     connect(ui->nextButton, SIGNAL( clicked() ), this, SIGNAL( next() ));
@@ -22,17 +25,27 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    qDebug() << "Main destroyed";
     delete ui;
+    qDebug() << "Main destroyed";
 }
 
 void MainWindow::setPlaylist(PlayList *p)
 {
     ui->playList->setModel(p);
+    ui->playList->horizontalHeader()->restoreGeometry(settings.value("PlayList/geometry").toByteArray());
+    ui->playList->horizontalHeader()->restoreState(settings.value("PlayList/state").toByteArray());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e)
 {
+    settings.setValue("MainWindow/geometry", saveGeometry());
+    settings.setValue("MainWindow/state", saveState());
+
+    settings.setValue("PlayList/geometry", ui->playList->horizontalHeader()->saveGeometry());
+    settings.setValue("PlayList/state", ui->playList->horizontalHeader()->saveState());
+
+    settings.sync(); // force save
+
     if (!isMinimized()) {
         hide();
         e->ignore();

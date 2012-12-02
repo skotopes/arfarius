@@ -76,15 +76,15 @@ bool PlayList::next()
     if (!items.count())
         return false;
 
-    int c = current;
+    int previous = current;
     if (current == (items.count() - 1)) {
         current = -1;
-        emit dataChanged(createIndex(c, 0), createIndex(c,2));
+        emit dataChanged(createIndex(previous, 0), createIndex(previous, 2));
         return false;
     } else {
         current ++;
-        emit dataChanged(createIndex(c,0), createIndex(c,2));
-        emit dataChanged(createIndex(current,0), createIndex(current,2));
+        emit dataChanged(createIndex(previous, 0), createIndex(previous, 2));
+        emit dataChanged(createIndex(current, 0), createIndex(current, 2));
         return true;
     }
 }
@@ -94,14 +94,14 @@ bool PlayList::prev()
     if (current < 0 || !items.count())
         return false;
 
-    int c = current;
+    int previous = current;
     if (current < 1) {
         current = -1;
-        emit dataChanged(createIndex(c,0), createIndex(c,2));
+        emit dataChanged(createIndex(previous,0), createIndex(previous,2));
         return false;
     } else {
         current --;
-        emit dataChanged(createIndex(c,0), createIndex(c,2));
+        emit dataChanged(createIndex(previous,0), createIndex(previous,2));
         emit dataChanged(createIndex(current,0), createIndex(current,2));
         return true;
     }

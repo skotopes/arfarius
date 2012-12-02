@@ -22,7 +22,8 @@ SOURCES += main.cpp\
     avfile.cpp \
     avthread.cpp \
     avmutex.cpp \
-    avcondition.cpp
+    avcondition.cpp \
+    avring.cpp
 
 HEADERS  += mainwindow.h \
     histogramwidget.h \
@@ -37,7 +38,8 @@ HEADERS  += mainwindow.h \
     avexception.h \
     avthread.h \
     avmutex.h \
-    avcondition.h
+    avcondition.h \
+    avring.h
 
 FORMS    += mainwindow.ui
 

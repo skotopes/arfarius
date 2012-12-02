@@ -30,7 +30,7 @@ void HistogramWidget::paintEvent(QPaintEvent *)
 
     QColor  redColor(255, 55, 55);
 
-    QFont   textFont("Arial", 10);
+    QFont   textFont("Monaco", 10);
 
     QPainter painter(this);
     painter.setFont(textFont);

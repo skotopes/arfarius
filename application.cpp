@@ -10,6 +10,10 @@
 Application::Application(int argc, char *argv[])
     : QApplication(argc, argv), platform_support(0), main_window(0), player(0), playlist(0)
 {
+    setOrganizationName("White-label Ltd");
+    setOrganizationDomain("white-label.ru");
+    setApplicationName("wmp");
+
     qRegisterMetaType<AVFile::Progress>("AVFile::Progress");
 
     // Allocate

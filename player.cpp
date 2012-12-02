@@ -27,7 +27,6 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
                       double streamTime, RtAudioStreamStatus status, void *userData )
 {
     Q_UNUSED(status)
-    Q_UNUSED(streamTime)
     Q_UNUSED(inputBuffer)
 
     Player *me = reinterpret_cast<Player *>(userData);
@@ -44,9 +43,12 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
                 me->track_mutex->unlock();
                 return 1;
             }
+        } else if (ret < nBufferFrames * 2) {
+            buffer += ret;
+            memset(buffer, 0, (nBufferFrames * 2 - ret)*4);
         }
 
-        if (streamTime > (me->streamTime + .25)) {
+        if (streamTime > (me->streamTime + .5)) {
             me->streamTime = streamTime;
             me->emitNewPlayProgress(me->track_current->getProgress());
         }

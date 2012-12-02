@@ -79,7 +79,8 @@ void AVFile::stopDecoder()
 {
     qDebug() << "AVFile::stopDecoder()";
     do_shutdown = true;
-    ring->reset();
+    if (ring)
+        ring->reset();
     conditon.signal();
     join();
 }
@@ -129,8 +130,9 @@ void AVFile::seekToPositionPercent(float p)
 {
     if (0. < p && p < 1.) {
         AVStream * s = formatCtx->streams[audioStream];
-        seek_to = av_rescale(formatCtx->duration * p, s->time_base.den, AV_TIME_BASE * s->time_base.num);
-        qDebug() << p << seek_to;
+        seek_to = av_rescale(p * formatCtx->duration, s->time_base.den, AV_TIME_BASE * s->time_base.num);
+        qDebug() << "AVFile::seekToPositionPercent(" << p << "): duration:" << formatCtx->duration
+                 << "seek_to" << seek_to << "time_base:"<< s->time_base.den << s->time_base.num;
     }
 }
 
@@ -219,7 +221,10 @@ void AVFile::run()
         }
 
         if (seek_to > -1) {
-            av_seek_frame(formatCtx, audioStream, seek_to, 0);
+            int flags = AVSEEK_FLAG_ANY;
+            if (seek_to < position)
+                flags = flags | AVSEEK_FLAG_BACKWARD;
+            av_seek_frame(formatCtx, audioStream, seek_to, flags);
             seek_to = -1;
         }
     }
@@ -253,12 +258,16 @@ void AVFile::allocSWR()
 
 void AVFile::fillRing(float * buffer, size_t size)
 {
-//    qDebug() << "AVFile::fillRing();";
-    while (ring->writeSpace() < size) {
-        conditon.lock();
-        conditon.wait(); // magic
-        conditon.unlock();
-    }
+    while (size > 0) {
+        while (ring->writeSpace() < 512) {
+            conditon.lock();
+            conditon.wait(); // magic
+            conditon.unlock();
+        }
 
-    ring->push(buffer, size);
+        size_t ws = ring->writeSpace();
+        size_t ret = ring->push(buffer, size > ws ? ws : size);
+        buffer += ret;
+        size -= ret;
+    }
 }

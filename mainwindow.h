@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSettings>
 #include <QList>
 #include <QUrl>
 
@@ -29,6 +30,8 @@ protected:
 
 private:
     Ui::MainWindow *ui;
+    QSettings settings;
+
 
 signals:
     void droppedUrls(QList<QUrl> urls);
