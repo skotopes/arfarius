@@ -3,7 +3,7 @@
 #include "macsupport.h"
 #include "mainwindow.h"
 #include "player.h"
-#include "playlist.h"
+#include "playlistmodel.h"
 
 #include <QColor>
 
@@ -19,7 +19,7 @@ Application::Application(int argc, char *argv[])
     // Allocate
     platform_support = new MacSupport();
     main_window = new MainWindow();
-    playlist = new PlayList();
+    playlist = new PlayListModel();
     player = new Player();
 
     // Connect

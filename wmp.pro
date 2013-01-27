@@ -17,13 +17,14 @@ SOURCES += main.cpp\
     application.cpp \
     RtAudio.cpp \
     player.cpp \
-    playlist.cpp \
     playlistitem.cpp \
     avfile.cpp \
     avthread.cpp \
     avmutex.cpp \
     avcondition.cpp \
-    avring.cpp
+    avring.cpp \
+    playlistmodel.cpp \
+    playlistview.cpp
 
 HEADERS  += mainwindow.h \
     histogramwidget.h \
@@ -31,7 +32,6 @@ HEADERS  += mainwindow.h \
     RtAudio.h \
     RtError.h \
     player.h \
-    playlist.h \
     playlistitem.h \
     avfile.h \
     memring.h \
@@ -39,7 +39,9 @@ HEADERS  += mainwindow.h \
     avthread.h \
     avmutex.h \
     avcondition.h \
-    avring.h
+    avring.h \
+    playlistmodel.h \
+    playlistview.h
 
 FORMS    += mainwindow.ui
 

@@ -185,7 +185,7 @@ void AVFile::run()
 
                     if (swrCtx) {
                         uint8_t *shadow_array[] = { shadow };
-                        const uint8_t *input_array[] = { frame.data[0] };
+                        const uint8_t **input_array = (const uint8_t **)frame.extended_data;
                         // todo: check original code^ some nasty shit inside
                         int ret = swr_convert(swrCtx, shadow_array, AVCODEC_MAX_AUDIO_FRAME_SIZE, input_array, frame.nb_samples);
                         if (ret > 0) {

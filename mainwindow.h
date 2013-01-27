@@ -12,7 +12,7 @@ namespace Ui {
     class MainWindow;
 }
 
-class PlayList;
+class PlayListModel;
 
 class MainWindow : public QMainWindow
 {
@@ -21,7 +21,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void setPlaylist(PlayList *p);
+    void setPlaylist(PlayListModel *p);
 
 protected:
     void closeEvent(QCloseEvent *e);

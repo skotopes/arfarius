@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include "playlist.h"
+#include "playlistmodel.h"
 
 #include <QCloseEvent>
 #include <QDebug>
@@ -29,7 +29,7 @@ MainWindow::~MainWindow()
     qDebug() << "Main destroyed";
 }
 
-void MainWindow::setPlaylist(PlayList *p)
+void MainWindow::setPlaylist(PlayListModel *p)
 {
     ui->playList->setModel(p);
     ui->playList->horizontalHeader()->restoreGeometry(settings.value("PlayList/geometry").toByteArray());

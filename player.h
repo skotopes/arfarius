@@ -7,7 +7,7 @@
 
 #include "avfile.h"
 
-class PlayList;
+class PlayListModel;
 class AVFile;
 class QMutex;
 
@@ -25,11 +25,11 @@ public:
     explicit Player(QObject *parent = 0);
     virtual ~Player();
 
-    void setPlaylist(PlayList *p);
+    void setPlaylist(PlayListModel *p);
 
 private:
     State state;
-    PlayList *playlist;
+    PlayListModel *playlist;
 
     AVFile *track_current;
     QMutex *track_mutex;

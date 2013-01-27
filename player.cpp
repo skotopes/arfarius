@@ -1,6 +1,6 @@
 #include "player.h"
 
-#include "playlist.h"
+#include "playlistmodel.h"
 #include "playlistitem.h"
 
 #include <QMutex>
@@ -58,7 +58,7 @@ int Player::callback( void *outputBuffer, void *inputBuffer, unsigned int nBuffe
     return 0;
 }
 
-void Player::setPlaylist(PlayList *p)
+void Player::setPlaylist(PlayListModel *p)
 {
     playlist = p;
 }

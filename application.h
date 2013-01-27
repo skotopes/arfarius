@@ -6,7 +6,7 @@
 class MacSupport;
 class MainWindow;
 class Player;
-class PlayList;
+class PlayListModel;
 
 class Application : public QApplication
 {
@@ -21,7 +21,7 @@ private:
     MacSupport *platform_support;
     MainWindow *main_window;
     Player *player;
-    PlayList *playlist;
+    PlayListModel *playlist;
 };
 
 #endif // APPLICATION_H
