@@ -15,7 +15,10 @@ void PlayListView::contextMenuEvent(QContextMenuEvent * event)
     QModelIndex index = indexAt(event->pos());
     if (index.isValid()) {
         QMenu *menu = new QMenu(this);
-        menu->addAction(QString("Row %1 - Col %2 was clicked on").arg(index.row()).arg(index.column()));
+        menu->addAction(QString("edit meta"));
+        menu->addAction(QString("show file"));
+        menu->addAction(QString("remove"));
+        menu->addAction(QString("wipe from hdd"));
         menu->exec(QCursor::pos());
         QTableView::contextMenuEvent(event);
     } else {

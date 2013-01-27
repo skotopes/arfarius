@@ -169,7 +169,7 @@ void Player::emitNewPlayProgress(AVFile::Progress p)
 void Player::setPlayPointer(float p)
 {
     track_mutex->lock();
-    if (!track_current->isEOF()) {
+    if (track_current && !track_current->isEOF()) {
         track_current->seekToPositionPercent(p);
     }
     track_mutex->unlock();

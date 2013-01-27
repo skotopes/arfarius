@@ -111,7 +111,7 @@ void PlayListModel::appendDirectory(QUrl u)
     while (iterator.hasNext()) {
         iterator.next();
         if (!iterator.fileInfo().isDir()) {
-            appendFile(u.toString() + iterator.fileName());
+            appendFile(QUrl::fromLocalFile(iterator.filePath()));
         }
     }
 }
