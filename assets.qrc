@@ -1,9 +1,9 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/pause.png</file>
-        <file>images/play.png</file>
-        <file>images/stop.png</file>
-        <file>images/next.png</file>
-        <file>images/prev.png</file>
+        <file>images/prev.svg</file>
+        <file>images/next.svg</file>
+        <file>images/play.svg</file>
+        <file>images/stop.svg</file>
+        <file>images/pause.svg</file>
     </qresource>
 </RCC>

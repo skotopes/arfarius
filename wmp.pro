@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     avcondition.cpp \
     avring.cpp \
     playlistmodel.cpp \
-    playlistview.cpp
+    playlistview.cpp \
+    timewidget.cpp
 
 HEADERS  += mainwindow.h \
     histogramwidget.h \
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     avcondition.h \
     avring.h \
     playlistmodel.h \
-    playlistview.h
+    playlistview.h \
+    timewidget.h
 
 FORMS    += mainwindow.ui
 

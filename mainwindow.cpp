@@ -73,13 +73,13 @@ void MainWindow::updateState(Player::State s)
 {
     switch (s) {
     case Player::PLAY:
-        ui->playButton->setIcon(QIcon(":/images/pause.png"));
+        ui->playButton->setIcon(QIcon(":/images/pause.svg"));
         break;
     case Player::PAUSE:
-        ui->playButton->setIcon(QIcon(":/images/play.png"));
+        ui->playButton->setIcon(QIcon(":/images/play.svg"));
         break;
     case Player::STOP:
-        ui->playButton->setIcon(QIcon(":/images/play.png"));
+        ui->playButton->setIcon(QIcon(":/images/play.svg"));
         break;
     default:
         break;
@@ -89,4 +89,5 @@ void MainWindow::updateState(Player::State s)
 void MainWindow::updatePlayProgress(AVFile::Progress p)
 {
     ui->histogram->updatePlayProgress(p);
+    ui->timeWidget->updatePlayProgress(p);
 }

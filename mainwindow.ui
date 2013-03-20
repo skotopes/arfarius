@@ -28,10 +28,7 @@ QPushButton {
     padding:0;
     margin:0;
     border:none;
-    width: 38px;
-    height: 38px;
-}
-</string>
+}</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -63,91 +60,119 @@ QPushButton {
        <number>5</number>
       </property>
       <item>
-       <widget class="QPushButton" name="prevButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <layout class="QGridLayout" name="gridLayout">
+        <property name="verticalSpacing">
+         <number>0</number>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>50</height>
-         </size>
-        </property>
-        <property name="icon">
-         <iconset resource="assets.qrc">
-          <normaloff>:/images/prev.png</normaloff>:/images/prev.png</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>38</width>
-          <height>38</height>
-         </size>
-        </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="playButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>50</height>
-         </size>
-        </property>
-        <property name="icon">
-         <iconset resource="assets.qrc">
-          <normaloff>:/images/play.png</normaloff>:/images/play.png</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>38</width>
-          <height>38</height>
-         </size>
-        </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="nextButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>50</height>
-         </size>
-        </property>
-        <property name="icon">
-         <iconset resource="assets.qrc">
-          <normaloff>:/images/next.png</normaloff>:/images/next.png</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>38</width>
-          <height>38</height>
-         </size>
-        </property>
-        <property name="flat">
-         <bool>true</bool>
-        </property>
-       </widget>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="playButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="icon">
+           <iconset resource="assets.qrc">
+            <normaloff>:/images/play.svg</normaloff>:/images/play.svg</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="prevButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="icon">
+           <iconset resource="assets.qrc">
+            <normaloff>:/images/prev.svg</normaloff>:/images/prev.svg</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QPushButton" name="nextButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="icon">
+           <iconset resource="assets.qrc">
+            <normaloff>:/images/next.svg</normaloff>:/images/next.svg</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>35</width>
+            <height>35</height>
+           </size>
+          </property>
+          <property name="flat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="3">
+         <widget class="TimeWidget" name="timeWidget" native="true"/>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="HistogramWidget" name="histogram" native="true">
@@ -195,6 +220,12 @@ QPushButton {
    <class>PlayListView</class>
    <extends>QTableView</extends>
    <header>playlistview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>TimeWidget</class>
+   <extends>QWidget</extends>
+   <header>timewidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

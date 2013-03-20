@@ -9,7 +9,7 @@
 Player::Player(QObject *parent) :
     QObject(parent), state(Player::STOP), playlist(0),
     track_current(0), track_mutex(new QMutex(QMutex::Recursive)),
-    dac(), parameters(), sampleRate(0), bufferFrames(0)
+    dac(), parameters(), sampleRate(0), bufferFrames(0), streamTime(0)
 {
     openStream();
     qRegisterMetaType<Player::State>("Player::State");
