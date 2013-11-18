@@ -24,7 +24,7 @@ bool PlayListItem::isValid()
     try {
         AVFile f;
         f.open(getUrl().toLocal8Bit().constData());
-        time = f.getDuration();
+        time = f.getDurationInSeconds();
     } catch (AVException &e) {
         qDebug() << "PlayListItem::isValid() says NOO to "<< source << "because:" << e.what();
         return false;
@@ -104,7 +104,7 @@ void PlayListItem::readTags()
 {
     TagLib::FileRef f(getUrlLocalFile().toLocal8Bit().constData());
     TagLib::Tag *t = f.tag();
-    if (t && !t->isEmpty()) {
+    if (t && !t->isEmpty() && (t->artist().length()>0 && t->title().length() >0)) {
         artist = t->artist().toCString();
         title = t->title().toCString();
         album = t->album().toCString();

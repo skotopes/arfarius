@@ -1,49 +1,48 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2012-08-29T18:52:43
-#
-#-------------------------------------------------
-
-QT       += core gui
-
+QT       += core gui concurrent
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = wmp
 TEMPLATE = app
+TARGET = wmp
+CONFIG += c++11
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
+SOURCES += RtAudio.cpp \
+    avcondition.cpp \
+    avfile.cpp \
+    avhistogram.cpp \
+    avmutex.cpp \
+    avobject.cpp \
+    avring.cpp \
+    avspectrogram.cpp \
+    avsplitter.cpp \
+    avthread.cpp \
     histogramwidget.cpp \
-    application.cpp \
-    RtAudio.cpp \
+    main.cpp \
+    mainwindow.cpp \
     player.cpp \
     playlistitem.cpp \
-    avfile.cpp \
-    avthread.cpp \
-    avmutex.cpp \
-    avcondition.cpp \
-    avring.cpp \
     playlistmodel.cpp \
-    playlistview.cpp \
-    timewidget.cpp
+    playlistview.cpp
 
-HEADERS  += mainwindow.h \
-    histogramwidget.h \
-    application.h \
-    RtAudio.h \
+HEADERS  += RtAudio.h \
     RtError.h \
+    avcondition.h \
+    avconf.h \
+    avexception.h \
+    avfile.h \
+    avhistogram.h \
+    avmutex.h \
+    avobject.h \
+    avring.h \
+    avspectrogram.h \
+    avsplitter.h \
+    avthread.h \
+    histogramwidget.h \
+    mainwindow.h \
+    memring.h \
     player.h \
     playlistitem.h \
-    avfile.h \
-    memring.h \
-    avexception.h \
-    avthread.h \
-    avmutex.h \
-    avcondition.h \
-    avring.h \
     playlistmodel.h \
-    playlistview.h \
-    timewidget.h
+    playlistview.h
 
 FORMS    += mainwindow.ui
 
@@ -51,15 +50,17 @@ RESOURCES += \
     assets.qrc
 
 LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag
-#INCLUDEPATH += /usr/local/include/taglib
 
 macx {
-    LIBS += -framework Cocoa -framework CoreAudio -lpthread
+    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -lpthread
     ICON = wmp.icns
     OBJECTIVE_SOURCES += macsupport.mm
     HEADERS += macsupport.h
     DEFINES += __MACOSX_CORE__
+    INCLUDEPATH += /usr/local/include/
 }
 
 OTHER_FILES += \
     README.md
+
+cache()

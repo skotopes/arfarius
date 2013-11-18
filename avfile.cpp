@@ -1,4 +1,5 @@
 #include "avfile.h"
+#include "avobject.h"
 #include "avexception.h"
 #include "memring.h"
 
@@ -9,16 +10,14 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-#include <QDebug>
 
 static volatile bool ffmpeginit = false;
 
 AVFile::AVFile() :
-    AVThread(), formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1), ring(0), conditon(),
-    do_shutdown(false), eof(false), position(0), seek_to(-1)
+    AVObject(),
+    formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1),
+    _abort(false), _position(0), _seek_to(-1)
 {
-    qDebug() << "AVFile: created" << this;
-
     if (!ffmpeginit) {
         av_register_all();
         avcodec_register_all();
@@ -28,16 +27,25 @@ AVFile::AVFile() :
 
 AVFile::~AVFile()
 {
-    stopDecoder();
-    join();
     close();
-    qDebug() << "AVFile: destroyed" << this;
+}
+
+const char * AVFile::getName() {
+    return "AVFile";
+}
+
+size_t AVFile::pull(av_sample_t */*buffer_ptr*/, size_t /*buffer_size*/)
+{
+    return 0;
+}
+
+size_t AVFile::push(av_sample_t */*buffer_ptr*/, size_t /*buffer_size*/)
+{
+    return 0;
 }
 
 void AVFile::open(const char *url)
 {
-    qDebug() << "AVFile: trying to open" << url;
-
     if (formatCtx)
         throw AVException("Programming error: i already did it");
 
@@ -59,35 +67,16 @@ void AVFile::open(const char *url)
     if (!codecCtx->channel_layout)
         codecCtx->channel_layout = av_get_default_channel_layout(codecCtx->channels);
 
-    // TODO: stream params can be changed on the fly, add moare checks
-    if (codecCtx->channel_layout != av_get_default_channel_layout(2) ||
+    // TODO: stream params can be changed on the fly, add moar checks
+    if (codecCtx->channel_layout != (uint64_t)av_get_default_channel_layout(_channels) ||
             codecCtx->sample_fmt != AV_SAMPLE_FMT_FLT ||
-            codecCtx->sample_rate != 44100) {
-        allocSWR();
+            codecCtx->sample_rate != _sample_rate) {
+        _allocSWR();
     }
-
-    allocRing();
-}
-
-void AVFile::startDecoder()
-{
-    qDebug() << "AVFile::startDecoder()";
-    create();
-}
-
-void AVFile::stopDecoder()
-{
-    qDebug() << "AVFile::stopDecoder()";
-    do_shutdown = true;
-    if (ring)
-        ring->reset();
-    conditon.signal();
-    join();
 }
 
 void AVFile::close()
 {
-    qDebug() << "AVFile::close()";
     if (codecCtx) {
         avcodec_close(codecCtx);
         codecCtx = 0;
@@ -102,57 +91,53 @@ void AVFile::close()
     }
 
     audioStream = -1;
-
-    if (ring) {
-        delete ring;
-    }
 }
 
-float AVFile::getDuration()
-{
+float AVFile::getDurationInSeconds() {
     return (float) formatCtx->duration / AV_TIME_BASE;
 }
 
-float AVFile::getPosition() {
+size_t AVFile::getDurationInSamples() {
+    return formatCtx->duration * _sample_rate / AV_TIME_BASE;
+}
+
+float AVFile::getPositionInSeconds() {
     AVStream * s = formatCtx->streams[audioStream];
-    return (float) position * s->time_base.num / s->time_base.den;
+    return (float) _position * s->time_base.num / s->time_base.den;
 }
 
-AVFile::Progress AVFile::getProgress() {
-    AVFile::Progress p;
-    p.duration = getDuration();
-    p.position = getPosition();
-    qDebug() << "AVFile::getProgress()" << p.duration << p.position;
-    return p;
+float AVFile::getPositionInPercents()
+{
+    return getPositionInSeconds() / getDurationInSeconds();
 }
 
-void AVFile::seekToPositionPercent(float p)
+size_t AVFile::getBitrate() {
+    return formatCtx->bit_rate;
+}
+
+size_t AVFile::getCodecBitrate() {
+    return codecCtx->bit_rate;
+}
+
+int AVFile::getCodecSamplerate() {
+    return codecCtx->sample_rate;
+}
+
+int AVFile::getCodecChannels() {
+    return codecCtx->channels;
+}
+
+void AVFile::seekToPercent(float p)
 {
     if (0. < p && p < 1.) {
         AVStream * s = formatCtx->streams[audioStream];
-        seek_to = av_rescale(p * formatCtx->duration, s->time_base.den, AV_TIME_BASE * s->time_base.num);
-        qDebug() << "AVFile::seekToPositionPercent(" << p << "): duration:" << formatCtx->duration
-                 << "seek_to" << seek_to << "time_base:"<< s->time_base.den << s->time_base.num;
+        _seek_to = av_rescale(p * formatCtx->duration, s->time_base.den, AV_TIME_BASE * s->time_base.num);
     }
 }
 
-size_t AVFile::pull(float * buffer, size_t size)
-{
-    if (!ring)
-        return 0;
-
-    size_t ret = ring->pull(buffer, size);
-    conditon.signal();
-
-    return ret;
-}
-
 // Protected
-void AVFile::run()
+void AVFile::decode()
 {
-    qDebug() << "AVFile::run()";
-    eof = false;
-
     AVFrame frame;
     int got_frame;
 
@@ -189,22 +174,23 @@ void AVFile::run()
                         // todo: check original code^ some nasty shit inside
                         int ret = swr_convert(swrCtx, shadow_array, AVCODEC_MAX_AUDIO_FRAME_SIZE, input_array, frame.nb_samples);
                         if (ret > 0) {
-                            fillRing(reinterpret_cast<float *>(shadow), ret*2);
+                            _push(reinterpret_cast<float *>(shadow), ret * _channels);
                         }
                     } else {
-                        fillRing(reinterpret_cast<float *>(frame.data[0]), frame.nb_samples * 2);
+                        _push(reinterpret_cast<float *>(frame.data[0]), frame.nb_samples * _channels);
                     }
 
                     // update position
-                    if (frame.pts != AV_NOPTS_VALUE)
-                        position = frame.pts;
-                    else if (packet.pts != AV_NOPTS_VALUE)
-                        position = packet.pts;
-                    else
-                        position = 0;
+                    if (frame.pts != AV_NOPTS_VALUE) {
+                        _position = frame.pts;
+                    } else if (packet.pts != AV_NOPTS_VALUE) {
+                        _position = packet.pts;
+                    } else {
+                        _position = 0;
+                    }
                 }
                 // hurry up, no time to decode one more frame
-                if (do_shutdown)
+                if (_abort)
                     break;
             }
 
@@ -215,38 +201,38 @@ void AVFile::run()
         // free packet data, reuse structure
         av_free_packet(&packet);
         // complete decoding thread shutdown
-        if (do_shutdown) {
-            do_shutdown = false;
+        if (_abort) {
+            _abort = false;
             break;
         }
 
-        if (seek_to > -1) {
+        if (_seek_to > -1) {
             int flags = AVSEEK_FLAG_ANY;
-            if (seek_to < position)
+            if (_seek_to < _position)
                 flags = flags | AVSEEK_FLAG_BACKWARD;
-            av_seek_frame(formatCtx, audioStream, seek_to, flags);
-            seek_to = -1;
+            av_seek_frame(formatCtx, audioStream, _seek_to, flags);
+            _seek_to = -1;
         }
     }
     av_free(shadow);
-    eof = true;
-    qDebug() << "AVFile::run() done";
+}
+void AVFile::abort()
+{
+    _abort = true;
 }
 
-// Private
-void AVFile::allocRing()
+void AVFile::_push(av_sample_t *buffer_ptr, size_t buffer_size)
 {
-    qDebug() << "AVFile::allocRing()";
-    ring = new MemRing<float>(512 * 2 * 4);
-    if (!ring)
-        throw AVException("Unable to allocate ring");
+    if (_output) {
+        while (buffer_size > 0) {
+            buffer_size -= _output->push(buffer_ptr, buffer_size);
+        }
+    }
 }
 
-
-void AVFile::allocSWR()
+void AVFile::_allocSWR()
 {
-    qDebug() << "AVFile::allocSWR()" << codecCtx->channel_layout << codecCtx->sample_fmt << codecCtx->sample_rate;
-    swrCtx = swr_alloc_set_opts(0, av_get_default_channel_layout(2), AV_SAMPLE_FMT_FLT, 44100,
+    swrCtx = swr_alloc_set_opts(0, av_get_default_channel_layout(_channels), AV_SAMPLE_FMT_FLT, _sample_rate,
                                 codecCtx->channel_layout, codecCtx->sample_fmt, codecCtx->sample_rate,
                                 0, 0);
 
@@ -254,20 +240,4 @@ void AVFile::allocSWR()
         throw AVException("Unable to allocate swresample context");
 
     swr_init(swrCtx);
-}
-
-void AVFile::fillRing(float * buffer, size_t size)
-{
-    while (size > 0) {
-        while (ring->writeSpace() < 512) {
-            conditon.lock();
-            conditon.wait(); // magic
-            conditon.unlock();
-        }
-
-        size_t ws = ring->writeSpace();
-        size_t ret = ring->push(buffer, size > ws ? ws : size);
-        buffer += ret;
-        size -= ret;
-    }
 }

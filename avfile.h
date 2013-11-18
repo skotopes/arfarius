@@ -1,61 +1,52 @@
 #ifndef AVFILE_H
 #define AVFILE_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include "avcondition.h"
-#include "avthread.h"
+#include "avobject.h"
 
 struct AVFormatContext;
 struct AVCodecContext;
 struct SwrContext;
 
-template<typename T> class MemRing;
-
-
-class AVFile : private AVThread
+class AVFile: public AVObject
 {
 public:
-    struct Progress {
-        float position;
-        float duration;
-    };
-
     AVFile();
     virtual ~AVFile();
 
+    virtual const char * getName();
+    virtual size_t pull(av_sample_t *buffer_ptr, size_t buffer_size);
+    virtual size_t push(av_sample_t *buffer_ptr, size_t buffer_size);
+
     void open(const char *);
-    void startDecoder();
-    inline bool isDecoderRunning() { return isRunning(); }
-    void stopDecoder();
     void close();
 
-    float getDuration();
-    float getPosition();
-    Progress getProgress();
-    void seekToPositionPercent(float p);
+    float getDurationInSeconds();
+    size_t getDurationInSamples();
+    float getPositionInSeconds();
+    float getPositionInPercents();
+    size_t getBitrate();
 
-    size_t pull(float * buffer, size_t size);
-    bool isEOF() { return eof; }
+    size_t getCodecBitrate();
+    int getCodecSamplerate();
+    int getCodecChannels();
 
-protected:
-    void run();
+    void seekToPercent(float p);
+
+    void decode();
+    void abort();
 
 private:
     AVFormatContext *formatCtx;
     AVCodecContext *codecCtx;
     SwrContext *swrCtx;
     int audioStream;
-    MemRing<float> *ring;
-    AVCondition conditon;
-    volatile bool do_shutdown;
-    volatile bool eof;
-    volatile int64_t position;
-    volatile int64_t seek_to;
 
-    void allocRing();
-    void allocSWR();
-    void fillRing(float * buffer, size_t size);
+    volatile bool _abort;
+    volatile int64_t _position;
+    volatile int64_t _seek_to;
+
+    void _push(av_sample_t *buffer_ptr, size_t buffer_size);
+    void _allocSWR();
 };
 
 #endif // AVFILE_H

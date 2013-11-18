@@ -7,15 +7,6 @@
 	<rect display="inline" fill="#414042" width="50" height="50"/>
 </g>
 <g id="play">
-	
-		<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="301.25" y1="-358.75" x2="278.751" y2="-381.2489" gradientTransform="matrix(1 0 0 -1 -272.5 -345)">
-		<stop  offset="0" style="stop-color:#FFFFFF"/>
-		<stop  offset="0.3242" style="stop-color:#FCFCFC"/>
-		<stop  offset="0.5426" style="stop-color:#F3F3F3"/>
-		<stop  offset="0.7299" style="stop-color:#E4E4E4"/>
-		<stop  offset="0.8986" style="stop-color:#CFCFCF"/>
-		<stop  offset="1" style="stop-color:#BEBEBE"/>
-	</linearGradient>
-	<polygon fill="url(#SVGID_1_)" points="10,40 10,10 40,25 	"/>
+	<polygon fill="#333333" points="10,40 10,10 40,25 	"/>
 </g>
 </svg>

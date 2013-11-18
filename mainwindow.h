@@ -2,10 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QSettings>
-#include <QList>
-#include <QUrl>
-
 #include "player.h"
 
 namespace Ui {
@@ -13,6 +9,7 @@ namespace Ui {
 }
 
 class PlayListModel;
+class MacSupport;
 
 class MainWindow : public QMainWindow
 {
@@ -21,8 +18,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void setPlaylist(PlayListModel *p);
-
 protected:
     void closeEvent(QCloseEvent *e);
     void dragEnterEvent(QDragEnterEvent *);
@@ -30,20 +25,12 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    QSettings settings;
-
-
-signals:
-    void droppedUrls(QList<QUrl> urls);
-    void playPause();
-    void next();
-    void prev();
-
-    void newPlayPointer(float p);
+    MacSupport *platform_support;
+    PlayListModel *playlist;
+    Player *player;
 
 public slots:
     void updateState(Player::State);
-    void updatePlayProgress(AVFile::Progress);
 };
 
 #endif // MAINWINDOW_H

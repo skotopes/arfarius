@@ -36,7 +36,7 @@ QVariant PlayListModel::data(const QModelIndex &index, int role) const
         PlayListItem *i = items[index.row()];
         return i->getColumn(index.column());
     } else if (role == Qt::BackgroundRole && index.row() == current) {
-        return QVariant(QColor(Qt::green));
+        return QVariant(QColor(152,209,117));
     } else if (role == Qt::EditRole) {
         PlayListItem *i = items[index.row()];
         return i->getColumn(index.column());

@@ -3,7 +3,7 @@
 AVCondition::AVCondition() :
     AVMutex(), condition()
 {
-    pthread_cond_init(&condition, NULL);
+    pthread_cond_init(&condition, 0);
 }
 
 AVCondition::~AVCondition()

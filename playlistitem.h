@@ -16,6 +16,7 @@ public:
 
     inline QString getUrl() { return source.toString(); }
     inline QString getUrlLocalFile() { return source.toLocalFile(); }
+    inline bool isLocalFile() { return source.isLocalFile(); }
     inline void setPos(int p) { pos = p; }
     inline int getPos() { return pos; }
 

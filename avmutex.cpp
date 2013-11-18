@@ -2,7 +2,7 @@
 
 AVMutex::AVMutex(): mutex()
 {
-    pthread_mutex_init(&mutex, NULL);
+    pthread_mutex_init(&mutex, 0);
 }
 
 AVMutex::~AVMutex()

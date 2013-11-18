@@ -2,16 +2,18 @@
 #define PLAYER_H
 
 #include <QObject>
-#include "RtAudio.h"
-#include "RtError.h"
+#include <QFuture>
+#include <QFutureWatcher>
 
-#include "avfile.h"
+#include "avobject.h"
+#include "memring.h"
+#include "RtAudio.h"
 
 class PlayListModel;
 class AVFile;
-class QMutex;
+class QSemaphore;
 
-class Player : public QObject
+class Player : public QObject, public AVObject
 {
     Q_OBJECT
 
@@ -27,43 +29,52 @@ public:
 
     void setPlaylist(PlayListModel *p);
 
+    virtual const char * getName();
+    virtual size_t pull(float *buffer_ptr, size_t buffer_size);
+    virtual size_t push(float *buffer_ptr, size_t buffer_size);
+
 private:
-    State state;
+    RtAudio *dac;
     PlayListModel *playlist;
+    AVFile *file;
+    QFuture<void> file_future;
+    QFutureWatcher<void> file_future_watcher;
+    MemRing<av_sample_t> *buffer;
+    QSemaphore *buffer_semaphor;
+    State state;
+    size_t cnt;
 
-    AVFile *track_current;
-    QMutex *track_mutex;
+    static int callback(void *outputBuffer, void *inputBuffer,
+                        unsigned int nBufferFrames, double streamTime,
+                        RtAudioStreamStatus status, void *userData);
 
-    RtAudio dac;
-    RtAudio::StreamParameters parameters;
-    unsigned int sampleRate;
-    unsigned int bufferFrames;
-    double streamTime;
-
-    void openStream();
+    // Stream and DAC
+    void openDAC();
     void startStream();
     void stopStream();
-    void closeStream();
+    void closeDAC();
 
+    // Player state
     void updateState(Player::State);
-    void updateCurrent();
-    void disconnectCurrent();
-
-    void emitNewPlayProgress(AVFile::Progress p);
-
-    static int callback( void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames,
-                    double streamTime, RtAudioStreamStatus status, void *userData );
+    void loadFile();
+    void ejectFile();
 
 signals:
-    void stateChanged(Player::State);
-    void newPlayProgress(AVFile::Progress);
+    void stateUpdated(Player::State);
+    void timeComboUpdated(QString);
+    void progressUpdated(float);
+    void histogramUpdated(QImage *);
 
 public slots:
-    void setPlayPointer(float p);
+    void seekTo(float p);
     void playPause();
     void stop();
     void next();
     void prev();
+    void analyze();
+
+private slots:
+    void onTrackEnd();
 };
 
 #endif // PLAYER_H

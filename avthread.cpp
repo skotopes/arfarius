@@ -31,7 +31,7 @@ bool AVThread::create()
 
 bool AVThread::join()
 {
-    int ec = pthread_join(thread, NULL);
+    int ec = pthread_join(thread, 0);
     if (ec != 0)
         return false;
 
@@ -46,5 +46,5 @@ void *AVThread::aCallback(void *data)
     me->run();
     me->running = false;
 
-    pthread_exit(NULL);
+    pthread_exit(0);
 }

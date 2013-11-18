@@ -3,24 +3,20 @@
 #include <QtGui>
 
 HistogramWidget::HistogramWidget(QWidget *parent)
-    : QWidget(parent), progress()
+    : QWidget(parent), progress(-1), image(0)
 {
 }
 
 void HistogramWidget::paintEvent(QPaintEvent *)
 {
-    QColor  lightGrayColor(128, 128, 128);
-    QColor  lightRedColor(255, 200, 200);
-
-    QColor  redColor(255, 55, 55);
-
     QPainter painter(this);
 
-    painter.setPen(lightGrayColor);
-    painter.drawLine(0, height()/2, width(), height()/2);
+    if (image) {
+        painter.drawImage(QRect(0,0,width(),height()), *image);
+    }
 
-    painter.setPen(redColor);
-    int p = progress.position / progress.duration * width();
+    painter.setPen(QColor(255, 55, 55));
+    int p = progress * width();
     painter.drawLine(p, 0, p, height());
 }
 
@@ -31,8 +27,16 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)
     e->accept();
 }
 
-void HistogramWidget::updatePlayProgress(AVFile::Progress p)
+void HistogramWidget::updatePlayProgress(float p)
 {
     progress = p;
+    update();
+}
+
+void HistogramWidget::updateImage(QImage *i)
+{
+    QImage *t = image;
+    image = i;
+    delete t;
     update();
 }
