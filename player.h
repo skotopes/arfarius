@@ -43,6 +43,7 @@ private:
     QSemaphore *buffer_semaphor;
     State state;
     size_t cnt;
+    volatile bool stopping;
 
     static int callback(void *outputBuffer, void *inputBuffer,
                         unsigned int nBufferFrames, double streamTime,
@@ -71,7 +72,7 @@ public slots:
     void stop();
     void next();
     void prev();
-    void analyze();
+    QImage *analyze();
 
 private slots:
     void onTrackEnd();

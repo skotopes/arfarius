@@ -1,4 +1,6 @@
 #include <QApplication>
+#include <QDir>
+
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
@@ -9,12 +11,13 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    QApplication::setOrganizationName("White-label Ltd");
-    QApplication::setOrganizationDomain("white-label.ru");
-    QApplication::setApplicationName("wmp");
-
     QApplication a(argc, argv);
+
+    a.setOrganizationName("Plooks Ltd");
+    a.setOrganizationDomain("plooks.com");
+    a.setApplicationName("wmp");
     a.setAttribute(Qt::AA_UseHighDpiPixmaps);
+
     MainWindow m;
     m.show();
     return a.exec();

@@ -23,8 +23,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->playList->setModel(playlist);
     player->setPlaylist(playlist);
 
-    ui->playButton->icon();
-
     connect(platform_support, SIGNAL( dockClicked() ), this, SLOT( show() ));
 
     connect(ui->prevButton, SIGNAL(clicked()), player, SLOT(prev()));

@@ -12,12 +12,16 @@ void HistogramWidget::paintEvent(QPaintEvent *)
     QPainter painter(this);
 
     if (image) {
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setRenderHint(QPainter::SmoothPixmapTransform);
         painter.drawImage(QRect(0,0,width(),height()), *image);
     }
 
-    painter.setPen(QColor(255, 55, 55));
+    painter.setCompositionMode(QPainter::RasterOp_SourceXorDestination);
+    painter.setPen(QColor(255,255,255));
     int p = progress * width();
     painter.drawLine(p, 0, p, height());
+
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)

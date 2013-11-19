@@ -37,6 +37,31 @@ bool PlayListItem::isValid()
     return true;
 }
 
+QString PlayListItem::getUrl() {
+    if (source.isLocalFile()) {
+        return source.toLocalFile();
+    } else {
+        return source.toString();
+    }
+}
+
+QString PlayListItem::getUrlLocalFile() { return source.toLocalFile(); }
+bool PlayListItem::isLocalFile()
+{
+    return source.isLocalFile();
+}
+
+void PlayListItem::setPos(int p)
+{
+    pos = p;
+}
+
+int PlayListItem::getPos()
+{
+    return pos;
+}
+
+
 QString PlayListItem::getColumn(int col)
 {
     switch (col) {

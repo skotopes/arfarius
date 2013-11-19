@@ -14,11 +14,11 @@ public:
 
     bool isValid();
 
-    inline QString getUrl() { return source.toString(); }
-    inline QString getUrlLocalFile() { return source.toLocalFile(); }
-    inline bool isLocalFile() { return source.isLocalFile(); }
-    inline void setPos(int p) { pos = p; }
-    inline int getPos() { return pos; }
+    QString getUrl();
+    QString getUrlLocalFile();
+    bool isLocalFile();
+    void setPos(int p);
+    int getPos();
 
     QString getColumn(int col);
     void setColumn(int col, QString value);
