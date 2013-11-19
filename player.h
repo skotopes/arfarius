@@ -39,6 +39,8 @@ private:
     AVFile *file;
     QFuture<void> file_future;
     QFutureWatcher<void> file_future_watcher;
+    QFuture<void> histogram_future;
+    QFutureWatcher<void> histogram_future_watcher;
     MemRing<av_sample_t> *buffer;
     QSemaphore *buffer_semaphor;
     State state;

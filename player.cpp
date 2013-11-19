@@ -36,6 +36,7 @@ QString formatTime(size_t time)
 Player::Player(QObject *parent) :
     QObject(parent),
     dac(0), playlist(0), file(0), file_future(), file_future_watcher(),
+    histogram_future(), histogram_future_watcher(),
     buffer(new MemRing<av_sample_t>(BUFFER_SIZE)), buffer_semaphor(new QSemaphore(BUFFER_SIZE)),
     state(Player::STOP), cnt(0), stopping(false)
 {
@@ -77,16 +78,6 @@ size_t Player::pull(float *buffer_ptr, size_t buffer_size)
     buffer_semaphor->release(ret);
     if (stopping) {
         ret = 0;
-    } else {
-        cnt += buffer_size;
-        if (cnt > _sample_rate / 4) {
-            cnt = 0;
-            emit progressUpdated(file->getPositionInPercents());
-            emit timeComboUpdated(
-                formatTime(file->getPositionInSeconds()) + " [" +
-                formatTime(file->getDurationInSeconds()) +"]"
-            );
-        }
     }
     return ret;
 }
@@ -99,6 +90,16 @@ size_t Player::push(float *buffer_ptr, size_t buffer_size)
     } else {
         ret = buffer->push(buffer_ptr, buffer_size);
         buffer_semaphor->acquire(ret);
+    }
+
+    cnt += buffer_size;
+    if (cnt > _sample_rate / 4) {
+        cnt = 0;
+        emit progressUpdated(file->getPositionInPercents());
+        emit timeComboUpdated(
+            formatTime(file->getPositionInSeconds()) + " [" +
+            formatTime(file->getDurationInSeconds()) +"]"
+        );
     }
 
     return ret;
@@ -209,10 +210,13 @@ void Player::loadFile()
                 file = 0;
             });
             file_future_watcher.setFuture(file_future);
-            QtConcurrent::run([this]() {
+
+            histogram_future = QtConcurrent::run([this]() {
                 emit histogramUpdated(0);
                 emit histogramUpdated(analyze());
             });
+            histogram_future_watcher.setFuture(histogram_future);
+
         } catch (AVException &e) {
             qWarning() << this << "loadFile()" << "unable to open file: " << e.what();
             if (file)
@@ -236,6 +240,7 @@ void Player::ejectFile()
             updateState(Player::PLAY);
         }
         file_future.waitForFinished();
+        histogram_future.waitForFinished();
         emit histogramUpdated(0);
     }
 }
