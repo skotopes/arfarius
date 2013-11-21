@@ -6,6 +6,48 @@
 
 #import <Cocoa/Cocoa.h>
 #import <objc/runtime.h>
+#import <IOKit/hidsystem/ev_keymap.h>
+
+#define NX_KEYSTATE_UP      0x0A
+#define NX_KEYSTATE_DOWN    0x0B
+
+static CFMachPortRef _eventPort;
+static CFRunLoopSourceRef _runLoopSource;
+
+CGEventRef tapEventCallback(CGEventTapProxy /*proxy*/, CGEventType type, CGEventRef event, void *refcon) {
+    MacSupport *me = reinterpret_cast<MacSupport*>(refcon);
+
+    if(type == kCGEventTapDisabledByTimeout)
+        CGEventTapEnable(_eventPort, TRUE);
+
+    if(type != NX_SYSDEFINED)
+        return event;
+
+    NSEvent *nsEvent = [NSEvent eventWithCGEvent:event];
+
+    if([nsEvent subtype] != 8)
+        return event;
+
+    int data = [nsEvent data1];
+    int keyCode = (data & 0xFFFF0000) >> 16;
+    int keyFlags = (data & 0xFFFF);
+    int keyState = (keyFlags & 0xFF00) >> 8;
+    BOOL keyIsRepeat = (keyFlags & 0x1) > 0;
+
+    if (keyIsRepeat)
+        return event;
+
+    switch (keyCode) {
+        case NX_KEYTYPE_PLAY:
+        case NX_KEYTYPE_FAST:
+        case NX_KEYTYPE_REWIND:
+            me->emitKeyEvent(keyCode, keyState);
+            return NULL;
+        break;
+    }
+
+    return event;
+}
 
 static MacSupport *ms_instance = 0;
 
@@ -30,19 +72,62 @@ MacSupport::MacSupport(QObject *parent):
     }
 
     Class cls = [[[NSApplication sharedApplication] delegate] class];
-
     if (!class_addMethod(cls, @selector(applicationShouldHandleReopen:hasVisibleWindows:), (IMP) dockClickHandler, "v@:"))
-        qDebug() << "MyPrivate::MyPrivate() : class_addMethod failed!";
+        qFatal("MacSupport(): unable to add dock click handler");
+
+    _eventPort = CGEventTapCreate(
+        kCGSessionEventTap,
+        kCGHeadInsertEventTap,
+        kCGEventTapOptionDefault,
+        CGEventMaskBit(NX_SYSDEFINED),
+        tapEventCallback,
+        (void *)this
+    );
+    if (_eventPort == NULL) {
+        qFatal("Fatal Error: Event Tap could not be created");
+    }
+
+    _runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorSystemDefault, _eventPort, 0);
+    if (_runLoopSource == NULL) {
+        qFatal("Fatal Error: Run Loop Source could not be created");
+    }
+
+    CFRunLoopRef runLoop = CFRunLoopGetCurrent();
+    if (runLoop == NULL) {
+        qFatal("Fatal Error: Couldn't get current threads Run Loop");
+    }
+
+    CFRunLoopAddSource(runLoop, _runLoopSource, kCFRunLoopCommonModes);
 
     ms_instance = this;
 }
 
 MacSupport::~MacSupport() {
+    CFRelease(_eventPort);
+    CFRelease(_runLoopSource);
     if (ms_instance == this) ms_instance = 0;
 }
 
 void MacSupport::emitDockClick() {
     emit dockClicked();
+}
+
+void MacSupport::emitKeyEvent(int keycode, int keystate)
+{
+    switch (keycode) {
+        case NX_KEYTYPE_PLAY:
+            if(keystate == NX_KEYSTATE_DOWN)
+                emit play();
+        break;
+        case NX_KEYTYPE_FAST:
+            if(keystate == NX_KEYSTATE_DOWN)
+                emit next();
+        break;
+        case NX_KEYTYPE_REWIND:
+            if(keystate == NX_KEYSTATE_DOWN)
+                emit prev();
+        break;
+    }
 }
 
 void MacSupport::setDockBadge(const QString & badgeText)

@@ -52,10 +52,10 @@ private:
                         RtAudioStreamStatus status, void *userData);
 
     // Stream and DAC
-    void openDAC();
-    void startStream();
-    void stopStream();
-    void closeDAC();
+    bool openDAC();
+    bool startStream();
+    bool stopStream();
+    bool closeDAC();
 
     // Player state
     void updateState(Player::State);

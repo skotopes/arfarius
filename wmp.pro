@@ -1,4 +1,4 @@
-QT       += core gui concurrent svg
+QT       += core gui concurrent svg opengl
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TEMPLATE = app
@@ -21,7 +21,8 @@ SOURCES += RtAudio.cpp \
     player.cpp \
     playlistitem.cpp \
     playlistmodel.cpp \
-    playlistview.cpp
+    playlistview.cpp \
+    collection.cpp
 
 HEADERS  += RtAudio.h \
     RtError.h \
@@ -42,14 +43,15 @@ HEADERS  += RtAudio.h \
     player.h \
     playlistitem.h \
     playlistmodel.h \
-    playlistview.h
+    playlistview.h \
+    collection.h
 
 FORMS    += mainwindow.ui
 
 RESOURCES += \
     assets.qrc
 
-LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag
+LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag -ltcejdb
 
 macx {
     LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -lpthread
@@ -59,6 +61,12 @@ macx {
     DEFINES += __MACOSX_CORE__
     INCLUDEPATH += /usr/local/include/
     QMAKE_INFO_PLIST = wmp.plist
+}
+
+linux {
+}
+
+win {
 }
 
 OTHER_FILES += \

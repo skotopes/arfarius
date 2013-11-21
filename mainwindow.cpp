@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QMessageBox>
 #include <QCloseEvent>
 #include <QMimeData>
 #include <QSettings>
@@ -10,20 +11,34 @@
 
 #include "macsupport.h"
 #include "playlistmodel.h"
-
+#include "collection.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     platform_support(new MacSupport(this)),
     playlist(new PlayListModel(this)),
+    collection(new Collection(this)),
     player(new Player(this))
 {
     ui->setupUi(this);
     ui->playList->setModel(playlist);
+    if (collection->openDB()) {
+        qDebug() << this << "Database is ready. Tracks in collection:" << collection->getCollectionSize();
+    } else {
+        QMessageBox::critical(
+            this,
+            "Collection load error",
+            "Failed to load collection database, you need to fix it by yourself or delete it."
+        );
+    }
+
     player->setPlaylist(playlist);
 
     connect(platform_support, SIGNAL( dockClicked() ), this, SLOT( show() ));
+    connect(platform_support, SIGNAL( prev() ), player, SLOT( prev() ));
+    connect(platform_support, SIGNAL( play() ), player, SLOT( playPause() ));
+    connect(platform_support, SIGNAL( next() ), player, SLOT( next() ));
 
     connect(ui->prevButton, SIGNAL(clicked()), player, SLOT(prev()));
     connect(ui->playButton, SIGNAL(clicked()), player, SLOT(playPause()));

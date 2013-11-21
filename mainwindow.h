@@ -10,6 +10,7 @@ namespace Ui {
 
 class PlayListModel;
 class MacSupport;
+class Collection;
 
 class MainWindow : public QMainWindow
 {
@@ -27,6 +28,7 @@ private:
     Ui::MainWindow *ui;
     MacSupport *platform_support;
     PlayListModel *playlist;
+    Collection *collection;
     Player *player;
 
 public slots:

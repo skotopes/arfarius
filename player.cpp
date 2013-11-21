@@ -127,7 +127,7 @@ int Player::callback(void *outputBuffer, void *inputBuffer,
     return 0;
 }
 
-void Player::openDAC()
+bool Player::openDAC()
 {
     QSettings settings;
     _sample_rate = settings.value("dac/samplerate", 44100).toInt();
@@ -137,7 +137,7 @@ void Player::openDAC()
 
     if (dac->getDeviceCount() < 1) {
         qWarning() << this << "openStream(): No output found";
-        return;
+        return false;
     }
 
     auto device_id = dac->getDefaultOutputDevice();
@@ -154,37 +154,45 @@ void Player::openDAC()
                         &callback, this );
     } catch ( RtError& e ) {
         qWarning() << this << "openStream() RtError:" << e.what();
+        return false;
     }
+    return true;
 }
 
-void Player::startStream()
+bool Player::startStream()
 {
     try {
         dac->startStream();
     } catch ( RtError& e ) {
-        qWarning() << this << this << "startStream() RtError:" << e.what();
+        qWarning() << this << "startStream() RtError:" << e.what();
+        return false;
     }
+    return true;
 }
 
-void Player::stopStream()
+bool Player::stopStream()
 {
     try {
         if (dac->isStreamRunning())
             dac->stopStream();
     } catch (RtError& e) {
         qWarning() << this << "stopStream() RtError:" << e.what();
+        return false;
     }
+    return true;
 }
 
-void Player::closeDAC()
+bool Player::closeDAC()
 {
     try {
         if (dac->isStreamOpen())
             dac->closeStream();
     } catch (RtError& e) {
         qWarning() << this << "stopStream() RtError:" << e.what();
+        return false;
     }
     delete dac; dac=0;
+    return true;
 }
 
 void Player::updateState(Player::State s)

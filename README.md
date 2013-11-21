@@ -11,18 +11,24 @@ Main features:
 Download
 ============
 
-Mac OS: http://myau.su/wmp.dmg
+Latest version for Mac OS: http://myau.su/wmp.dmg
 Requirements: Mac OS 10.7 or higher
 
 Building from source
 ============
 
-Before you will try to compile it:
-please install ffmpeg (including libav headers and bins) and taglib
+Requirments:
 
-If you are using brew type following commands:
+* ffmpeg
+* taglib
+* ejdb
+
+Type following commands if you are using brew:
+
+```
 brew install taglib
 brew install ffmpeg --with-libvorbis --with-tools
+brew install ejdb
+```
 
-Complete build with qmake
-
+And complete build with qmake.
