@@ -9,11 +9,12 @@
 #include <QUrl>
 #include <QDebug>
 
+#include "wmpapplication.h"
 #include "macsupport.h"
 #include "playlistmodel.h"
 #include "collection.h"
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(WmpApplication *application, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     platform_support(new MacSupport(this)),
@@ -55,6 +56,8 @@ MainWindow::MainWindow(QWidget *parent) :
     restoreGeometry(settings.value("MainWindow/geometry").toByteArray());
     ui->playList->horizontalHeader()->restoreState(settings.value("PlayList/state").toByteArray());
     ui->playList->horizontalHeader()->restoreGeometry(settings.value("PlayList/geometry").toByteArray());
+
+    connect(application, SIGNAL(fileDropped(QUrl)), playlist, SLOT(appendUrl(QUrl)));
 }
 
 MainWindow::~MainWindow()

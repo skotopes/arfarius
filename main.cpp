@@ -1,6 +1,4 @@
-#include <QApplication>
-#include <QDir>
-
+#include "wmpapplication.h"
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
@@ -11,14 +9,14 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    QApplication a(argc, argv);
-
+    WmpApplication a(argc, argv);
     a.setOrganizationName("Plooks Ltd");
     a.setOrganizationDomain("plooks.com");
     a.setApplicationName("wmp");
     a.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
-    MainWindow m;
+    MainWindow m(&a);
     m.show();
+
     return a.exec();
 }

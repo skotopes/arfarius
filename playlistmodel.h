@@ -33,6 +33,7 @@ signals:
 public slots:
     void appendFile(QUrl);
     void appendDirectory(QUrl);
+    void appendUrl(QUrl url);
     void appendUrls(QList<QUrl> urls);
     void clear();
 

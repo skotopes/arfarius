@@ -22,7 +22,8 @@ SOURCES += RtAudio.cpp \
     playlistitem.cpp \
     playlistmodel.cpp \
     playlistview.cpp \
-    collection.cpp
+    collection.cpp \
+    wmpapplication.cpp
 
 HEADERS  += RtAudio.h \
     RtError.h \
@@ -44,7 +45,8 @@ HEADERS  += RtAudio.h \
     playlistitem.h \
     playlistmodel.h \
     playlistview.h \
-    collection.h
+    collection.h \
+    wmpapplication.h
 
 FORMS    += mainwindow.ui
 

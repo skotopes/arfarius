@@ -116,19 +116,23 @@ void PlayListModel::appendDirectory(QUrl u)
     }
 }
 
+void PlayListModel::appendUrl(QUrl url)
+{
+    if (url.isLocalFile()) {
+        QFileInfo f(url.path());
+        if (f.isDir()) {
+            appendDirectory(url);
+        } else {
+            appendFile(url);
+        }
+    }
+}
+
 void PlayListModel::appendUrls(QList<QUrl> urls)
 {
     QList<QUrl>::iterator i;
     for (i = urls.begin(); i != urls.end(); ++i) {
-        QUrl u = *i;
-        if (u.isLocalFile()) {
-            QFileInfo f(u.path());
-            if (f.isDir()) {
-                appendDirectory(u);
-            } else {
-                appendFile(u);
-            }
-        }
+        appendUrl(*i);
     }
 }
 
