@@ -345,7 +345,7 @@ QImage *Player::analyze()
     splitter.connectOutput(&spectrogram);
 
     file.setChannels(1);
-    file.setSamplerate(44100);
+    file.setSamplerate(22050);
     file.open(i->getUrl().toLocal8Bit().constData());
     file.decode();
 
@@ -365,9 +365,9 @@ QImage *Player::analyze()
 
         // color section
         float r, g, b;
-        r = spec->front()/2; spec->pop_front();
+        r = spec->front()*0.5; spec->pop_front();
         g = spec->front(); spec->pop_front();
-        b = spec->front()*10; spec->pop_front();
+        b = spec->front()*5.0; spec->pop_front();
 
         float maximum = r;
         if (g > maximum) {
@@ -378,9 +378,9 @@ QImage *Player::analyze()
         }
 
         if (maximum) {
-            r = r / maximum * 220;
-            g = g / maximum * 200;
-            b = b / maximum * 255;
+            r = r / maximum * 180 + 30;
+            g = g / maximum * 180 + 30;
+            b = b / maximum * 180 + 30;
         } else {
             r = g = b = 0;
         }
@@ -398,7 +398,6 @@ QImage *Player::analyze()
         pos_rms  = hist->front()*80; hist->pop_front();
         neg_rms  = hist->front()*80; hist->pop_front();
         painter.drawLine(x,80+pos_rms,x,80-neg_rms);
-//        qDebug() << this << "analyze()" << r << g << b << pos_peak << neg_peak << pos_rms << neg_rms;
     }
     return pic;
 }

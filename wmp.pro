@@ -63,6 +63,7 @@ macx {
     DEFINES += __MACOSX_CORE__
     INCLUDEPATH += /usr/local/include/
     QMAKE_INFO_PLIST = wmp.plist
+    OTHER_FILES += wmp.plist
 }
 
 linux {
@@ -72,7 +73,6 @@ win {
 }
 
 OTHER_FILES += \
-    README.md \
-    wmp.plist
+    README.md
 
 cache()

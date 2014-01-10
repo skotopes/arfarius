@@ -70,7 +70,7 @@ void AVFile::open(const char *url)
     // TODO: stream params can be changed on the fly, add moar checks
     if (codecCtx->channel_layout != (uint64_t)av_get_default_channel_layout(_channels) ||
             codecCtx->sample_fmt != AV_SAMPLE_FMT_FLT ||
-            codecCtx->sample_rate != _sample_rate) {
+            codecCtx->sample_rate != (int)_sample_rate) {
         _allocSWR();
     }
 }

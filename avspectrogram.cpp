@@ -26,7 +26,7 @@ AVSpectrogram::~AVSpectrogram() {
 
 }
 
-size_t AVSpectrogram::pull(av_sample_t *buffer_ptr, size_t buffer_size)
+size_t AVSpectrogram::pull(av_sample_t */*buffer_ptr*/, size_t /*buffer_size*/)
 {
     return 0;
 }
@@ -188,12 +188,9 @@ void AVSpectrogram::_fft(bool inverse) {
 
 void AVSpectrogram::_postProcess() {
     // amplitude
-    for (size_t x = 0; x < _window_size; x++) {
+    for (size_t x = 0; x < _window_size/2; x++) {
         float magnitude = sqrt(_out_r[x] * _out_r[x] + _out_i[x] * _out_i[x]) / _window_size;
         float frequencie = (float)x * _sample_rate / _window_size;
-        if (frequencie > 22050.0f || frequencie < 20.0f)
-            continue;
-
         if (frequencie > 1500.0f) {
             // high frequency
             _high_rms += magnitude;

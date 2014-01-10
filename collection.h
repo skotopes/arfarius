@@ -3,9 +3,6 @@
 
 #include <QObject>
 
-struct EJDB;
-struct EJCOLL;
-
 class PlayListItem;
 
 class Collection : public QObject
@@ -23,8 +20,6 @@ public:
     quint32 getCollectionSize();
 
 private:
-    EJDB *db;
-    EJCOLL *tracks;
 
 signals:
 

@@ -21,7 +21,6 @@ void HistogramWidget::paintEvent(QPaintEvent *)
     painter.setPen(QColor(255,255,255));
     int p = progress * width();
     painter.drawLine(p, 0, p, height());
-
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)

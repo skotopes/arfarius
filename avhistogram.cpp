@@ -14,7 +14,7 @@ AVHistogram::AVHistogram(size_t window_size, float threshold):
 AVHistogram::~AVHistogram() {
 }
 
-size_t AVHistogram::pull(av_sample_t *buffer_ptr, size_t buffer_size)
+size_t AVHistogram::pull(av_sample_t */*buffer_ptr*/, size_t /*buffer_size*/)
 {
     return 0;
 }
