@@ -38,7 +38,7 @@ Player::Player(QObject *parent) :
     dac(0), playlist(0), file(0), file_future(), file_future_watcher(),
     histogram_future(), histogram_future_watcher(),
     buffer(new MemRing<av_sample_t>(BUFFER_SIZE)), buffer_semaphor(new QSemaphore(BUFFER_SIZE)),
-    state(Player::STOP), cnt(0), stopping(false)
+    state(Player::STOP), cnt(0)
 {
     qRegisterMetaType<Player::State>("Player::State");
     connect(&file_future_watcher, SIGNAL(finished()), this, SLOT(onTrackEnd()));
@@ -76,9 +76,7 @@ size_t Player::pull(float *buffer_ptr, size_t buffer_size)
 {
     size_t ret = buffer->pull(buffer_ptr, buffer_size);
     buffer_semaphor->release(ret);
-    if (stopping) {
-        ret = 0;
-    }
+
     return ret;
 }
 
@@ -121,7 +119,7 @@ int Player::callback(void *outputBuffer, void *inputBuffer,
     if (ret != nBufferFrames) {
         buffer += ret;
         memset(buffer, 0, (nBufferFrames - ret) * sizeof(av_sample_t));
-        if (!me->stopping) qWarning() << me << "callback()" << "Buffer underrun";
+        qWarning() << me << "callback()" << "Buffer underrun";
     }
 
     return 0;
@@ -243,12 +241,22 @@ void Player::ejectFile()
 {
     if (file) {
         file->abort();
-        if (state != PLAY) {
-            startStream();
-            updateState(Player::PLAY);
-        }
+
+        QFutureWatcher<void> eject_future_watcher;
+        auto eject_future = QtConcurrent::run([this](){
+            av_sample_t *buffer = new av_sample_t[4096];
+            while (state != Player::PLAY && file) {
+                qDebug() << this << "ejectFile(): pumping samples";
+                pull(buffer, 4096);
+            }
+            delete [] buffer ;
+        });
+        eject_future_watcher.setFuture(eject_future);
+
         file_future.waitForFinished();
         histogram_future.waitForFinished();
+        eject_future_watcher.waitForFinished();
+
         emit histogramUpdated(0);
     }
 }
@@ -284,10 +292,9 @@ void Player::stop()
     if (state == Player::STOP)
         return;
 
-    stopping = true;
     ejectFile();
     stopStream();
-    stopping = false;
+
     // wipe buffer content and restore semaphor
     buffer->reset();
     int e = buffer_semaphor->available();

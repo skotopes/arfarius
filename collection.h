@@ -12,10 +12,7 @@ public:
     explicit Collection(QObject *parent = 0);
     virtual ~Collection();
 
-    bool openDB();
-    bool closeDB();
-
-    void sync(PlayListItem *i);
+    void syncPlayListItem(PlayListItem *i);
 
     quint32 getCollectionSize();
 

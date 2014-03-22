@@ -146,7 +146,7 @@ void AVFile::decode()
     uint8_t *packet_data;
     av_init_packet(&packet);
 
-    uint8_t * shadow = reinterpret_cast<uint8_t*>(av_malloc(AVCODEC_MAX_AUDIO_FRAME_SIZE * 4));
+    uint8_t * shadow = reinterpret_cast<uint8_t*>(av_malloc(192000 * 4));
 
     while (av_read_frame(formatCtx, &packet) == 0) {
         if (packet.stream_index == audioStream) {
@@ -172,7 +172,7 @@ void AVFile::decode()
                         uint8_t *shadow_array[] = { shadow };
                         const uint8_t **input_array = (const uint8_t **)frame.extended_data;
                         // todo: check original code^ some nasty shit inside
-                        int ret = swr_convert(swrCtx, shadow_array, AVCODEC_MAX_AUDIO_FRAME_SIZE, input_array, frame.nb_samples);
+                        int ret = swr_convert(swrCtx, shadow_array, 192000, input_array, frame.nb_samples);
                         if (ret > 0) {
                             _push(reinterpret_cast<float *>(shadow), ret * _channels);
                         }

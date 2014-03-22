@@ -24,16 +24,6 @@ MainWindow::MainWindow(WmpApplication *application, QWidget *parent) :
 {
     ui->setupUi(this);
     ui->playList->setModel(playlist);
-    if (collection->openDB()) {
-        qDebug() << this << "Database is ready. Tracks in collection:" << collection->getCollectionSize();
-    } else {
-        QMessageBox::critical(
-            this,
-            "Collection load error",
-            "Failed to load collection database, you need to fix it by yourself or delete it."
-        );
-    }
-
     player->setPlaylist(playlist);
 
     connect(platform_support, SIGNAL( dockClicked() ), this, SLOT( show() ));
