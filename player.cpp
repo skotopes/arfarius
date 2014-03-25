@@ -8,7 +8,7 @@
 #include "avsplitter.h"
 #include "avhistogram.h"
 #include "avspectrogram.h"
-#include "RtError.h"
+#include "qcoreaudio.h"
 
 #include <QtConcurrentRun>
 #include <QSemaphore>
@@ -16,8 +16,6 @@
 #include <QImage>
 #include <QPainter>
 #include <QDebug>
-
-#define BUFFER_SIZE 16384
 
 QString formatTime(size_t time)
 {
@@ -35,14 +33,23 @@ QString formatTime(size_t time)
 
 Player::Player(QObject *parent) :
     QObject(parent),
-    dac(0), playlist(0), file(0), file_future(), file_future_watcher(),
+    ca(new QCoreAudio(this)), playlist(0), file(0), file_future(), file_future_watcher(),
     histogram_future(), histogram_future_watcher(),
-    buffer(new MemRing<av_sample_t>(BUFFER_SIZE)), buffer_semaphor(new QSemaphore(BUFFER_SIZE)),
+    ring(0), ring_semaphor(0), ring_size(0),
     state(Player::STOP), cnt(0)
 {
     qRegisterMetaType<Player::State>("Player::State");
     connect(&file_future_watcher, SIGNAL(finished()), this, SLOT(onTrackEnd()));
-    openDAC();
+
+    ca->connectInput(this);
+    _sample_rate = ca->getDeviceSampleRate();
+    _channels = 2;
+    ca->setDeviceChannelsCount(2);
+
+    ring_size = ca->getDeviceBufferSize();
+    ring_size *= 8;
+    ring = new MemRing<av_sample_t>(ring_size);
+    ring_semaphor = new QSemaphore(ring_size);
 }
 
 Player::~Player()
@@ -51,14 +58,13 @@ Player::~Player()
         ejectFile();
     }
 
-    if (dac) {
+    if (ca) {
         stopStream();
-        closeDAC();
     }
 
-    if (buffer) {
-        delete buffer;
-        buffer = 0;
+    if (ring) {
+        delete ring;
+        ring = 0;
     }
 }
 
@@ -74,21 +80,22 @@ const char * Player::getName()
 
 size_t Player::pull(float *buffer_ptr, size_t buffer_size)
 {
-    size_t ret = buffer->pull(buffer_ptr, buffer_size);
-    buffer_semaphor->release(ret);
+    size_t ret = ring->pull(buffer_ptr, buffer_size);
+    ring_semaphor->release(ret);
 
     return ret;
 }
 
 size_t Player::push(float *buffer_ptr, size_t buffer_size)
 {
-    size_t ret;
-    if (buffer_semaphor->tryAcquire(buffer_size, 500)) {
-        ret = buffer->push(buffer_ptr, buffer_size);
-    } else {
-        ret = buffer->push(buffer_ptr, buffer_size);
-        buffer_semaphor->acquire(ret);
+    // check if we have enough space in the ring
+    // reduce buffer size if incoming buffer is bigger then 1/8
+    if (buffer_size > ring_size/8) {
+        buffer_size = ring_size/8;
     }
+
+    ring_semaphor->acquire(buffer_size);
+    ring->push(buffer_ptr, buffer_size);
 
     cnt += buffer_size;
     if (cnt > _sample_rate / 4) {
@@ -100,96 +107,20 @@ size_t Player::push(float *buffer_ptr, size_t buffer_size)
         );
     }
 
-    return ret;
-}
-
-int Player::callback(void *outputBuffer, void *inputBuffer,
-             unsigned int nBufferFrames, double streamTime,
-             RtAudioStreamStatus status, void *userData)
-{
-    Q_UNUSED(inputBuffer)
-    Q_UNUSED(streamTime)
-    Q_UNUSED(status)
-
-    Player *me = reinterpret_cast<Player *>(userData);
-    float *buffer = reinterpret_cast<float *>(outputBuffer);
-
-    nBufferFrames *= me->_channels;
-    size_t ret = me->pull(buffer, nBufferFrames);
-    if (ret != nBufferFrames) {
-        buffer += ret;
-        memset(buffer, 0, (nBufferFrames - ret) * sizeof(av_sample_t));
-        qWarning() << me << "callback()" << "Buffer underrun";
-    }
-
-    return 0;
-}
-
-bool Player::openDAC()
-{
-    QSettings settings;
-    _sample_rate = settings.value("dac/samplerate", 44100).toInt();
-    _channels = settings.value("dac/channels", 2).toInt();
-
-    dac = new RtAudio();
-
-    if (dac->getDeviceCount() < 1) {
-        qWarning() << this << "openStream(): No output found";
-        return false;
-    }
-
-    auto device_id = dac->getDefaultOutputDevice();
-    RtAudio::StreamParameters parameters;
-    parameters.deviceId = device_id;
-    parameters.nChannels = _channels;
-    parameters.firstChannel = 0;
-
-    unsigned int buffer_frames = 256;
-
-    try {
-        dac->openStream( &parameters, 0, RTAUDIO_FLOAT32,
-                        _sample_rate, &buffer_frames,
-                        &callback, this );
-    } catch ( RtError& e ) {
-        qWarning() << this << "openStream() RtError:" << e.what();
-        return false;
-    }
-    return true;
+    return buffer_size;
 }
 
 bool Player::startStream()
 {
-    try {
-        dac->startStream();
-    } catch ( RtError& e ) {
-        qWarning() << this << "startStream() RtError:" << e.what();
-        return false;
-    }
+    ca->start();
+
     return true;
 }
 
 bool Player::stopStream()
 {
-    try {
-        if (dac->isStreamRunning())
-            dac->stopStream();
-    } catch (RtError& e) {
-        qWarning() << this << "stopStream() RtError:" << e.what();
-        return false;
-    }
-    return true;
-}
+    ca->stop();
 
-bool Player::closeDAC()
-{
-    try {
-        if (dac->isStreamOpen())
-            dac->closeStream();
-    } catch (RtError& e) {
-        qWarning() << this << "stopStream() RtError:" << e.what();
-        return false;
-    }
-    delete dac; dac=0;
     return true;
 }
 
@@ -296,10 +227,10 @@ void Player::stop()
     stopStream();
 
     // wipe buffer content and restore semaphor
-    buffer->reset();
-    int e = buffer_semaphor->available();
-    if (e < BUFFER_SIZE) {
-        buffer_semaphor->release(BUFFER_SIZE - e);
+    ring->reset();
+    int e = ring_semaphor->available();
+    if (e < ring_size) {
+        ring_semaphor->release(ring_size - e);
     }
     // emit all neccesery signals
     updateState(Player::STOP);

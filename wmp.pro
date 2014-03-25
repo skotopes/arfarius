@@ -1,11 +1,10 @@
-QT       += core gui concurrent svg opengl
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui concurrent svg opengl widgets
 
 TEMPLATE = app
 TARGET = wmp
 CONFIG += c++11
 
-SOURCES += RtAudio.cpp \
+SOURCES += \
     avcondition.cpp \
     avfile.cpp \
     avhistogram.cpp \
@@ -23,10 +22,10 @@ SOURCES += RtAudio.cpp \
     playlistmodel.cpp \
     playlistview.cpp \
     collection.cpp \
-    wmpapplication.cpp
+    wmpapplication.cpp \
+    qcoreaudio.cpp
 
-HEADERS  += RtAudio.h \
-    RtError.h \
+HEADERS  += \
     avcondition.h \
     avconf.h \
     avexception.h \
@@ -46,17 +45,17 @@ HEADERS  += RtAudio.h \
     playlistmodel.h \
     playlistview.h \
     collection.h \
-    wmpapplication.h
+    wmpapplication.h \
+    qcoreaudio.h
 
 FORMS    += mainwindow.ui
 
-RESOURCES += \
-    assets.qrc
+RESOURCES += assets.qrc
 
 LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag -ltcejdb
 
 macx {
-    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -lpthread
+    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio
     ICON = wmp.icns
     OBJECTIVE_SOURCES += macsupport.mm
     HEADERS += macsupport.h
@@ -66,13 +65,10 @@ macx {
     OTHER_FILES += wmp.plist
 }
 
-linux {
-}
-
-win {
-}
-
 OTHER_FILES += \
     README.md
+
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE += -O3
 
 cache()

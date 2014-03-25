@@ -224,8 +224,11 @@ void AVFile::abort()
 void AVFile::_push(av_sample_t *buffer_ptr, size_t buffer_size)
 {
     if (_output) {
+        size_t ret;
         while (buffer_size > 0) {
-            buffer_size -= _output->push(buffer_ptr, buffer_size);
+            ret = _output->push(buffer_ptr, buffer_size);
+            buffer_size -= ret;
+            buffer_ptr += ret;
         }
     }
 }

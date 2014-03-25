@@ -7,11 +7,11 @@
 
 #include "avobject.h"
 #include "memring.h"
-#include "RtAudio.h"
 
 class PlayListModel;
 class AVFile;
 class QSemaphore;
+class QCoreAudio;
 
 class Player : public QObject, public AVObject
 {
@@ -34,27 +34,22 @@ public:
     virtual size_t push(float *buffer_ptr, size_t buffer_size);
 
 private:
-    RtAudio *dac;
+    QCoreAudio *ca;
     PlayListModel *playlist;
     AVFile *file;
     QFuture<void> file_future;
     QFutureWatcher<void> file_future_watcher;
     QFuture<void> histogram_future;
     QFutureWatcher<void> histogram_future_watcher;
-    MemRing<av_sample_t> *buffer;
-    QSemaphore *buffer_semaphor;
+    MemRing<av_sample_t> *ring;
+    QSemaphore *ring_semaphor;
+    size_t ring_size;
     State state;
     size_t cnt;
 
-    static int callback(void *outputBuffer, void *inputBuffer,
-                        unsigned int nBufferFrames, double streamTime,
-                        RtAudioStreamStatus status, void *userData);
-
     // Stream and DAC
-    bool openDAC();
     bool startStream();
     bool stopStream();
-    bool closeDAC();
 
     // Player state
     void updateState(Player::State);
