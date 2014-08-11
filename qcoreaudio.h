@@ -2,7 +2,6 @@
 #define QCOREAUDIO_H
 
 #include <QObject>
-#include <CoreAudio/CoreAudio.h>
 #include <AudioUnit/AudioUnit.h>
 #include "avobject.h"
 
@@ -18,10 +17,7 @@ public:
     virtual size_t pull(float *buffer_ptr, size_t buffer_size);
     virtual size_t push(float *buffer_ptr, size_t buffer_size);
 
-    static AudioDeviceID getDefaultOutputDeviceID();
-
 private:
-    AudioDeviceID device_id;
     AudioUnit device_unit;
 
     static OSStatus outputCallback(
@@ -35,7 +31,7 @@ private:
 signals:
 
 public slots:
-    bool open(AudioDeviceID dev_id=getDefaultOutputDeviceID());
+    bool open();
     void start();
     void stop();
     void close();

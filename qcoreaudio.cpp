@@ -1,7 +1,7 @@
 #include "qcoreaudio.h"
 #include <QDebug>
 
-#include <AudioUnit/AudioUnit.h>
+#include <CoreAudio/CoreAudio.h>
 
 OSStatus QCoreAudio::outputCallback(
         void *inRefCon,
@@ -31,7 +31,7 @@ OSStatus QCoreAudio::outputCallback(
 }
 
 QCoreAudio::QCoreAudio(QObject *parent) :
-    QObject(parent), device_id()
+    QObject(parent)
 {
     open();
 }
@@ -56,40 +56,11 @@ size_t QCoreAudio::push(float */*buffer_ptr*/, size_t /*buffer_size*/)
     return 0;
 }
 
-AudioDeviceID QCoreAudio::getDefaultOutputDeviceID()
+bool QCoreAudio::open()
 {
-    AudioDeviceID dev_id = 0;
-    UInt32 dev_id_size = sizeof(AudioDeviceID);
-
-    AudioObjectPropertyAddress theAddress = {
-        kAudioHardwarePropertyDefaultOutputDevice,
-        kAudioObjectPropertyScopeGlobal,
-        kAudioObjectPropertyElementMaster
-    };
-
-    OSStatus ret = AudioObjectGetPropertyData(
-                kAudioObjectSystemObject,
-                &theAddress,
-                0,
-                NULL,
-                &dev_id_size,
-                &dev_id
-                );
-
-    if (ret != noErr) {
-        qWarning() << "getDefaultOutputDeviceID(): AudioObjectGetPropertyData error " << ret;
-    }
-
-    return dev_id;
-}
-
-bool QCoreAudio::open(AudioDeviceID dev_id)
-{
-    device_id = dev_id;
-
     AudioComponentDescription componentDescription;
     componentDescription.componentType = kAudioUnitType_Output;
-    componentDescription.componentSubType = kAudioUnitSubType_HALOutput;
+    componentDescription.componentSubType = kAudioUnitSubType_DefaultOutput;
     componentDescription.componentManufacturer = kAudioUnitManufacturer_Apple;
     componentDescription.componentFlags = 0;
     componentDescription.componentFlagsMask = 0;
@@ -115,16 +86,6 @@ bool QCoreAudio::open(AudioDeviceID dev_id)
                              &callback,
                              sizeof(callback)) != noErr) {
         qWarning() << this << "open(): unable to set callback";
-        return false;
-    }
-
-    if (AudioUnitSetProperty(device_unit,
-                             kAudioOutputUnitProperty_CurrentDevice,
-                             kAudioUnitScope_Global,
-                             0,
-                             &device_id,
-                             sizeof(device_id)) != noErr) {
-        qWarning() << this << "open(): unable to set device";
         return false;
     }
 
@@ -209,13 +170,12 @@ Float64 QCoreAudio::getDeviceSampleRate()
     Float64 sample_rate = 0;
     UInt32 sample_rate_size = sizeof(Float64);
 
-    AudioObjectPropertyAddress property_address = {
-        kAudioDevicePropertyNominalSampleRate,
-        kAudioObjectPropertyScopeGlobal,
-        kAudioObjectPropertyElementMaster
-    };
-
-    OSStatus ret = AudioObjectGetPropertyData(device_id, &property_address, 0, NULL, &sample_rate_size, &sample_rate);
+    OSStatus ret = AudioUnitGetProperty(device_unit,
+                                        kAudioUnitProperty_SampleRate,
+                                        kAudioUnitScope_Input,
+                                        0,
+                                        &sample_rate,
+                                        &sample_rate_size);
     if (ret != noErr) {
         qWarning() << "getDeviceSampleRate(): AudioObjectGetPropertyData error " << ret;
     }
@@ -225,13 +185,12 @@ Float64 QCoreAudio::getDeviceSampleRate()
 
 void QCoreAudio::setDeviceSampleRate(Float64 sample_rate)
 {
-    AudioObjectPropertyAddress property_address = {
-        kAudioDevicePropertyNominalSampleRate,
-        kAudioObjectPropertyScopeGlobal,
-        kAudioObjectPropertyElementMaster
-    };
-
-    OSStatus ret = AudioObjectSetPropertyData(device_id, &property_address, 0, NULL, sizeof(Float64), &sample_rate);
+    OSStatus ret = AudioUnitSetProperty(device_unit,
+                                        kAudioUnitProperty_SampleRate,
+                                        kAudioUnitScope_Input,
+                                        0,
+                                        &sample_rate,
+                                        sizeof(Float64));
     if (ret != noErr) {
         qWarning() << "setDeviceSampleRate(): AudioObjectGetPropertyData error " << ret;
     }
