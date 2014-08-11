@@ -1,7 +1,6 @@
 #include "qcoreaudio.h"
 #include <QDebug>
 
-#include <CoreServices/CoreServices.h>
 #include <AudioUnit/AudioUnit.h>
 
 OSStatus QCoreAudio::outputCallback(
@@ -32,7 +31,7 @@ OSStatus QCoreAudio::outputCallback(
 }
 
 QCoreAudio::QCoreAudio(QObject *parent) :
-    QObject(parent), device_id(), state(Stop)
+    QObject(parent), device_id()
 {
     open();
 }
@@ -88,24 +87,23 @@ bool QCoreAudio::open(AudioDeviceID dev_id)
 {
     device_id = dev_id;
 
-    ComponentDescription componentDescription;
+    AudioComponentDescription componentDescription;
     componentDescription.componentType = kAudioUnitType_Output;
     componentDescription.componentSubType = kAudioUnitSubType_HALOutput;
     componentDescription.componentManufacturer = kAudioUnitManufacturer_Apple;
     componentDescription.componentFlags = 0;
     componentDescription.componentFlagsMask = 0;
 
-    Component component = FindNextComponent(NULL, &componentDescription);
+    AudioComponent component = AudioComponentFindNext(NULL, &componentDescription);
     if (component == 0) {
         qWarning() << this << "open(): failed to find HAL Output component";
         return false;
     }
 
-    if (OpenAComponent(component, &device_unit) != noErr) {
+    if (AudioComponentInstanceNew(component, &device_unit) != noErr) {
         qWarning() << this << "open(): unable to Open Output Component";
         return false;
     }
-
 
     AURenderCallbackStruct callback;
     callback.inputProc = outputCallback;
@@ -163,25 +161,19 @@ bool QCoreAudio::open(AudioDeviceID dev_id)
 
 void QCoreAudio::start()
 {
-    if (state != Stop)
-        qFatal("Programming error: device is not stopped");
-
     AudioOutputUnitStart(device_unit);
 }
 
 void QCoreAudio::stop()
 {
-    if (state != Play)
-        qFatal("Programming error: device is not playing");
-
     AudioOutputUnitStop(device_unit);
 }
 
 void QCoreAudio::close()
 {
-    if (state != Stop) stop();
+    AudioOutputUnitStop(device_unit);
     AudioUnitUninitialize(device_unit);
-    CloseComponent(device_unit);
+    AudioComponentInstanceDispose(device_unit);
 }
 
 UInt32 QCoreAudio::getDeviceBufferSize() {

@@ -9,10 +9,6 @@
 class QCoreAudio : public QObject, public AVObject
 {
     Q_OBJECT
-    enum State {
-        Stop,
-        Play
-    };
 
 public:
     explicit QCoreAudio(QObject *parent = 0);
@@ -27,7 +23,6 @@ public:
 private:
     AudioDeviceID device_id;
     AudioUnit device_unit;
-    State state;
 
     static OSStatus outputCallback(
             void *inRefCon,
