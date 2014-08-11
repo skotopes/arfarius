@@ -1,19 +1,22 @@
 #include "qcoreaudio.h"
 #include <QDebug>
 
-OSStatus QCoreAudio::outputCallback(
-        AudioObjectID           /*inDevice*/,
-        const AudioTimeStamp*   /*inNow*/,
-        const AudioBufferList*  /*inInputData*/,
-        const AudioTimeStamp*   /*inInputTime*/,
-        AudioBufferList*        outOutputData,
-        const AudioTimeStamp*   /*inOutputTime*/,
-        void*                   inClientData)
-{
-    QCoreAudio *me = reinterpret_cast<QCoreAudio*>(inClientData);
+#include <CoreServices/CoreServices.h>
+#include <AudioUnit/AudioUnit.h>
 
-    for (UInt32 i=0; i < outOutputData->mNumberBuffers; i++) {
-        AudioBuffer* buf = &outOutputData->mBuffers[i];
+OSStatus QCoreAudio::outputCallback(
+        void *inRefCon,
+        AudioUnitRenderActionFlags */*ioActionFlags*/,
+        const AudioTimeStamp */*inTimeStamp*/,
+        UInt32 /*inBusNumber*/,
+        UInt32 /*inNumberFrames*/,
+        AudioBufferList *ioData
+        )
+{
+    QCoreAudio *me = reinterpret_cast<QCoreAudio*>(inRefCon);
+
+    for (UInt32 i=0; i < ioData->mNumberBuffers; i++) {
+        AudioBuffer* buf = &ioData->mBuffers[i];
         av_sample_t* buffer = reinterpret_cast<av_sample_t*>(buf->mData);
 
         size_t nBufferFrames = buf->mDataByteSize / sizeof(av_sample_t);
@@ -28,37 +31,15 @@ OSStatus QCoreAudio::outputCallback(
     return noErr;
 }
 
-QCoreAudio::QCoreAudio(QObject *parent, AudioDeviceID dev_id) :
-    QObject(parent), ioproc_id(0), device_id(dev_id)
+QCoreAudio::QCoreAudio(QObject *parent) :
+    QObject(parent), device_id(), state(Stop)
 {
-    CFRunLoopRef theRunLoop = NULL;
-    AudioObjectPropertyAddress property = { kAudioHardwarePropertyRunLoop,
-                                            kAudioObjectPropertyScopeGlobal,
-                                            kAudioObjectPropertyElementMaster };
-    OSStatus ret = AudioObjectSetPropertyData( kAudioObjectSystemObject, &property, 0, NULL, sizeof(CFRunLoopRef), &theRunLoop);
-    if (ret != noErr) {
-        qWarning() << this << "QCoreAudio(): AudioObjectSetPropertyData error" << ret;
-    }
-
-    device_id = dev_id;
-    ret = AudioDeviceCreateIOProcID(
-                device_id,
-                outputCallback,
-                reinterpret_cast<void*>(this),
-                &ioproc_id
-                );
-
-    if (ret != noErr) {
-        qWarning() << this << "QCoreAudio(): AudioDeviceCreateIOProcID error" << ret;
-    }
+    open();
 }
 
 QCoreAudio::~QCoreAudio()
 {
-    OSStatus ret = AudioDeviceDestroyIOProcID(device_id, ioproc_id);
-    if (ret != noErr) {
-        qWarning() << this << "close(): AudioDeviceDestroyIOProcID error" << ret;
-    }
+    close();
 }
 
 const char * QCoreAudio::getName()
@@ -103,110 +84,131 @@ AudioDeviceID QCoreAudio::getDefaultOutputDeviceID()
     return dev_id;
 }
 
+bool QCoreAudio::open(AudioDeviceID dev_id)
+{
+    device_id = dev_id;
+
+    ComponentDescription componentDescription;
+    componentDescription.componentType = kAudioUnitType_Output;
+    componentDescription.componentSubType = kAudioUnitSubType_HALOutput;
+    componentDescription.componentManufacturer = kAudioUnitManufacturer_Apple;
+    componentDescription.componentFlags = 0;
+    componentDescription.componentFlagsMask = 0;
+
+    Component component = FindNextComponent(NULL, &componentDescription);
+    if (component == 0) {
+        qWarning() << this << "open(): failed to find HAL Output component";
+        return false;
+    }
+
+    if (OpenAComponent(component, &device_unit) != noErr) {
+        qWarning() << this << "open(): unable to Open Output Component";
+        return false;
+    }
+
+
+    AURenderCallbackStruct callback;
+    callback.inputProc = outputCallback;
+    callback.inputProcRefCon = this;
+    if (AudioUnitSetProperty(device_unit,
+                             kAudioUnitProperty_SetRenderCallback,
+                             kAudioUnitScope_Global,
+                             0,
+                             &callback,
+                             sizeof(callback)) != noErr) {
+        qWarning() << this << "open(): unable to set callback";
+        return false;
+    }
+
+    if (AudioUnitSetProperty(device_unit,
+                             kAudioOutputUnitProperty_CurrentDevice,
+                             kAudioUnitScope_Global,
+                             0,
+                             &device_id,
+                             sizeof(device_id)) != noErr) {
+        qWarning() << this << "open(): unable to set device";
+        return false;
+    }
+
+    AudioStreamBasicDescription m_streamFormat;
+
+    m_streamFormat.mFormatFlags         = kAudioFormatFlagIsPacked;
+    m_streamFormat.mSampleRate          = getDeviceSampleRate();
+    m_streamFormat.mFramesPerPacket     = 1;
+    m_streamFormat.mChannelsPerFrame    = 2;
+    m_streamFormat.mBitsPerChannel      = 32;
+    m_streamFormat.mBytesPerFrame       = m_streamFormat.mChannelsPerFrame * (m_streamFormat.mBitsPerChannel / 8);
+    m_streamFormat.mBytesPerPacket      = m_streamFormat.mFramesPerPacket * m_streamFormat.mBytesPerFrame;
+    m_streamFormat.mFormatID            = kAudioFormatLinearPCM;
+    m_streamFormat.mFormatFlags         = kAudioFormatFlagIsFloat;
+
+    UInt32 size = sizeof(m_streamFormat);
+    if (AudioUnitSetProperty(device_unit,
+                                kAudioUnitProperty_StreamFormat,
+                                kAudioUnitScope_Input,
+                                0,
+                                &m_streamFormat,
+                                size) != noErr) {
+        qWarning() << this << "open(): Unable to Set Stream information";
+        return false;
+    }
+
+    if (AudioUnitInitialize(device_unit)) {
+        qWarning() << this << "open(): Failed to initialize AudioUnit";
+        return false;
+    }
+
+    return true;
+}
+
 void QCoreAudio::start()
 {
-    OSStatus ret = AudioDeviceStart(device_id, ioproc_id);
-    if (ret != noErr) {
-        qWarning() << this << "open(): AudioDeviceStart error" << ret;
-    }
+    if (state != Stop)
+        qFatal("Programming error: device is not stopped");
+
+    AudioOutputUnitStart(device_unit);
 }
 
 void QCoreAudio::stop()
 {
-    OSStatus ret = AudioDeviceStop(device_id, ioproc_id);
-    if (ret != noErr) {
-        qWarning() << this << "close(): AudioDeviceStop error" << ret;
-    }
+    if (state != Play)
+        qFatal("Programming error: device is not playing");
+
+    AudioOutputUnitStop(device_unit);
 }
 
-UInt32 QCoreAudio::getDeviceChannelsCount()
+void QCoreAudio::close()
 {
-    UInt32 buffers_size = 0;
-    AudioObjectPropertyAddress property_address = {
-        kAudioDevicePropertyStreamConfiguration,
-        kAudioDevicePropertyScopeOutput,
-        kAudioObjectPropertyElementMaster
-    };
-
-    OSStatus ret = AudioObjectGetPropertyDataSize(device_id, &property_address, 0, NULL, &buffers_size);
-    if (ret != noErr) {
-        qWarning() << "getDeviceChannelsCount(): AudioObjectGetPropertyDataSize error " << ret;
-    }
-
-    AudioBufferList	*buffers = (AudioBufferList *) malloc(buffers_size);
-    ret = AudioObjectGetPropertyData(device_id, &property_address, 0, NULL, &buffers_size, buffers);
-    if (ret != noErr) {
-        qWarning() << "getDeviceChannelsCount(): AudioObjectGetPropertyData error " << ret;
-    }
-    UInt32  mNumberChannels = buffers->mBuffers[0].mNumberChannels;
-    free(buffers);
-
-    return mNumberChannels;
-}
-
-void QCoreAudio::setDeviceChannelsCount(UInt32 channels_count)
-{
-    AudioStreamBasicDescription	description;
-    UInt32 description_size = sizeof(AudioStreamBasicDescription);
-
-    AudioObjectPropertyAddress property_address = {
-        kAudioStreamPropertyVirtualFormat,
-        kAudioObjectPropertyScopeOutput,
-        kAudioObjectPropertyElementMaster
-    };
-
-    OSStatus ret = AudioObjectGetPropertyData(device_id, &property_address, 0, NULL, &description_size, &description);
-    if (ret != noErr) {
-        qWarning() << "setDeviceChannelsCount(): AudioObjectGetPropertyData error " << ret;
-    }
-
-    description.mChannelsPerFrame = channels_count;
-    description.mBytesPerFrame = 4 * channels_count;
-    description.mBytesPerPacket = description.mBytesPerFrame * description.mFramesPerPacket;
-    description.mBitsPerChannel = 32;
-    description.mFormatID = kAudioFormatLinearPCM;
-    description.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsFloat;
-
-    ret = AudioObjectSetPropertyData(device_id, &property_address, 0, NULL, description_size, &description);
-    if (ret != noErr) {
-        qWarning() << "setDeviceChannelsCount(): AudioObjectSetPropertyData error " <<  ret;
-    }
+    if (state != Stop) stop();
+    AudioUnitUninitialize(device_unit);
+    CloseComponent(device_unit);
 }
 
 UInt32 QCoreAudio::getDeviceBufferSize() {
     UInt32 buffer_size = 0;
-    UInt32 buffer_size_size = sizeof(UInt32);
-
-    AudioObjectPropertyAddress property_address = {
-        kAudioDevicePropertyBufferFrameSize,
-        kAudioObjectPropertyScopeGlobal,
-        kAudioObjectPropertyElementMaster
-    };
-    OSStatus ret = AudioObjectGetPropertyData(
-                device_id,
-                &property_address,
-                0,
-                NULL,
-                &buffer_size_size,
-                &buffer_size
-                );
-
-    if (ret != noErr) {
-        qWarning() << "getBufferSize(): AudioObjectGetPropertyData error " << ret;
+    UInt32 size = sizeof(UInt32);
+    if (AudioUnitGetProperty(device_unit,
+                             kAudioDevicePropertyBufferFrameSize,
+                             kAudioUnitScope_Global,
+                             0,
+                             &buffer_size,
+                             &size) != noErr) {
+        qWarning() << this << "getDeviceBufferSize(): failed to get buffer size";
+        return 0;
     }
 
     return buffer_size;
 }
 
 void QCoreAudio::setDeviceBufferSize(UInt32 buffer_size) {
-    AudioObjectPropertyAddress property_address = {
-        kAudioDevicePropertyBufferFrameSize,
-        kAudioObjectPropertyScopeGlobal,
-        kAudioObjectPropertyElementMaster
-    };
-    OSStatus ret = AudioObjectSetPropertyData(device_id, &property_address, 0, NULL, sizeof(buffer_size), &buffer_size);
-    if (ret != noErr) {
-        qWarning() << this << "setBufferSize(): AudioObjectSetPropertyData error" << ret;
+    UInt32 size = sizeof(UInt32);
+    if (AudioUnitSetProperty(device_unit,
+                             kAudioDevicePropertyBufferFrameSize,
+                             kAudioUnitScope_Global,
+                             0,
+                             &buffer_size,
+                             size) != noErr) {
+        qWarning() << this << "setDeviceBufferSize(): failed to set buffer size";
     }
 }
 

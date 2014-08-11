@@ -3,13 +3,19 @@
 
 #include <QObject>
 #include <CoreAudio/CoreAudio.h>
-#include <avobject.h>
+#include <AudioUnit/AudioUnit.h>
+#include "avobject.h"
 
 class QCoreAudio : public QObject, public AVObject
 {
     Q_OBJECT
+    enum State {
+        Stop,
+        Play
+    };
+
 public:
-    explicit QCoreAudio(QObject *parent = 0, AudioDeviceID dev_id=getDefaultOutputDeviceID());
+    explicit QCoreAudio(QObject *parent = 0);
     virtual ~QCoreAudio();
 
     virtual const char * getName();
@@ -19,26 +25,26 @@ public:
     static AudioDeviceID getDefaultOutputDeviceID();
 
 private:
-    AudioDeviceIOProcID ioproc_id;
     AudioDeviceID device_id;
+    AudioUnit device_unit;
+    State state;
 
     static OSStatus outputCallback(
-            AudioObjectID           inDevice,
-            const AudioTimeStamp*   inNow,
-            const AudioBufferList*  inInputData,
-            const AudioTimeStamp*   inInputTime,
-            AudioBufferList*        outOutputData,
-            const AudioTimeStamp*   inOutputTime,
-            void*                   inClientData);
+            void *inRefCon,
+            AudioUnitRenderActionFlags *ioActionFlags,
+            const AudioTimeStamp *inTimeStamp,
+            UInt32 inBusNumber,
+            UInt32 inNumberFrames,
+            AudioBufferList *ioData);
 
 signals:
 
 public slots:
+    bool open(AudioDeviceID dev_id=getDefaultOutputDeviceID());
     void start();
     void stop();
+    void close();
 
-    UInt32 getDeviceChannelsCount();
-    void setDeviceChannelsCount(UInt32 channels_count);
     Float64 getDeviceSampleRate();
     void setDeviceSampleRate(Float64 sample_rate);
     UInt32 getDeviceBufferSize();

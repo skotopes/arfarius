@@ -44,7 +44,6 @@ Player::Player(QObject *parent) :
     ca->connectInput(this);
     _sample_rate = ca->getDeviceSampleRate();
     _channels = 2;
-    ca->setDeviceChannelsCount(2);
 
     ring_size = ca->getDeviceBufferSize();
     ring_size *= 8;
@@ -229,7 +228,7 @@ void Player::stop()
     // wipe buffer content and restore semaphor
     ring->reset();
     int e = ring_semaphor->available();
-    if (e < ring_size) {
+    if (e < (int)ring_size) {
         ring_semaphor->release(ring_size - e);
     }
     // emit all neccesery signals

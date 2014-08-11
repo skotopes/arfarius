@@ -1,4 +1,4 @@
-QT       += core gui concurrent svg opengl widgets
+QT       += core gui concurrent widgets
 
 TEMPLATE = app
 TARGET = wmp
@@ -55,11 +55,11 @@ RESOURCES += assets.qrc
 LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag -ltcejdb
 
 macx {
-    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio
+    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit
     ICON = wmp.icns
     OBJECTIVE_SOURCES += macsupport.mm
     HEADERS += macsupport.h
-    DEFINES += __MACOSX_CORE__
+    DEFINES += __STDC_CONSTANT_MACROS
     INCLUDEPATH += /usr/local/include/
     QMAKE_INFO_PLIST = wmp.plist
     OTHER_FILES += wmp.plist
@@ -69,6 +69,6 @@ OTHER_FILES += \
     README.md
 
 QMAKE_CXXFLAGS_RELEASE -= -O2
-QMAKE_CXXFLAGS_RELEASE += -O3
+QMAKE_CXXFLAGS_RELEASE += -Os
 
 cache()
