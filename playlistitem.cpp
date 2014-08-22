@@ -7,6 +7,7 @@
 #include <taglib/tstring.h>
 #include <taglib/tag.h>
 
+#include <QTextCodec>
 #include <QFileInfo>
 #include <QDebug>
 
@@ -125,18 +126,31 @@ QString PlayListItem::getColumnName(int col)
     }
 }
 
+QString toQstring(TagLib::String str) {
+    if (str.isLatin1()) {
+        QTextCodec* codec = QTextCodec::codecForName("cp1251");
+        return codec->toUnicode(str.toCString());
+    } else {
+        return QString::fromUtf8(str.toCString(true));
+    }
+}
+
 void PlayListItem::readTags()
 {
     TagLib::FileRef f(getUrlLocalFile().toLocal8Bit().constData());
     TagLib::Tag *t = f.tag();
-    if (t && !t->isEmpty() && (t->artist().length()>0 && t->title().length() >0)) {
-        artist = t->artist().toCString();
-        title = t->title().toCString();
-        album = t->album().toCString();
+    if (t && !t->isEmpty() && (!t->artist().isEmpty() && !t->title().isEmpty())) {
+        artist = toQstring(t->artist());
+        title = toQstring(t->title());
+        album = toQstring(t->album());
     } else {
         QFileInfo fileInf(source.toLocalFile());
-        title = fileInf.fileName();
+        title = fileInf.completeBaseName();
     }
+}
+
+TagLib::String toString(QString str) {
+    return TagLib::String(str.toStdString(), TagLib::String::UTF8);
 }
 
 void PlayListItem::writeTags()
@@ -144,9 +158,9 @@ void PlayListItem::writeTags()
     TagLib::FileRef f(getUrlLocalFile().toLocal8Bit().constData());
     TagLib::Tag *t = f.tag();
 
-    t->setArtist(artist.toStdString());
-    t->setTitle(title.toStdString());
-    t->setAlbum(album.toStdString());
+    t->setArtist(toString(artist));
+    t->setTitle(toString(title));
+    t->setAlbum(toString(album));
 
     f.save();
 }
