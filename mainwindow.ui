@@ -44,6 +44,12 @@
       <property name="selectionBehavior">
        <enum>QAbstractItemView::SelectRows</enum>
       </property>
+      <property name="verticalScrollMode">
+       <enum>QAbstractItemView::ScrollPerPixel</enum>
+      </property>
+      <property name="horizontalScrollMode">
+       <enum>QAbstractItemView::ScrollPerPixel</enum>
+      </property>
       <property name="showGrid">
        <bool>false</bool>
       </property>
@@ -79,15 +85,14 @@
             <height>40</height>
            </size>
           </property>
-          <property name="icon">
-           <iconset resource="assets.qrc">
-            <normaloff>:/images/prev.svg</normaloff>:/images/prev.svg</iconset>
+          <property name="font">
+           <font>
+            <family>FontAwesome</family>
+            <pointsize>20</pointsize>
+           </font>
           </property>
-          <property name="iconSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
+          <property name="text">
+           <string></string>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -108,15 +113,14 @@
             <height>40</height>
            </size>
           </property>
-          <property name="icon">
-           <iconset resource="assets.qrc">
-            <normaloff>:/images/next.svg</normaloff>:/images/next.svg</iconset>
+          <property name="font">
+           <font>
+            <family>FontAwesome</family>
+            <pointsize>20</pointsize>
+           </font>
           </property>
-          <property name="iconSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
+          <property name="text">
+           <string></string>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -137,15 +141,14 @@
             <height>40</height>
            </size>
           </property>
-          <property name="icon">
-           <iconset resource="assets.qrc">
-            <normaloff>:/images/play.svg</normaloff>:/images/play.svg</iconset>
+          <property name="font">
+           <font>
+            <family>FontAwesome</family>
+            <pointsize>20</pointsize>
+           </font>
           </property>
-          <property name="iconSize">
-           <size>
-            <width>40</width>
-            <height>40</height>
-           </size>
+          <property name="text">
+           <string></string>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -218,8 +221,6 @@
    <header>playlistview.h</header>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="assets.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

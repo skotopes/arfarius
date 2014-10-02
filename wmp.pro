@@ -1,4 +1,4 @@
-QT       += core gui concurrent widgets
+QT       += core gui widgets concurrent
 
 TEMPLATE = app
 TARGET = wmp

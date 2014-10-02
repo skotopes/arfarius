@@ -88,13 +88,13 @@ void MainWindow::updateState(Player::State s)
 {
     switch (s) {
     case Player::PLAY:
-        ui->playButton->setIcon(QIcon(":/images/pause.svg"));
+        ui->playButton->setText("");
         break;
     case Player::PAUSE:
-        ui->playButton->setIcon(QIcon(":/images/play.svg"));
+        ui->playButton->setText("");
         break;
     case Player::STOP:
-        ui->playButton->setIcon(QIcon(":/images/play.svg"));
+        ui->playButton->setText("");
         break;
     default:
         break;

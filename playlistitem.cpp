@@ -156,13 +156,17 @@ TagLib::String toString(QString str) {
 void PlayListItem::writeTags()
 {
     TagLib::FileRef f(getUrlLocalFile().toLocal8Bit().constData());
-    TagLib::Tag *t = f.tag();
+    if (!f.isNull()) {
+        TagLib::Tag *t = f.tag();
 
-    t->setArtist(toString(artist));
-    t->setTitle(toString(title));
-    t->setAlbum(toString(album));
+        t->setArtist(toString(artist));
+        t->setTitle(toString(title));
+        t->setAlbum(toString(album));
 
-    f.save();
+        f.save();
+    } else {
+        qDebug() << this << "can not write tags into" << getUrlLocalFile();
+    }
 }
 
 QString PlayListItem::formatTime()
