@@ -3,8 +3,6 @@
 #include "avfile.h"
 #include "math.h"
 
-#include "iostream"
-
 AVSpectrogram::AVSpectrogram(size_t window_size, WindowType window_type, float threshold):
     _window_size(window_size), _window_type(window_type), _threshold(threshold),
     _in_r(0), _in_i(0), _out_r(0), _out_i(0),
@@ -171,9 +169,9 @@ void AVSpectrogram::_fft(bool inverse) {
             u2 = u1 * sa + u2 * ca;
             u1 = z;
         }
-        sa = sqrt((1.0 - ca) / 2.0);
+        sa = sqrtf((1.0 - ca) / 2.0);
         if (!inverse) sa = -sa;
-        ca = sqrt((1.0 + ca) / 2.0);
+        ca = sqrtf((1.0 + ca) / 2.0);
     }
 
     // Divide through n if it isn't the IDFT

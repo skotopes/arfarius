@@ -8,6 +8,7 @@
 #include "avsplitter.h"
 #include "avhistogram.h"
 #include "avspectrogram.h"
+#include "avspectrum.h"
 #include "qcoreaudio.h"
 
 #include <QtConcurrentRun>
@@ -268,75 +269,80 @@ void Player::prev()
 
 QImage *Player::analyze()
 {
-    PlayListItem *i = playlist->getCurrent();
-    if (!i->isLocalFile())
-        return 0;
+    try {
+        PlayListItem *i = playlist->getCurrent();
+        if (!i->isLocalFile())
+            return 0;
 
-    AVFile file;
-    AVSplitter splitter;
-    AVHistogram histogram(4096);
-    AVSpectrogram spectrogram(4096, AVSpectrogram::BlackmanHarris);
+        AVFile file;
+        AVSplitter splitter;
+        AVHistogram histogram(4096);
+        AVSpectrum spectrum(4096, AVSpectrum::BlackmanHarris);
 
-    file.connectOutput(&splitter);
-    splitter.connectOutput(&histogram);
-    splitter.connectOutput(&spectrogram);
+        file.connectOutput(&splitter);
+        splitter.connectOutput(&histogram);
+        splitter.connectOutput(&spectrum);
 
-    file.setChannels(1);
-    file.setSamplerate(22050);
-    file.open(i->getUrl().toLocal8Bit().constData());
-    file.decode();
+        file.setChannels(1);
+        file.setSamplerate(44100);
+        file.open(i->getUrl().toLocal8Bit().constData());
+        file.decode();
 
-    std::deque<float> *hist=histogram.getData();
-    std::deque<float> *spec=spectrogram.getData();
+        std::deque<float> *hist=histogram.getData();
+        std::deque<float> *spec=spectrum.getData();
 
-    QImage *pic = new QImage(hist->size()/4, 160, QImage::Format_ARGB32);
-    QPainter painter(pic);
+        QImage *pic = new QImage(hist->size()/4, 160, QImage::Format_ARGB32);
+        QPainter painter(pic);
 
-    pic->fill(QColor(0,0,0,0));
+        pic->fill(QColor(0,0,0,0));
 
-    int x=0;
-    while (true) {
-        x++;
-        if (!hist->size() || !spec->size())
-            break;
+        int x=0;
+        while (true) {
+            x++;
+            if (!hist->size() || !spec->size())
+                break;
 
-        // color section
-        float r, g, b;
-        r = spec->front()*0.5; spec->pop_front();
-        g = spec->front(); spec->pop_front();
-        b = spec->front()*5.0; spec->pop_front();
+            // color section
+            float r, g, b;
+            r = spec->front()*0.5; spec->pop_front();
+            g = spec->front(); spec->pop_front();
+            b = spec->front()*5.0; spec->pop_front();
 
-        float maximum = r;
-        if (g > maximum) {
-            maximum = g;
+            float maximum = r;
+            if (g > maximum) {
+                maximum = g;
+            }
+            if (b > maximum) {
+                maximum = b;
+            }
+
+            if (maximum) {
+                r = r / maximum * 180 + 30;
+                g = g / maximum * 180 + 30;
+                b = b / maximum * 180 + 30;
+            } else {
+                r = g = b = 0;
+            }
+
+            painter.setPen(QColor(r,g,b,64));
+
+            // histogram section
+            float pos_peak, neg_peak, pos_rms, neg_rms;
+            pos_peak = hist->front()*80; hist->pop_front();
+            neg_peak = hist->front()*80; hist->pop_front();
+
+            painter.drawLine(x,80+pos_peak,x,80-neg_peak);
+
+            painter.setPen(QColor(r,g,b));
+            pos_rms  = hist->front()*80; hist->pop_front();
+            neg_rms  = hist->front()*80; hist->pop_front();
+            painter.drawLine(x,80+pos_rms,x,80-neg_rms);
         }
-        if (b > maximum) {
-            maximum = b;
-        }
-
-        if (maximum) {
-            r = r / maximum * 180 + 30;
-            g = g / maximum * 180 + 30;
-            b = b / maximum * 180 + 30;
-        } else {
-            r = g = b = 0;
-        }
-
-        painter.setPen(QColor(r,g,b,64));
-
-        // histogram section
-        float pos_peak, neg_peak, pos_rms, neg_rms;
-        pos_peak = hist->front()*80; hist->pop_front();
-        neg_peak = hist->front()*80; hist->pop_front();
-
-        painter.drawLine(x,80+pos_peak,x,80-neg_peak);
-
-        painter.setPen(QColor(r,g,b));
-        pos_rms  = hist->front()*80; hist->pop_front();
-        neg_rms  = hist->front()*80; hist->pop_front();
-        painter.drawLine(x,80+pos_rms,x,80-neg_rms);
+        return pic;
+    } catch (AVException e) {
+        qDebug() << "failed to create histogram" << e.what();
     }
-    return pic;
+    return new QImage(1, 1, QImage::Format_ARGB32);
 }
 
 void Player::onTrackEnd()

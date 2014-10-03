@@ -3,7 +3,7 @@
 #include <QtGui>
 
 HistogramWidget::HistogramWidget(QWidget *parent)
-    : QWidget(parent), progress(-1), image(0)
+    : QGLWidget(parent), progress(-1), image(0)
 {
 }
 
@@ -17,10 +17,12 @@ void HistogramWidget::paintEvent(QPaintEvent *)
         painter.drawImage(QRect(0,0,width(),height()), *image);
     }
 
-    painter.setCompositionMode(QPainter::RasterOp_SourceXorDestination);
+    glLogicOp(GL_XOR);
+    glEnable(GL_COLOR_LOGIC_OP);
     painter.setPen(QColor(255,255,255));
     int p = progress * width();
     painter.drawLine(p, 0, p, height());
+    glDisable(GL_COLOR_LOGIC_OP);
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)

@@ -1,4 +1,4 @@
-QT       += core gui widgets concurrent
+QT       += core gui widgets concurrent opengl
 
 TEMPLATE = app
 TARGET = wmp
@@ -23,7 +23,8 @@ SOURCES += \
     playlistview.cpp \
     collection.cpp \
     wmpapplication.cpp \
-    qcoreaudio.cpp
+    qcoreaudio.cpp \
+    avspectrum.cpp
 
 HEADERS  += \
     avcondition.h \
@@ -46,7 +47,8 @@ HEADERS  += \
     playlistview.h \
     collection.h \
     wmpapplication.h \
-    qcoreaudio.h
+    qcoreaudio.h \
+    avspectrum.h
 
 FORMS    += mainwindow.ui
 
@@ -55,7 +57,7 @@ RESOURCES += assets.qrc
 LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag -ltcejdb
 
 macx {
-    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit
+    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit -lfftw3f_threads -lfftw3f
     ICON = wmp.icns
     OBJECTIVE_SOURCES += macsupport.mm
     HEADERS += macsupport.h

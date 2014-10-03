@@ -66,8 +66,17 @@
       <property name="spacing">
        <number>0</number>
       </property>
+      <property name="topMargin">
+       <number>1</number>
+      </property>
+      <property name="bottomMargin">
+       <number>1</number>
+      </property>
       <item>
        <layout class="QGridLayout" name="controlsLayout">
+        <property name="bottomMargin">
+         <number>4</number>
+        </property>
         <property name="spacing">
          <number>0</number>
         </property>
@@ -81,8 +90,8 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>40</width>
-            <height>40</height>
+            <width>35</width>
+            <height>30</height>
            </size>
           </property>
           <property name="font">
@@ -109,8 +118,8 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>40</width>
-            <height>40</height>
+            <width>35</width>
+            <height>30</height>
            </size>
           </property>
           <property name="font">
@@ -137,8 +146,8 @@
           </property>
           <property name="maximumSize">
            <size>
-            <width>40</width>
-            <height>40</height>
+            <width>35</width>
+            <height>30</height>
            </size>
           </property>
           <property name="font">
@@ -176,16 +185,10 @@
       <item>
        <widget class="HistogramWidget" name="histogram" native="true">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>80</height>
-         </size>
         </property>
         <property name="cursor">
          <cursorShape>PointingHandCursor</cursorShape>

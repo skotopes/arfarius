@@ -1,11 +1,11 @@
 #ifndef HISTOGRAMWIDGET_H
 #define HISTOGRAMWIDGET_H
 
-#include <QWidget>
+#include <QGLWidget>
 
 class QImage;
 
-class HistogramWidget : public QWidget
+class HistogramWidget : public QGLWidget
 {
     Q_OBJECT
 public:
