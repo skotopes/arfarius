@@ -12,15 +12,17 @@
 #include "wmpapplication.h"
 #include "macsupport.h"
 #include "playlistmodel.h"
-#include "collection.h"
+#include "playlistitem.h"
+
+#define CONFIG_VERSION 1
 
 MainWindow::MainWindow(WmpApplication *application, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     platform_support(new MacSupport(this)),
+    player(new Player(this)),
     playlist(new PlayListModel(this)),
-    collection(new Collection(this)),
-    player(new Player(this))
+    current_item(nullptr)
 {
     ui->setupUi(this);
     ui->playList->setModel(playlist);
@@ -34,20 +36,27 @@ MainWindow::MainWindow(WmpApplication *application, QWidget *parent) :
     connect(ui->prevButton, SIGNAL(clicked()), player, SLOT(prev()));
     connect(ui->playButton, SIGNAL(clicked()), player, SLOT(playPause()));
     connect(ui->nextButton, SIGNAL(clicked()), player, SLOT(next()));
-    connect(ui->histogram, SIGNAL(newPlayPointer(float)), player, SLOT(seekTo(float)));
+    connect(ui->histogram, SIGNAL(clicked(float)), player, SLOT(seekTo(float)));
 
-    connect(player, SIGNAL(progressUpdated(float)), ui->histogram, SLOT(updatePlayProgress(float)));
-    connect(player, SIGNAL(histogramUpdated(QImage*)), ui->histogram, SLOT(updateImage(QImage*)));
+    connect(player, SIGNAL(itemUpdated(PlayListItem*)), this, SLOT(updateItem(PlayListItem*)));
     connect(player, SIGNAL(stateUpdated(Player::State)), this, SLOT(updateState(Player::State)));
+    connect(player, SIGNAL(progressUpdated(float)), ui->histogram, SLOT(updateProgress(float)));
     connect(player, SIGNAL(timeComboUpdated(QString)), ui->timeLabel, SLOT(setText(QString)));
 
     QSettings settings;
+    if (settings.value("ConfigVersion", 0).toInt() < CONFIG_VERSION) {
+        settings.clear();
+        settings.setValue("ConfigVersion", CONFIG_VERSION);
+    }
+
     restoreState(settings.value("MainWindow/state").toByteArray());
     restoreGeometry(settings.value("MainWindow/geometry").toByteArray());
     ui->playList->horizontalHeader()->restoreState(settings.value("PlayList/state").toByteArray());
     ui->playList->horizontalHeader()->restoreGeometry(settings.value("PlayList/geometry").toByteArray());
 
     connect(application, SIGNAL(fileDropped(QUrl)), playlist, SLOT(appendUrl(QUrl)));
+
+    PlayListItem::ensurePath();
 }
 
 MainWindow::~MainWindow()
@@ -98,5 +107,30 @@ void MainWindow::updateState(Player::State s)
         break;
     default:
         break;
+    }
+}
+
+void MainWindow::updateItem(PlayListItem* item)
+{
+    if (current_item) {
+        disconnect(current_item, SIGNAL(histogramUpdated()), this, SLOT(updateHistogram()));
+    }
+    current_item = item;
+    if (current_item) {
+        connect(current_item, SIGNAL(histogramUpdated()), this, SLOT(updateHistogram()));
+    }
+
+    updateHistogram();
+}
+
+void MainWindow::updateHistogram()
+{
+    qDebug() << this << "updateHistogram()";
+    if (current_item) {
+        auto r = ((QApplication*)QApplication::instance())->devicePixelRatio();
+        QImage *image = current_item->getHistogrammImage(ui->histogram->width()*r, ui->histogram->height()*r);
+        ui->histogram->updateImage(image);
+    } else {
+        ui->histogram->updateImage(nullptr);
     }
 }

@@ -2,8 +2,8 @@
 #define AVSPECTRUM_H
 
 #include "avobject.h"
+#include <functional>
 #include <fftw3.h>
-#include <deque>
 
 class AVSpectrum: public AVObject
 {
@@ -16,6 +16,8 @@ public:
         BlackmanHarris
     };
 
+    std::function<void(float, float, float)> dataCallback;
+
     AVSpectrum(size_t window_size=4096, WindowType window_type=Square, float threshold=0);
     virtual ~AVSpectrum();
 
@@ -23,8 +25,6 @@ public:
 
     virtual size_t pull(float *buffer_ptr, size_t buffer_size);
     virtual size_t push(float *buffer_ptr, size_t buffer_size);
-
-    std::deque<float> *getData();
 
 private:
     size_t _window_size;
@@ -39,8 +39,6 @@ private:
 
     size_t _low_cnt, _mid_cnt, _high_cnt;
     float _low_rms, _mid_rms, _high_rms;
-
-    std::deque<float> _data;
 
     void _processDomain();
 

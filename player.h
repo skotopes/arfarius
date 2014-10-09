@@ -9,9 +9,11 @@
 #include "memring.h"
 
 class PlayListModel;
+class PlayListItem;
 class AVFile;
 class QSemaphore;
 class QCoreAudio;
+class QTimer;
 
 class Player : public QObject, public AVObject
 {
@@ -39,13 +41,11 @@ private:
     AVFile *file;
     QFuture<void> file_future;
     QFutureWatcher<void> file_future_watcher;
-    QFuture<void> histogram_future;
-    QFutureWatcher<void> histogram_future_watcher;
     MemRing<av_sample_t> *ring;
     QSemaphore *ring_semaphor;
     size_t ring_size;
+    QTimer *progress_timer;
     State state;
-    size_t cnt;
 
     // Stream and DAC
     bool startStream();
@@ -58,9 +58,9 @@ private:
 
 signals:
     void stateUpdated(Player::State);
+    void itemUpdated(PlayListItem *);
     void timeComboUpdated(QString);
     void progressUpdated(float);
-    void histogramUpdated(QImage *);
 
 public slots:
     void seekTo(float p);
@@ -68,10 +68,10 @@ public slots:
     void stop();
     void next();
     void prev();
-    QImage *analyze();
 
 private slots:
     void onTrackEnd();
+    void onProgressTimer();
 };
 
 #endif // PLAYER_H

@@ -3,8 +3,6 @@
 
 #include <QGLWidget>
 
-class QImage;
-
 class HistogramWidget : public QGLWidget
 {
     Q_OBJECT
@@ -20,11 +18,11 @@ private:
     QImage *image;
 
 public slots:
-    void updatePlayProgress(float);
+    void updateProgress(float);
     void updateImage(QImage *);
 
 signals:
-    void newPlayPointer(float);
+    void clicked(float);
 };
 
 #endif // HISTOGRAMWIDGET_H

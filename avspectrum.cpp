@@ -1,30 +1,34 @@
 #include "avspectrum.h"
 #include "avexception.h"
+#include "avmutex.h"
 
 #include <QDebug>
 #include <math.h>
 
+static AVMutex fftw_mutex = AVMutex();
+
 AVSpectrum::AVSpectrum(size_t window_size, WindowType window_type, float threshold):
+    dataCallback(nullptr),
     _window_size(window_size), _window_type(window_type), _threshold(threshold),
     _cnt_in(0), _plan(nullptr),
     _in(nullptr), _out(nullptr),
     _low_cnt(0), _mid_cnt(0), _high_cnt(0),
     _low_rms(0), _mid_rms(0), _high_rms(0)
 {
-    fftwf_init_threads();
-    fftwf_plan_with_nthreads(4);
-
+    fftw_mutex.lock();
     _in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * _window_size);
     _out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * _window_size);
     _plan = fftwf_plan_dft_1d(_window_size, _in, _out, FFTW_FORWARD, FFTW_MEASURE | FFTW_DESTROY_INPUT);
+    fftw_mutex.unlock();
 }
 
 AVSpectrum::~AVSpectrum()
 {
+    fftw_mutex.lock();
     if (_plan) fftwf_destroy_plan(_plan);
     if (_out) fftwf_free(_out);
     if (_in) fftwf_free(_in);
-    fftwf_cleanup_threads();
+    fftw_mutex.unlock();
 }
 
 size_t AVSpectrum::pull(float */*buffer_ptr*/, size_t /*buffer_size*/)
@@ -34,23 +38,19 @@ size_t AVSpectrum::pull(float */*buffer_ptr*/, size_t /*buffer_size*/)
 
 size_t AVSpectrum::push(float *buffer_ptr, size_t buffer_size)
 {
-    for (size_t i=0; i<buffer_size; i++) {
-        _in[_cnt_in][0] = buffer_ptr[i];
+    size_t to_consume = buffer_size;
+    while (to_consume-- > 0) {
+        float v = *buffer_ptr++;
+        _in[_cnt_in][0] = v;
         _in[_cnt_in][1] = 0;
 
-        _cnt_in += 1;
-        if (_cnt_in == _window_size) {
+        if (++_cnt_in == _window_size) {
             _processDomain();
             _cnt_in = 0;
         }
     }
 
     return buffer_size;
-}
-
-std::deque<float> * AVSpectrum::getData()
-{
-    return &_data;
 }
 
 void AVSpectrum::_processDomain()
@@ -82,9 +82,7 @@ void AVSpectrum::_processDomain()
         _processLinear();
     }
 
-    _data.push_back(_low_rms);
-    _data.push_back(_mid_rms);
-    _data.push_back(_high_rms);
+    if (dataCallback) dataCallback(_low_rms, _mid_rms, _high_rms);
 
     // nullify variables
     _low_rms = _mid_rms = _high_rms = 0;

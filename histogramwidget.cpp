@@ -1,9 +1,9 @@
 #include "histogramwidget.h"
-
+#include "playlistitem.h"
 #include <QtGui>
 
 HistogramWidget::HistogramWidget(QWidget *parent)
-    : QGLWidget(parent), progress(-1), image(0)
+    : QGLWidget(parent), progress(-1), image(nullptr)
 {
 }
 
@@ -28,11 +28,11 @@ void HistogramWidget::paintEvent(QPaintEvent *)
 void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)
 {
     float p = (float) e->pos().x() / width();
-    emit newPlayPointer(p);
+    emit clicked(p);
     e->accept();
 }
 
-void HistogramWidget::updatePlayProgress(float p)
+void HistogramWidget::updateProgress(float p)
 {
     progress = p;
     update();
@@ -40,8 +40,11 @@ void HistogramWidget::updatePlayProgress(float p)
 
 void HistogramWidget::updateImage(QImage *i)
 {
-    QImage *t = image;
+    qDebug() << this << "updateImage(QImage *)" << image << "->" << i;
+    QImage *temp = image;
     image = i;
-    delete t;
+    if (temp) delete temp;
+
     update();
 }
+

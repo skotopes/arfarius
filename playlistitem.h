@@ -13,32 +13,38 @@ public:
     virtual ~PlayListItem();
 
     bool isValid();
-
-    QString getUrl();
-    QString getUrlLocalFile();
     bool isLocalFile();
-    void setPos(int p);
-    int getPos();
 
-    QString getColumn(int col);
-    void setColumn(int col, QString value);
+    QString getUrlHash();
+    QString getUrlString();
+    QString getUrlStringLocal();
 
     static int getColumnsCount();
     static QString getColumnName(int col);
+    QString getColumn(int col);
+    void setColumn(int col, QString value);
+
+    void ensureHistogram();
+
+    bool hasHistogram();
+    QString getHistogramDataPath();
+    QImage * getHistogrammImage(size_t width, size_t height);
+
+    static bool ensurePath();
 
 private:
-    int     pos;
     QUrl    source;
     QString artist;
     QString title;
     QString album;
-    int     time;
-    bool    hasTag;
+    int     duration;
 
     void readTags();
     void writeTags();
+    void analyze();
 
-    QString formatTime();
+signals:
+    void histogramUpdated();
 };
 
 #endif // PLAYLISTITEM_H

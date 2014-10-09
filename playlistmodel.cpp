@@ -98,9 +98,9 @@ PlayListItem * PlayListModel::getCurrent()
 void PlayListModel::appendFile(QUrl u) {
     PlayListItem *p = new PlayListItem(u);
     if (p->isValid()) {
-        p->setPos(items.count() + 1);
         beginInsertRows(QModelIndex(), items.count(), items.count());
         items.append(p);
+        p->ensureHistogram();
         endInsertRows();
     }
 }

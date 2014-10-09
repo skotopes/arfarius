@@ -5,8 +5,9 @@
 #include <iostream>
 
 AVHistogram::AVHistogram(size_t window_size, float threshold):
-    _threshold(threshold), _window_size(window_size),
-    _block_current_pos(0), _block_number(0), _pos_cnt(0), _neg_cnt(0),
+    dataCallback(nullptr),
+    _window_size(window_size), _threshold(threshold),
+    _cnt_in(0), _pos_cnt(0), _neg_cnt(0),
     _pos_peak(0), _neg_peak(0), _pos_rms(0), _neg_rms(0)
 {
 }
@@ -34,32 +35,23 @@ size_t AVHistogram::push(float *buffer_ptr, size_t buffer_size) {
             _neg_cnt++;
         }
 
-        if (++_block_current_pos == _window_size) {
+        if (++_cnt_in == _window_size) {
             if (_threshold != 0.0f) {
                 _processDb();
             } else {
                 _processLinear();
             }
 
-            _data.push_back(_pos_peak);
-            _data.push_back(_neg_peak);
-            _data.push_back(_pos_rms);
-            _data.push_back(_neg_rms);
+            if (dataCallback) dataCallback(_pos_peak, _neg_peak, _pos_rms, _neg_rms);
 
             _pos_peak = _neg_peak = 0;
             _pos_rms = _neg_rms = 0;
             _pos_cnt = _neg_cnt = 0;
-            _block_current_pos = 0;
-            _block_number++;
+            _cnt_in = 0;
         }
     }
     
     return buffer_size;
-}
-
-std::deque<float> *AVHistogram::getData()
-{
-    return &_data;
 }
 
 void AVHistogram::_processDb() {

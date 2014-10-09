@@ -5,17 +5,12 @@
 
 #include "avexception.h"
 #include "avfile.h"
-#include "avsplitter.h"
-#include "avhistogram.h"
-#include "avspectrogram.h"
-#include "avspectrum.h"
 #include "qcoreaudio.h"
 
 #include <QtConcurrentRun>
 #include <QSemaphore>
 #include <QSettings>
-#include <QImage>
-#include <QPainter>
+#include <QTimer>
 #include <QDebug>
 
 QString formatTime(size_t time)
@@ -34,10 +29,10 @@ QString formatTime(size_t time)
 
 Player::Player(QObject *parent) :
     QObject(parent),
-    ca(new QCoreAudio(this)), playlist(0), file(0), file_future(), file_future_watcher(),
-    histogram_future(), histogram_future_watcher(),
+    ca(new QCoreAudio(this)), playlist(nullptr),
+    file(nullptr), file_future(), file_future_watcher(),
     ring(0), ring_semaphor(0), ring_size(0),
-    state(Player::STOP), cnt(0)
+    progress_timer(nullptr), state(Player::STOP)
 {
     qRegisterMetaType<Player::State>("Player::State");
     connect(&file_future_watcher, SIGNAL(finished()), this, SLOT(onTrackEnd()));
@@ -50,6 +45,10 @@ Player::Player(QObject *parent) :
     ring_size *= 8;
     ring = new MemRing<av_sample_t>(ring_size);
     ring_semaphor = new QSemaphore(ring_size);
+
+    progress_timer = new QTimer(this);
+    progress_timer->setInterval(250);
+    connect(progress_timer, SIGNAL(timeout()), this, SLOT(onProgressTimer()));
 }
 
 Player::~Player()
@@ -97,36 +96,26 @@ size_t Player::push(float *buffer_ptr, size_t buffer_size)
     ring_semaphor->acquire(buffer_size);
     ring->push(buffer_ptr, buffer_size);
 
-    cnt += buffer_size;
-    if (cnt > _sample_rate / 4) {
-        cnt = 0;
-        emit progressUpdated(file->getPositionInPercents());
-        emit timeComboUpdated(
-            formatTime(file->getPositionInSeconds()) + " [" +
-            formatTime(file->getDurationInSeconds()) +"]"
-        );
-    }
-
     return buffer_size;
 }
 
 bool Player::startStream()
 {
     ca->start();
-
+    progress_timer->start();
     return true;
 }
 
 bool Player::stopStream()
 {
+    progress_timer->stop();
     ca->stop();
-
     return true;
 }
 
 void Player::updateState(Player::State s)
 {
-    qDebug() << this << "updateState()" << "state changed to:" << s;
+    qDebug() << this << "updateState(): state changed to" << s;
     state = s;
     emit stateUpdated(state);
 }
@@ -140,22 +129,15 @@ void Player::loadFile()
             file->setSamplerate(_sample_rate);
             file->setChannels(_channels);
             file->connectOutput(this);
-            file->open(i->getUrl().toLocal8Bit().constData());
+            file->open(i->getUrlString().toLocal8Bit().constData());
             file_future = QtConcurrent::run([this](){
                 file->decode();
                 delete file;
                 file = 0;
             });
             file_future_watcher.setFuture(file_future);
-
-            histogram_future = QtConcurrent::run([this]() {
-                emit histogramUpdated(0);
-                emit histogramUpdated(analyze());
-            });
-            histogram_future_watcher.setFuture(histogram_future);
-
         } catch (AVException &e) {
-            qWarning() << this << "loadFile()" << "unable to open file: " << e.what();
+            qWarning() << this << "loadFile(): unable to open file: " << e.what();
             if (file)
                 delete file;
             return;
@@ -165,6 +147,7 @@ void Player::loadFile()
             startStream();
             updateState(Player::PLAY);
         }
+        emit itemUpdated(i);
     }
 }
 
@@ -183,12 +166,8 @@ void Player::ejectFile()
             delete [] buffer ;
         });
         eject_future_watcher.setFuture(eject_future);
-
         file_future.waitForFinished();
-        histogram_future.waitForFinished();
         eject_future_watcher.waitForFinished();
-
-        emit histogramUpdated(0);
     }
 }
 
@@ -235,8 +214,8 @@ void Player::stop()
     // emit all neccesery signals
     updateState(Player::STOP);
     emit timeComboUpdated("=(-_-)=");
-    emit histogramUpdated(0);
     emit progressUpdated(-1);
+    emit itemUpdated(nullptr);
 }
 
 void Player::next()
@@ -267,84 +246,6 @@ void Player::prev()
     }
 }
 
-QImage *Player::analyze()
-{
-    try {
-        PlayListItem *i = playlist->getCurrent();
-        if (!i->isLocalFile())
-            return 0;
-
-        AVFile file;
-        AVSplitter splitter;
-        AVHistogram histogram(4096);
-        AVSpectrum spectrum(4096, AVSpectrum::BlackmanHarris);
-
-        file.connectOutput(&splitter);
-        splitter.connectOutput(&histogram);
-        splitter.connectOutput(&spectrum);
-
-        file.setChannels(1);
-        file.setSamplerate(44100);
-        file.open(i->getUrl().toLocal8Bit().constData());
-        file.decode();
-
-        std::deque<float> *hist=histogram.getData();
-        std::deque<float> *spec=spectrum.getData();
-
-        QImage *pic = new QImage(hist->size()/4, 160, QImage::Format_ARGB32);
-        QPainter painter(pic);
-
-        pic->fill(QColor(0,0,0,0));
-
-        int x=0;
-        while (true) {
-            x++;
-            if (!hist->size() || !spec->size())
-                break;
-
-            // color section
-            float r, g, b;
-            r = spec->front()*0.5; spec->pop_front();
-            g = spec->front(); spec->pop_front();
-            b = spec->front()*5.0; spec->pop_front();
-
-            float maximum = r;
-            if (g > maximum) {
-                maximum = g;
-            }
-            if (b > maximum) {
-                maximum = b;
-            }
-
-            if (maximum) {
-                r = r / maximum * 180 + 30;
-                g = g / maximum * 180 + 30;
-                b = b / maximum * 180 + 30;
-            } else {
-                r = g = b = 0;
-            }
-
-            painter.setPen(QColor(r,g,b,64));
-
-            // histogram section
-            float pos_peak, neg_peak, pos_rms, neg_rms;
-            pos_peak = hist->front()*80; hist->pop_front();
-            neg_peak = hist->front()*80; hist->pop_front();
-
-            painter.drawLine(x,80+pos_peak,x,80-neg_peak);
-
-            painter.setPen(QColor(r,g,b));
-            pos_rms  = hist->front()*80; hist->pop_front();
-            neg_rms  = hist->front()*80; hist->pop_front();
-            painter.drawLine(x,80+pos_rms,x,80-neg_rms);
-        }
-        return pic;
-    } catch (AVException e) {
-        qDebug() << "failed to create histogram" << e.what();
-    }
-    return new QImage(1, 1, QImage::Format_ARGB32);
-}
-
 void Player::onTrackEnd()
 {
     qDebug() << this << "onTrackEnd()";
@@ -356,4 +257,21 @@ void Player::onTrackEnd()
     } else {
         stop();
     }
+}
+
+void Player::onProgressTimer()
+{
+    float file_duration = file->getDurationInSeconds();
+    float file_samples = file->getDurationInSamples();
+    float file_position = file->getPositionInPercents();
+    float ring_offset = ring->readSpace()/_channels/file_samples;
+
+    float percent = file_position - ring_offset;
+    float position = percent * file_duration;
+
+    emit progressUpdated(percent);
+    emit timeComboUpdated(
+        formatTime(position) + " [" +
+        formatTime(file_duration) +"]"
+    );
 }

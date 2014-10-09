@@ -11,7 +11,6 @@ SOURCES += \
     avmutex.cpp \
     avobject.cpp \
     avring.cpp \
-    avspectrogram.cpp \
     avsplitter.cpp \
     avthread.cpp \
     histogramwidget.cpp \
@@ -21,7 +20,6 @@ SOURCES += \
     playlistitem.cpp \
     playlistmodel.cpp \
     playlistview.cpp \
-    collection.cpp \
     wmpapplication.cpp \
     qcoreaudio.cpp \
     avspectrum.cpp
@@ -35,7 +33,6 @@ HEADERS  += \
     avmutex.h \
     avobject.h \
     avring.h \
-    avspectrogram.h \
     avsplitter.h \
     avthread.h \
     histogramwidget.h \
@@ -45,7 +42,6 @@ HEADERS  += \
     playlistitem.h \
     playlistmodel.h \
     playlistview.h \
-    collection.h \
     wmpapplication.h \
     qcoreaudio.h \
     avspectrum.h
@@ -54,10 +50,10 @@ FORMS    += mainwindow.ui
 
 RESOURCES += assets.qrc
 
-LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag -ltcejdb
+LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag
 
 macx {
-    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit -lfftw3f_threads -lfftw3f
+    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit -lfftw3f
     ICON = wmp.icns
     OBJECTIVE_SOURCES += macsupport.mm
     HEADERS += macsupport.h

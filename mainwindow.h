@@ -10,6 +10,7 @@ namespace Ui {
 
 class WmpApplication;
 class PlayListModel;
+class PlayListItem;
 class MacSupport;
 class Collection;
 
@@ -28,12 +29,15 @@ protected:
 private:
     Ui::MainWindow *ui;
     MacSupport *platform_support;
-    PlayListModel *playlist;
-    Collection *collection;
     Player *player;
+    PlayListModel *playlist;
+    PlayListItem *current_item;
 
-public slots:
+private slots:
     void updateState(Player::State);
+    void updateItem(PlayListItem*);
+    void updateHistogram();
+
 };
 
 #endif // MAINWINDOW_H

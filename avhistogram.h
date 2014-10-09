@@ -2,10 +2,12 @@
 #define AVHISTOGRAM_H
 
 #include "avobject.h"
-#include <deque>
+#include <functional>
 
 class AVHistogram : public AVObject {
 public:
+    std::function<void(float, float, float, float)> dataCallback;
+
     AVHistogram(size_t window_size, float threshold=0);
     virtual ~AVHistogram();
 
@@ -14,13 +16,11 @@ public:
     virtual size_t pull(float *buffer_ptr, size_t buffer_size);
     virtual size_t push(float *buffer_ptr, size_t buffer_size);
 
-    std::deque<float> *getData();
-
 private:
+    size_t _window_size;
     float _threshold;
-    size_t _window_size, _block_current_pos, _block_number, _pos_cnt, _neg_cnt;
+    size_t _cnt_in, _pos_cnt, _neg_cnt;
     float _pos_peak, _neg_peak, _pos_rms, _neg_rms;
-    std::deque<float> _data;
 
     void _processDb();
     void _processLinear();
