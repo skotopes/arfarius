@@ -146,51 +146,56 @@ void PlayListModel::prevItem()
     }
 }
 
-void PlayListModel::appendFile(QUrl u) {
-    QtConcurrent::run([this,u](){
-        PlayListItem *p = new PlayListItem(u);
-        if (p->isValid()) {
-            beginInsertRows(QModelIndex(), items.count(), items.count());
-            items.append(p);
-            p->ensureHistogram();
-            endInsertRows();
-        }
-    });
-}
-
-void PlayListModel::appendDirectory(QUrl u)
-{
-    QDirIterator iterator(u.path(), QDirIterator::Subdirectories);
-    while (iterator.hasNext()) {
-        iterator.next();
-        if (!iterator.fileInfo().isDir()) {
-            appendFile(QUrl::fromLocalFile(iterator.filePath()));
-        }
-    }
-}
-
 void PlayListModel::appendUrl(QUrl url)
 {
     if (url.isLocalFile()) {
-        QFileInfo f(url.path());
-        if (f.isDir()) {
-            appendDirectory(url);
-        } else {
-            appendFile(url);
-        }
+        appendItems(urlToItems(url));
     }
 }
 
 void PlayListModel::appendUrls(QList<QUrl> urls)
 {
-    QList<QUrl>::iterator i;
-    for (i = urls.begin(); i != urls.end(); ++i) {
-        appendUrl(*i);
+    QList<PlayListItem *> new_items;
+    QListIterator<QUrl> urls_iterator(urls);
+    while (urls_iterator.hasNext()) {
+        QUrl url = urls_iterator.next();
+        if (url.isLocalFile()) {
+            new_items += urlToItems(url);
+        }
+    }
+
+    appendItems(new_items);
+}
+
+void PlayListModel::appendItems(QList<PlayListItem *> new_items)
+{
+    if (new_items.length() > 0) {
+        beginInsertRows(QModelIndex(), new_items.count(), new_items.count() + new_items.size()-1);
+        items += new_items;
+        endInsertRows();
     }
 }
 
-void PlayListModel::clear() {
-    beginResetModel();
-    items.clear();
-    endResetModel();
+QList<PlayListItem *> PlayListModel::urlToItems(QUrl url)
+{
+    QList<PlayListItem *> new_items;
+
+    QFileInfo f(url.path());
+    if (f.isDir()) {
+        QDirIterator iterator(url.path(), QDirIterator::Subdirectories);
+        while (iterator.hasNext()) {
+            iterator.next();
+            if (!iterator.fileInfo().isDir()) {
+                new_items += urlToItems(QUrl::fromLocalFile(iterator.filePath()));
+            }
+        }
+    } else {
+        PlayListItem *p = new PlayListItem(url);
+        if (p->isValid()) {
+            p->ensureHistogram();
+            new_items += p;
+        }
+    }
+
+    return new_items;
 }

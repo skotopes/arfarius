@@ -31,15 +31,17 @@ signals:
 public slots:
     void nextItem();
     void prevItem();
-    void appendFile(QUrl);
-    void appendDirectory(QUrl);
+
     void appendUrl(QUrl url);
     void appendUrls(QList<QUrl> urls);
-    void clear();
+    void appendItems(QList<PlayListItem *> new_items);
 
 private:
     QList<PlayListItem *> items;
     int current;
+
+    QList<PlayListItem *> urlToItems(QUrl url);
+
 };
 
 #endif // PLAYLISTMODEL_H
