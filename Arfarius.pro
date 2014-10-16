@@ -1,7 +1,7 @@
 QT       += core gui widgets concurrent opengl
 
 TEMPLATE = app
-TARGET = wmp
+TARGET = Arfarius
 CONFIG += c++11
 
 SOURCES += \
@@ -20,7 +20,7 @@ SOURCES += \
     playlistitem.cpp \
     playlistmodel.cpp \
     playlistview.cpp \
-    wmpapplication.cpp \
+    arfariusapplication.cpp \
     qcoreaudio.cpp \
     avspectrum.cpp
 
@@ -42,7 +42,7 @@ HEADERS  += \
     playlistitem.h \
     playlistmodel.h \
     playlistview.h \
-    wmpapplication.h \
+    arfariusapplication.h \
     qcoreaudio.h \
     avspectrum.h
 
@@ -50,17 +50,17 @@ FORMS    += mainwindow.ui
 
 RESOURCES += assets.qrc
 
-LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag
+LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag -lfftw3f
 
 macx {
-    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit -lfftw3f
-    ICON = wmp.icns
+    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit
+    ICON = Arfarius.icns
     OBJECTIVE_SOURCES += macsupport.mm
     HEADERS += macsupport.h
     DEFINES += __STDC_CONSTANT_MACROS
     INCLUDEPATH += /usr/local/include/
-    QMAKE_INFO_PLIST = wmp.plist
-    OTHER_FILES += wmp.plist
+    QMAKE_INFO_PLIST = Arfarius.plist
+    OTHER_FILES += Arfarius.plist
 }
 
 OTHER_FILES += \

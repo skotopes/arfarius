@@ -68,7 +68,6 @@ void PlayListView::keyPressEvent(QKeyEvent *event) {
 
 void PlayListView::mouseReleaseEvent(QMouseEvent * event)
 {
-    qDebug() << this << "mouseReleaseEvent()" << event->modifiers();
     if (event->modifiers() & Qt::AltModifier) {
         QModelIndex index = indexAt(event->pos());
         if (index.isValid()) {
@@ -84,7 +83,6 @@ void PlayListView::mouseReleaseEvent(QMouseEvent * event)
 
 void PlayListView::mouseDoubleClickEvent(QMouseEvent * event)
 {
-    qDebug() << this << "mouseDoubleClickEvent()" << event->modifiers();
     QModelIndex index = indexAt(event->pos());
     if (index.isValid()) {
         PlayListModel * playlist = dynamic_cast<PlayListModel*>(model());

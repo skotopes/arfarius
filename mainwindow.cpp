@@ -8,14 +8,14 @@
 #include <QUrl>
 #include <QDebug>
 
-#include "wmpapplication.h"
+#include "arfariusapplication.h"
 #include "macsupport.h"
 #include "playlistmodel.h"
 #include "playlistitem.h"
 
-#define CONFIG_VERSION 1
+#define CONFIG_VERSION 2
 
-MainWindow::MainWindow(WmpApplication *application, QWidget *parent) :
+MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     platform_support(new MacSupport(this)),

@@ -5,7 +5,7 @@
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
     <key>CFBundleIconFile</key>
-    <string>wmp.icns</string>
+    <string>Arfarius.icns</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleGetInfoString</key>
@@ -13,9 +13,9 @@
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleExecutable</key>
-    <string>wmp</string>
+    <string>Arfarius</string>
     <key>CFBundleIdentifier</key>
-    <string>com.plooks.wmp</string>
+    <string>com.plooks.Arfarius</string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>

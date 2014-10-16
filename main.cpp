@@ -1,4 +1,4 @@
-#include "wmpapplication.h"
+#include "arfariusapplication.h"
 #include "mainwindow.h"
 
 int main(int argc, char *argv[])
@@ -9,10 +9,10 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    WmpApplication a(argc, argv);
+    ArfariusApplication a(argc, argv);
     a.setOrganizationName("Plooks Ltd");
     a.setOrganizationDomain("plooks.com");
-    a.setApplicationName("wmp");
+    a.setApplicationName("Arfarius");
     a.setAttribute(Qt::AA_UseHighDpiPixmaps);
 
     MainWindow m(&a);

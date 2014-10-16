@@ -4,11 +4,11 @@
 #include <QApplication>
 #include <QUrl>
 
-class WmpApplication : public QApplication
+class ArfariusApplication : public QApplication
 {
     Q_OBJECT
 public:
-    explicit WmpApplication(int &argc, char **argv);
+    explicit ArfariusApplication(int &argc, char **argv);
     bool event(QEvent *);
 
 signals:

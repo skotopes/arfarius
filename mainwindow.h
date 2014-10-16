@@ -8,7 +8,7 @@ namespace Ui {
     class MainWindow;
 }
 
-class WmpApplication;
+class ArfariusApplication;
 class PlayListModel;
 class PlayListItem;
 class MacSupport;
@@ -18,7 +18,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(WmpApplication *application, QWidget *parent = 0);
+    explicit MainWindow(ArfariusApplication *application, QWidget *parent = 0);
     ~MainWindow();
 
 protected:

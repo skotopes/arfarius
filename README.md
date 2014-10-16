@@ -1,7 +1,7 @@
 About
 ============
 
-WMP - minimalistic audio player written in c++ with Qt.
+Arfarius - minimalistic audio player written in c++ with Qt.
 
 Main features:
 
@@ -12,7 +12,7 @@ Main features:
 Download
 ============
 
-Latest version for Mac OS: http://myau.su/wmp.dmg
+Latest version for Mac OS: http://myau.su/Arfarius.dmg
 Requirements: Mac OS 10.9 or higher
 
 Building from source

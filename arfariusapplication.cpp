@@ -1,12 +1,12 @@
-#include "wmpapplication.h"
+#include "arfariusapplication.h"
 #include <QFileOpenEvent>
 
-WmpApplication::WmpApplication(int & argc, char ** argv) :
+ArfariusApplication::ArfariusApplication(int & argc, char ** argv) :
     QApplication(argc, argv)
 {
 }
 
-bool WmpApplication::event(QEvent *event)
+bool ArfariusApplication::event(QEvent *event)
 {
     switch (event->type()) {
     case QEvent::FileOpen:
