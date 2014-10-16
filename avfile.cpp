@@ -1,5 +1,5 @@
 #include "avfile.h"
-#include "avobject.h"
+#include "avmutex.h"
 #include "avexception.h"
 #include "memring.h"
 
@@ -11,18 +11,21 @@ extern "C" {
 }
 
 
-static volatile bool ffmpeginit = false;
+static AVMutex ffmpeg_init_mutex;
+static volatile bool ffmpeg_init = false;
 
 AVFile::AVFile() :
     AVObject(),
-    formatCtx(0), codecCtx(0), swrCtx(0), audioStream(-1),
-    _abort(false), _position(0), _seek_to(-1)
+    formatCtx(nullptr), codecCtx(nullptr), swrCtx(nullptr),
+    audioStream(-1), decoding(false), _position(0), _seek_to(-1)
 {
-    if (!ffmpeginit) {
+    ffmpeg_init_mutex.lock();
+    if (!ffmpeg_init) {
         av_register_all();
         avcodec_register_all();
-        ffmpeginit = true;
+        ffmpeg_init = true;
     }
+    ffmpeg_init_mutex.unlock();
 }
 
 AVFile::~AVFile()
@@ -32,6 +35,18 @@ AVFile::~AVFile()
 
 const char * AVFile::getName() {
     return "AVFile";
+}
+
+void AVFile::setSamplerate(av_sample_rate_t samplerate)
+{
+    AVObject::setSamplerate(samplerate);
+    _updateSWR();
+}
+
+void AVFile::setChannels(av_channels_t channels)
+{
+    AVObject::setChannels(channels);
+    _updateSWR();
 }
 
 size_t AVFile::pull(av_sample_t */*buffer_ptr*/, size_t /*buffer_size*/)
@@ -67,13 +82,7 @@ void AVFile::open(const char *url)
     if (!codecCtx->channel_layout)
         codecCtx->channel_layout = av_get_default_channel_layout(codecCtx->channels);
 
-    // TODO: stream params can be changed on the fly, add moar checks
-    if (_channels &&
-            (codecCtx->channel_layout != (uint64_t)av_get_default_channel_layout(_channels) ||
-            codecCtx->sample_fmt != AV_SAMPLE_FMT_FLT ||
-            codecCtx->sample_rate != (int)_sample_rate)) {
-        _allocSWR();
-    }
+    _updateSWR();
 }
 
 void AVFile::close()
@@ -148,7 +157,7 @@ void AVFile::decode()
     av_init_packet(&packet);
 
     uint8_t * shadow = reinterpret_cast<uint8_t*>(av_malloc(192000 * 4));
-
+    decoding = true;
     while (av_read_frame(formatCtx, &packet) == 0) {
         if (packet.stream_index == audioStream) {
             // make shure that we will be able to free it later
@@ -175,10 +184,10 @@ void AVFile::decode()
                         // todo: check original code^ some nasty shit inside
                         int ret = swr_convert(swrCtx, shadow_array, 192000, input_array, frame.nb_samples);
                         if (ret > 0) {
-                            _push(reinterpret_cast<float *>(shadow), ret * _channels);
+                            _output->push(reinterpret_cast<float *>(shadow), ret * _channels);
                         }
                     } else {
-                        _push(reinterpret_cast<float *>(frame.data[0]), frame.nb_samples * _channels);
+                        _output->push(reinterpret_cast<float *>(frame.data[0]), frame.nb_samples * _channels);
                     }
 
                     // update position
@@ -191,8 +200,9 @@ void AVFile::decode()
                     }
                 }
                 // hurry up, no time to decode one more frame
-                if (_abort)
+                if (!decoding) {
                     break;
+                }
             }
 
             // restore original size and pointer
@@ -202,8 +212,7 @@ void AVFile::decode()
         // free packet data, reuse structure
         av_free_packet(&packet);
         // complete decoding thread shutdown
-        if (_abort) {
-            _abort = false;
+        if (!decoding) {
             break;
         }
 
@@ -217,31 +226,32 @@ void AVFile::decode()
     }
     av_free(shadow);
 }
-void AVFile::abort()
+
+void AVFile::cancelDecoding()
 {
-    _abort = true;
+    decoding = false;
 }
 
-void AVFile::_push(av_sample_t *buffer_ptr, size_t buffer_size)
+void AVFile::_updateSWR()
 {
-    if (_output) {
-        size_t ret;
-        while (buffer_size > 0) {
-            ret = _output->push(buffer_ptr, buffer_size);
-            buffer_size -= ret;
-            buffer_ptr += ret;
-        }
+    if (swrCtx) {
+        swr_free(&swrCtx);
     }
-}
 
-void AVFile::_allocSWR()
-{
-    swrCtx = swr_alloc_set_opts(0, av_get_default_channel_layout(_channels), AV_SAMPLE_FMT_FLT, _sample_rate,
-                                codecCtx->channel_layout, codecCtx->sample_fmt, codecCtx->sample_rate,
-                                0, 0);
+    if (!_channels || !_sample_rate || !codecCtx)
+        return;
 
-    if (!swrCtx)
-        throw AVException("Unable to allocate swresample context");
+    if (codecCtx->channel_layout != (uint64_t)av_get_default_channel_layout(_channels) ||
+        codecCtx->sample_fmt != AV_SAMPLE_FMT_FLT ||
+        codecCtx->sample_rate != (int)_sample_rate)
+    {
+        swrCtx = swr_alloc_set_opts(0, av_get_default_channel_layout(_channels), AV_SAMPLE_FMT_FLT, _sample_rate,
+                                    codecCtx->channel_layout, codecCtx->sample_fmt, codecCtx->sample_rate,
+                                    0, 0);
 
-    swr_init(swrCtx);
+        if (!swrCtx)
+            throw AVException("Unable to allocate swresample context");
+
+        swr_init(swrCtx);
+    }
 }

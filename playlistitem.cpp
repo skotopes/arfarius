@@ -371,6 +371,20 @@ void PlayListItem::analyze()
     emit histogramUpdated();
 }
 
+AVFile * PlayListItem::getAVFile()
+{
+    AVFile *file = nullptr;
+    try {
+        file = new AVFile;
+        file->open(getUrlString().toLocal8Bit().constData());
+    } catch(AVException e) {
+        qDebug() << this << "Failed to open file because of" << e.what();
+        delete file; file = nullptr;
+    }
+
+    return file;
+}
+
 bool PlayListItem::ensurePath()
 {
     QString path = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/histogram/";

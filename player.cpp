@@ -29,13 +29,12 @@ QString formatTime(size_t time)
 
 Player::Player(QObject *parent) :
     QObject(parent),
-    ca(new QCoreAudio(this)), playlist(nullptr),
-    file(nullptr), file_future(), file_future_watcher(),
+    ca(new QCoreAudio(this)),
+    file(nullptr), file_future(), eject_future(),
     ring(0), ring_semaphor(0), ring_size(0),
-    progress_timer(nullptr), state(Player::STOP)
+    progress_timer(nullptr), state(Player::STOP), quiet(false)
 {
     qRegisterMetaType<Player::State>("Player::State");
-    connect(&file_future_watcher, SIGNAL(finished()), this, SLOT(onTrackEnd()));
 
     ca->connectInput(this);
     _sample_rate = ca->getDeviceSampleRate();
@@ -67,11 +66,6 @@ Player::~Player()
     }
 }
 
-void Player::setPlaylist(PlayListModel *p)
-{
-    playlist = p;
-}
-
 const char * Player::getName()
 {
     return "Player";
@@ -87,28 +81,31 @@ size_t Player::pull(float *buffer_ptr, size_t buffer_size)
 
 size_t Player::push(float *buffer_ptr, size_t buffer_size)
 {
-    // check if we have enough space in the ring
-    // reduce buffer size if incoming buffer is bigger then 1/8
-    if (buffer_size > ring_size/8) {
-        buffer_size = ring_size/8;
+    while (buffer_size > 0) {
+        // reduce buffer size if incoming buffer is bigger then 1/8 of the ring
+        size_t granula_size = buffer_size;
+        if (granula_size > ring_size/8) {
+            granula_size = ring_size/8;
+        }
+        // advance semaphor and push data into the buffer
+        ring_semaphor->acquire(granula_size);
+        ring->push(buffer_ptr, granula_size);
+        // adjust data pointer and size
+        buffer_size -= granula_size;
+        buffer_ptr  += granula_size;
     }
-
-    ring_semaphor->acquire(buffer_size);
-    ring->push(buffer_ptr, buffer_size);
 
     return buffer_size;
 }
 
 bool Player::startStream()
 {
-    ca->start();
-    progress_timer->start();
+    ca->start(); 
     return true;
 }
 
 bool Player::stopStream()
 {
-    progress_timer->stop();
     ca->stop();
     return true;
 }
@@ -120,44 +117,13 @@ void Player::updateState(Player::State s)
     emit stateUpdated(state);
 }
 
-void Player::loadFile()
-{
-    PlayListItem *i = playlist->getCurrent();
-    if (i) {
-        try {
-            file = new AVFile();
-            file->setSamplerate(_sample_rate);
-            file->setChannels(_channels);
-            file->connectOutput(this);
-            file->open(i->getUrlString().toLocal8Bit().constData());
-            file_future = QtConcurrent::run([this](){
-                file->decode();
-                delete file;
-                file = 0;
-            });
-            file_future_watcher.setFuture(file_future);
-        } catch (AVException &e) {
-            qWarning() << this << "loadFile(): unable to open file: " << e.what();
-            if (file)
-                delete file;
-            return;
-        }
-
-        if (state == Player::PAUSE) {
-            startStream();
-            updateState(Player::PLAY);
-        }
-        emit itemUpdated(i);
-    }
-}
-
 void Player::ejectFile()
 {
+    qDebug() << this << "ejectFile()";
     if (file) {
-        file->abort();
+        file->cancelDecoding();
 
-        QFutureWatcher<void> eject_future_watcher;
-        auto eject_future = QtConcurrent::run([this](){
+        eject_future = QtConcurrent::run([this](){
             av_sample_t *buffer = new av_sample_t[4096];
             while (state != Player::PLAY && file) {
                 qDebug() << this << "ejectFile(): pumping samples";
@@ -165,9 +131,44 @@ void Player::ejectFile()
             }
             delete [] buffer ;
         });
-        eject_future_watcher.setFuture(eject_future);
         file_future.waitForFinished();
-        eject_future_watcher.waitForFinished();
+        eject_future.waitForFinished();
+    }
+}
+
+void Player::updateItem(PlayListItem *item)
+{
+    qDebug() << this << "updateItem()" << item;
+    // skipping must suppress signals
+    if (file) {
+        quiet = true;
+    }
+    // set new item or stop
+    if (item) {
+        ejectFile();
+
+        file = item->getAVFile();
+        file->setSamplerate(_sample_rate);
+        file->setChannels(_channels);
+        file->connectOutput(this);
+        file_future = QtConcurrent::run([this](){
+            progress_timer->start();
+            file->decode();
+            progress_timer->stop();
+            delete file; file = 0;
+            if (quiet) {
+                quiet = false;
+            } else {
+                emit trackEnded();
+            }
+        });
+
+        if (state != Player::PLAY) {
+            startStream();
+            updateState(Player::PLAY);
+        }
+    } else {
+        stop();
     }
 }
 
@@ -188,10 +189,10 @@ void Player::playPause()
         startStream();
         updateState(Player::PLAY);
     } else {
-        if (playlist->next()) {
-            loadFile();
-            startStream();
-            updateState(Player::PLAY);
+        startStream();
+        updateState(Player::PLAY);
+        if (!file) {
+            emit trackEnded();
         }
     }
 }
@@ -215,48 +216,6 @@ void Player::stop()
     updateState(Player::STOP);
     emit timeComboUpdated("=(-_-)=");
     emit progressUpdated(-1);
-    emit itemUpdated(nullptr);
-}
-
-void Player::next()
-{
-    qDebug() << this << "next()";
-    if (state == Player::STOP)
-        return;
-
-    if (playlist->next()) {
-        ejectFile();
-        loadFile();
-    } else {
-        stop();
-    }
-}
-
-void Player::prev()
-{
-    qDebug() << this << "prev()";
-    if (state == Player::STOP)
-        return;
-
-    if (playlist->prev()) {
-        ejectFile();
-        loadFile();
-    } else {
-        stop();
-    }
-}
-
-void Player::onTrackEnd()
-{
-    qDebug() << this << "onTrackEnd()";
-    if (state == Player::STOP)
-        return;
-
-    if (playlist->next()) {
-        loadFile();
-    } else {
-        stop();
-    }
 }
 
 void Player::onProgressTimer()

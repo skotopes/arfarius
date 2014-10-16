@@ -3,7 +3,6 @@
 
 #include <QMessageBox>
 #include <QCloseEvent>
-#include <QMimeData>
 #include <QSettings>
 #include <QList>
 #include <QUrl>
@@ -26,19 +25,22 @@ MainWindow::MainWindow(WmpApplication *application, QWidget *parent) :
 {
     ui->setupUi(this);
     ui->playList->setModel(playlist);
-    player->setPlaylist(playlist);
 
     connect(platform_support, SIGNAL( dockClicked() ), this, SLOT( show() ));
-    connect(platform_support, SIGNAL( prev() ), player, SLOT( prev() ));
-    connect(platform_support, SIGNAL( play() ), player, SLOT( playPause() ));
-    connect(platform_support, SIGNAL( next() ), player, SLOT( next() ));
+    connect(platform_support, SIGNAL( prev() ), playlist, SLOT(prevItem()));
+    connect(platform_support, SIGNAL( next() ), playlist, SLOT(nextItem()));
+    connect(platform_support, SIGNAL( play() ), player, SLOT(playPause()));
 
-    connect(ui->prevButton, SIGNAL(clicked()), player, SLOT(prev()));
+    connect(ui->prevButton, SIGNAL(clicked()), playlist, SLOT(prevItem()));
+    connect(ui->nextButton, SIGNAL(clicked()), playlist, SLOT(nextItem()));
     connect(ui->playButton, SIGNAL(clicked()), player, SLOT(playPause()));
-    connect(ui->nextButton, SIGNAL(clicked()), player, SLOT(next()));
     connect(ui->histogram, SIGNAL(clicked(float)), player, SLOT(seekTo(float)));
 
-    connect(player, SIGNAL(itemUpdated(PlayListItem*)), this, SLOT(updateItem(PlayListItem*)));
+    connect(playlist, SIGNAL(itemUpdated(PlayListItem*)), this, SLOT(updateItem(PlayListItem*)));
+    connect(playlist, SIGNAL(itemUpdated(PlayListItem*)), player, SLOT(updateItem(PlayListItem*)));
+
+    connect(player, SIGNAL(trackEnded()), playlist, SLOT(nextItem()));
+
     connect(player, SIGNAL(stateUpdated(Player::State)), this, SLOT(updateState(Player::State)));
     connect(player, SIGNAL(progressUpdated(float)), ui->histogram, SLOT(updateProgress(float)));
     connect(player, SIGNAL(timeComboUpdated(QString)), ui->timeLabel, SLOT(setText(QString)));
@@ -80,21 +82,9 @@ void MainWindow::closeEvent(QCloseEvent *e)
     }
 }
 
-void MainWindow::dragEnterEvent(QDragEnterEvent *e)
-{
-    if (e->mimeData()->hasUrls())
-        e->acceptProposedAction();
-}
-
-void MainWindow::dropEvent(QDropEvent *e)
-{
-    QList<QUrl> urls = e->mimeData()->urls();
-    e->acceptProposedAction();
-    playlist->appendUrls(urls);
-}
-
 void MainWindow::updateState(Player::State s)
 {
+    qDebug() << this << "updateState()";
     switch (s) {
     case Player::PLAY:
         ui->playButton->setText("");
@@ -112,10 +102,12 @@ void MainWindow::updateState(Player::State s)
 
 void MainWindow::updateItem(PlayListItem* item)
 {
+    qDebug() << this << "updateItem()";
     if (current_item) {
         disconnect(current_item, SIGNAL(histogramUpdated()), this, SLOT(updateHistogram()));
     }
     current_item = item;
+
     if (current_item) {
         connect(current_item, SIGNAL(histogramUpdated()), this, SLOT(updateHistogram()));
     }

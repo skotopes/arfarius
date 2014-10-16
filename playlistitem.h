@@ -3,7 +3,8 @@
 
 #include <QObject>
 #include <QUrl>
-#include <QString>
+
+class AVFile;
 
 class PlayListItem : public QObject
 {
@@ -19,17 +20,20 @@ public:
     QString getUrlString();
     QString getUrlStringLocal();
 
+    // representation related methods
     static int getColumnsCount();
     static QString getColumnName(int col);
     QString getColumn(int col);
     void setColumn(int col, QString value);
 
+    // histogramm related methods
     void ensureHistogram();
-
     bool hasHistogram();
     QString getHistogramDataPath();
     QImage * getHistogrammImage(size_t width, size_t height);
 
+    // avfile related methods
+    AVFile * getAVFile();
     static bool ensurePath();
 
 private:

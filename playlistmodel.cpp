@@ -2,6 +2,7 @@
 #include "playlistitem.h"
 
 #include <QDirIterator>
+#include <QtConcurrent>
 #include <QFileInfo>
 #include <QMimeData>
 #include <QColor>
@@ -79,8 +80,20 @@ bool PlayListModel::removeRows(int row, int count, const QModelIndex &parent)
     Q_UNUSED(parent)
     beginRemoveRows( QModelIndex(), row, row + count - 1);
 
+    PlayListItem *current_item = nullptr;
+    if (current >= 0 && current < items.size()) {
+        current_item = items[current];
+    }
+
     for (int i = 0; i < count; ++i) {
         items.removeAt(row);
+    }
+
+    if (current_item) {
+        current = items.indexOf(current_item);
+        if (current == -1) {
+            emit itemUpdated(nullptr);
+        }
     }
 
     endRemoveRows();
@@ -88,21 +101,61 @@ bool PlayListModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
-PlayListItem * PlayListModel::getCurrent()
+void PlayListModel::clickedItem(const QModelIndex &index)
 {
-    if (current < 0)
-        return 0;
-    return items[current];
+    int previous = current;
+    current = index.row();
+    emit itemUpdated(items[current]);
+    emit dataChanged(createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount()));
+    emit dataChanged(createIndex(current, 0), createIndex(current, PlayListItem::getColumnsCount()));
+}
+
+void PlayListModel::nextItem()
+{
+    if (!items.count()) {
+        emit itemUpdated(nullptr);
+    } else {
+        int previous = current;
+        if (++current >= items.size()) {
+            current = -1;
+            emit itemUpdated(nullptr);
+            emit dataChanged(createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount()));
+        } else {
+            emit itemUpdated(items[current]);
+            emit dataChanged(createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount()));
+            emit dataChanged(createIndex(current, 0), createIndex(current, PlayListItem::getColumnsCount()));
+        }
+    }
+}
+
+void PlayListModel::prevItem()
+{
+    if (!items.count()) {
+        emit itemUpdated(nullptr);
+    } else {
+        int previous = current;
+        if (--current < 0) {
+            current = -1;
+            emit itemUpdated(nullptr);
+            emit dataChanged(createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount()));
+        } else {
+            emit itemUpdated(items[current]);
+            emit dataChanged(createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount()));
+            emit dataChanged(createIndex(current, 0), createIndex(current, PlayListItem::getColumnsCount()));
+        }
+    }
 }
 
 void PlayListModel::appendFile(QUrl u) {
-    PlayListItem *p = new PlayListItem(u);
-    if (p->isValid()) {
-        beginInsertRows(QModelIndex(), items.count(), items.count());
-        items.append(p);
-        p->ensureHistogram();
-        endInsertRows();
-    }
+    QtConcurrent::run([this,u](){
+        PlayListItem *p = new PlayListItem(u);
+        if (p->isValid()) {
+            beginInsertRows(QModelIndex(), items.count(), items.count());
+            items.append(p);
+            p->ensureHistogram();
+            endInsertRows();
+        }
+    });
 }
 
 void PlayListModel::appendDirectory(QUrl u)
@@ -141,40 +194,3 @@ void PlayListModel::clear() {
     items.clear();
     endResetModel();
 }
-
-bool PlayListModel::next()
-{
-    if (!items.count())
-        return false;
-
-    int previous = current;
-    if (current == (items.count() - 1)) {
-        current = -1;
-        emit dataChanged(createIndex(previous, 0), createIndex(previous, 2));
-        return false;
-    } else {
-        current ++;
-        emit dataChanged(createIndex(previous, 0), createIndex(previous, 2));
-        emit dataChanged(createIndex(current, 0), createIndex(current, 2));
-        return true;
-    }
-}
-
-bool PlayListModel::prev()
-{
-    if (current < 0 || !items.count())
-        return false;
-
-    int previous = current;
-    if (current < 1) {
-        current = -1;
-        emit dataChanged(createIndex(previous,0), createIndex(previous,2));
-        return false;
-    } else {
-        current --;
-        emit dataChanged(createIndex(previous,0), createIndex(previous,2));
-        emit dataChanged(createIndex(current,0), createIndex(current,2));
-        return true;
-    }
-}
-

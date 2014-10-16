@@ -1,13 +1,35 @@
 #include "playlistview.h"
 
 #include <QMenu>
+#include <QMimeData>
 #include <QModelIndex>
+#include <QMouseEvent>
 #include <QContextMenuEvent>
 
 #include <QDebug>
+#include "playlistmodel.h"
 
 PlayListView::PlayListView(QWidget *parent) : QTableView(parent)
 {
+    setEditTriggers(QAbstractItemView::NoEditTriggers);
+}
+
+void PlayListView::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void PlayListView::dropEvent(QDropEvent *event)
+{
+    PlayListModel * playlist = dynamic_cast<PlayListModel*>(model());
+    if (playlist) {
+        QList<QUrl> urls = event->mimeData()->urls();
+        event->acceptProposedAction();
+        playlist->appendUrls(urls);
+    } else {
+        qWarning() << this << "Incompatiable model for drag and drop event";
+    }
 }
 
 void PlayListView::contextMenuEvent(QContextMenuEvent * event)
@@ -15,10 +37,7 @@ void PlayListView::contextMenuEvent(QContextMenuEvent * event)
     QModelIndex index = indexAt(event->pos());
     if (index.isValid()) {
         QMenu *menu = new QMenu(this);
-        menu->addAction(QString("edit meta"));
         menu->addAction(QString("show file"));
-        menu->addAction(QString("remove"));
-        menu->addAction(QString("wipe from hdd"));
         menu->exec(QCursor::pos());
         QTableView::contextMenuEvent(event);
     } else {
@@ -45,4 +64,37 @@ void PlayListView::keyPressEvent(QKeyEvent *event) {
     }
 
     QTableView::keyPressEvent(event);
+}
+
+void PlayListView::mouseReleaseEvent(QMouseEvent * event)
+{
+    qDebug() << this << "mouseReleaseEvent()" << event->modifiers();
+    if (event->modifiers() & Qt::AltModifier) {
+        QModelIndex index = indexAt(event->pos());
+        if (index.isValid()) {
+            edit(index);
+            event->accept();
+        } else {
+            event->ignore();
+        }
+    } else {
+        QTableView::mousePressEvent(event);
+    }
+}
+
+void PlayListView::mouseDoubleClickEvent(QMouseEvent * event)
+{
+    qDebug() << this << "mouseDoubleClickEvent()" << event->modifiers();
+    QModelIndex index = indexAt(event->pos());
+    if (index.isValid()) {
+        PlayListModel * playlist = dynamic_cast<PlayListModel*>(model());
+        if (playlist) {
+            playlist->clickedItem(index);
+        } else {
+            qWarning() << this << "Incompatiable model for drag and drop event";
+        }
+        event->accept();
+    } else {
+        event->ignore();
+    }
 }

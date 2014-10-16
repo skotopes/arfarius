@@ -14,6 +14,10 @@ public:
     virtual ~AVFile();
 
     virtual const char * getName();
+
+    virtual void setSamplerate(av_sample_rate_t samplerate);
+    virtual void setChannels(av_channels_t channels);
+
     virtual size_t pull(av_sample_t *buffer_ptr, size_t buffer_size);
     virtual size_t push(av_sample_t *buffer_ptr, size_t buffer_size);
 
@@ -33,20 +37,19 @@ public:
     void seekToPercent(float p);
 
     void decode();
-    void abort();
+    void cancelDecoding();
 
 private:
     AVFormatContext *formatCtx;
     AVCodecContext *codecCtx;
     SwrContext *swrCtx;
     int audioStream;
+    bool decoding;
 
-    volatile bool _abort;
     volatile int64_t _position;
     volatile int64_t _seek_to;
 
-    void _push(av_sample_t *buffer_ptr, size_t buffer_size);
-    void _allocSWR();
+    void _updateSWR();
 };
 
 #endif // AVFILE_H

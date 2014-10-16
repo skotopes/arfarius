@@ -23,14 +23,14 @@ public:
 
     bool removeRows(int row, int count, const QModelIndex &parent);
 
-    PlayListItem * getCurrent();
-
-    bool next();
-    bool prev();
+    void clickedItem(const QModelIndex &index = QModelIndex());
 
 signals:
+    void itemUpdated(PlayListItem*);
 
 public slots:
+    void nextItem();
+    void prevItem();
     void appendFile(QUrl);
     void appendDirectory(QUrl);
     void appendUrl(QUrl url);
