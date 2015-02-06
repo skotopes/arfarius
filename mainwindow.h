@@ -35,6 +35,7 @@ private slots:
     void updateState(Player::State);
     void updateItem(PlayListItem*);
     void updateHistogram();
+    void applicationStateChanged(Qt::ApplicationState);
 
 };
 

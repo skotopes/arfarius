@@ -32,7 +32,7 @@ Player::Player(QObject *parent) :
     ca(new QCoreAudio(this)),
     file(nullptr), file_future(), eject_future(),
     ring(0), ring_semaphor(0), ring_size(0),
-    progress_timer(nullptr), state(Player::STOP), quiet(false)
+    state(Player::STOP), quiet(false)
 {
     qRegisterMetaType<Player::State>("Player::State");
 
@@ -44,10 +44,6 @@ Player::Player(QObject *parent) :
     ring_size *= 8;
     ring = new MemRing<av_sample_t>(ring_size);
     ring_semaphor = new QSemaphore(ring_size);
-
-    progress_timer = new QTimer(this);
-    progress_timer->setInterval(250);
-    connect(progress_timer, SIGNAL(timeout()), this, SLOT(onProgressTimer()));
 }
 
 Player::~Player()
@@ -94,6 +90,8 @@ size_t Player::push(float *buffer_ptr, size_t buffer_size)
         buffer_size -= granula_size;
         buffer_ptr  += granula_size;
     }
+
+    onProgressTimer();
 
     return buffer_size;
 }
@@ -152,9 +150,7 @@ void Player::updateItem(PlayListItem *item)
         file->setChannels(_channels);
         file->connectOutput(this);
         file_future = QtConcurrent::run([this](){
-            progress_timer->start();
             file->decode();
-            progress_timer->stop();
             delete file; file = 0;
             if (quiet) {
                 quiet = false;

@@ -57,23 +57,12 @@ NSString * nsStringFromQString(const QString & s)
     return [[NSString alloc] initWithUTF8String: utf8String];
 }
 
-void dockClickHandler(id self, SEL _cmd)
-{
-    Q_UNUSED(self);
-    Q_UNUSED(_cmd);
-    ms_instance->emitDockClick();
-}
-
 MacSupport::MacSupport(QObject *parent):
     QObject(parent)
 {
     if (ms_instance) {
         qFatal("MacSupport instance is already allocated");
     }
-
-    Class cls = [[[NSApplication sharedApplication] delegate] class];
-    if (!class_addMethod(cls, @selector(applicationShouldHandleReopen:hasVisibleWindows:), (IMP) dockClickHandler, "v@:"))
-        qFatal("MacSupport(): unable to add dock click handler");
 
     _eventPort = CGEventTapCreate(
         kCGSessionEventTap,
@@ -106,10 +95,6 @@ MacSupport::~MacSupport() {
     CFRelease(_eventPort);
     CFRelease(_runLoopSource);
     if (ms_instance == this) ms_instance = 0;
-}
-
-void MacSupport::emitDockClick() {
-    emit dockClicked();
 }
 
 void MacSupport::emitKeyEvent(int keycode, int keystate)

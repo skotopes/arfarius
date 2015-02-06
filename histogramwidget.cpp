@@ -3,14 +3,20 @@
 #include <QtGui>
 
 HistogramWidget::HistogramWidget(QWidget *parent)
-    : QGLWidget(parent), progress(-1), image(nullptr)
+    : QOpenGLWidget(parent), progress(-1), image(nullptr)
 {
 }
 
-void HistogramWidget::paintEvent(QPaintEvent *)
+void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)
+{
+    float p = (float) e->pos().x() / width();
+    emit clicked(p);
+    e->accept();
+}
+
+void HistogramWidget::paintGL()
 {
     QPainter painter(this);
-
     if (image) {
         painter.setRenderHint(QPainter::Antialiasing);
         painter.setRenderHint(QPainter::SmoothPixmapTransform);
@@ -20,16 +26,9 @@ void HistogramWidget::paintEvent(QPaintEvent *)
     glLogicOp(GL_XOR);
     glEnable(GL_COLOR_LOGIC_OP);
     painter.setPen(QColor(255,255,255));
-    int p = progress * width();
-    painter.drawLine(p, 0, p, height());
+    float p = progress * width();
+    painter.drawLine(QLineF(p, 0, p, height()));
     glDisable(GL_COLOR_LOGIC_OP);
-}
-
-void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)
-{
-    float p = (float) e->pos().x() / width();
-    emit clicked(p);
-    e->accept();
 }
 
 void HistogramWidget::updateProgress(float p)
@@ -44,7 +43,6 @@ void HistogramWidget::updateImage(QImage *i)
     QImage *temp = image;
     image = i;
     if (temp) delete temp;
-
     update();
 }
 

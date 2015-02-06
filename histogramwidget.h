@@ -1,17 +1,17 @@
 #ifndef HISTOGRAMWIDGET_H
 #define HISTOGRAMWIDGET_H
 
-#include <QGLWidget>
+#include <QOpenGLWidget>
 
-class HistogramWidget : public QGLWidget
+class HistogramWidget : public QOpenGLWidget
 {
     Q_OBJECT
 public:
     explicit HistogramWidget(QWidget *parent = 0);
     
 protected:
-    void paintEvent(QPaintEvent *event);
     void mouseReleaseEvent(QMouseEvent *);
+    void paintGL();
 
 private:
     float progress;

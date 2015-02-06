@@ -40,7 +40,6 @@ private:
     MemRing<av_sample_t> *ring;
     QSemaphore *ring_semaphor;
     size_t ring_size;
-    QTimer *progress_timer;
     State state;
     bool quiet;
 

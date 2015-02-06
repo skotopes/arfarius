@@ -22,8 +22,6 @@ public slots:
     void requestAttention();
 
 signals:
-    void dockClicked();
-
     void prev();
     void play();
     void next();

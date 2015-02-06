@@ -26,7 +26,8 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     ui->setupUi(this);
     ui->playList->setModel(playlist);
 
-    connect(platform_support, SIGNAL( dockClicked() ), this, SLOT( show() ));
+    connect(application, SIGNAL( applicationStateChanged(Qt::ApplicationState) ), this, SLOT( applicationStateChanged(Qt::ApplicationState)));
+
     connect(platform_support, SIGNAL( prev() ), playlist, SLOT(prevItem()));
     connect(platform_support, SIGNAL( next() ), playlist, SLOT(nextItem()));
     connect(platform_support, SIGNAL( play() ), player, SLOT(playPause()));
@@ -124,5 +125,12 @@ void MainWindow::updateHistogram()
         ui->histogram->updateImage(image);
     } else {
         ui->histogram->updateImage(nullptr);
+    }
+}
+
+void MainWindow::applicationStateChanged(Qt::ApplicationState state)
+{
+    if (state == Qt::ApplicationActive) {
+        show();
     }
 }
