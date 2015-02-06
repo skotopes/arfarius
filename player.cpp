@@ -31,7 +31,7 @@ Player::Player(QObject *parent) :
     QObject(parent),
     ca(new QCoreAudio(this)),
     file(nullptr), file_future(), eject_future(),
-    ring(0), ring_semaphor(0), ring_size(0),
+    ring(0), ring_semaphor(0), ring_size(0), samples_elapsed(0),
     state(Player::STOP), quiet(false)
 {
     qRegisterMetaType<Player::State>("Player::State");
@@ -77,6 +77,7 @@ size_t Player::pull(float *buffer_ptr, size_t buffer_size)
 
 size_t Player::push(float *buffer_ptr, size_t buffer_size)
 {
+    size_t buffer_size_orig = buffer_size;
     while (buffer_size > 0) {
         // reduce buffer size if incoming buffer is bigger then 1/8 of the ring
         size_t granula_size = buffer_size;
@@ -91,9 +92,13 @@ size_t Player::push(float *buffer_ptr, size_t buffer_size)
         buffer_ptr  += granula_size;
     }
 
-    onProgressTimer();
+    samples_elapsed += buffer_size_orig;
+    if (samples_elapsed > (_sample_rate * _channels / 8)) {
+        samples_elapsed = 0;
+        onProgressTimer();
+    }
 
-    return buffer_size;
+    return buffer_size_orig;
 }
 
 bool Player::startStream()

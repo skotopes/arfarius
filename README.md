@@ -1,5 +1,4 @@
-About
-============
+#About
 
 Arfarius - minimalistic audio player written in c++ with Qt.
 
@@ -7,16 +6,16 @@ Main features:
 
 * plays everything that can be played
 * histograms with spectrograms
-* in-line tags editing
+* in-line tags editing (alt+click)
+* made for Mac OS: directly uses core audio, supports media keys
+* quite good audio pipeline
 
-Download
-============
+#Download
 
-Latest version for Mac OS: http://myau.su/Arfarius.dmg
+Latest version for Mac OS: http://arfarius.com/Arfarius.dmg
 Requirements: Mac OS 10.9 or higher
 
-Building from source
-============
+#Building from source
 
 Requirements:
 

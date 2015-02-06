@@ -40,6 +40,7 @@ private:
     MemRing<av_sample_t> *ring;
     QSemaphore *ring_semaphor;
     size_t ring_size;
+    size_t samples_elapsed;
     State state;
     bool quiet;
 
