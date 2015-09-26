@@ -199,9 +199,6 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <property name="autoFillBackground">
-         <bool>true</bool>
-        </property>
        </widget>
       </item>
      </layout>

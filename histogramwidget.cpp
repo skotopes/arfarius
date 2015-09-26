@@ -25,7 +25,6 @@ void HistogramWidget::paintGL()
 
     glLogicOp(GL_XOR);
     glEnable(GL_COLOR_LOGIC_OP);
-    painter.setPen(QColor(255,255,255));
     float p = progress * width();
     painter.drawLine(QLineF(p, 0, p, height()));
     glDisable(GL_COLOR_LOGIC_OP);
