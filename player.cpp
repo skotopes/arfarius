@@ -151,6 +151,11 @@ void Player::updateItem(PlayListItem *item)
         ejectFile();
 
         file = item->getAVFile();
+        if (file == nullptr) {
+            emit trackEnded();
+            return;
+        }
+
         file->setSamplerate(_sample_rate);
         file->setChannels(_channels);
         file->connectOutput(this);

@@ -11,7 +11,6 @@
 
 PlayListView::PlayListView(QWidget *parent) : QTableView(parent)
 {
-    setEditTriggers(QAbstractItemView::NoEditTriggers);
 }
 
 void PlayListView::dragEnterEvent(QDragEnterEvent *event)

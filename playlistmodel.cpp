@@ -23,12 +23,19 @@ int PlayListModel::columnCount(const QModelIndex & /*parent*/) const
     return PlayListItem::getColumnsCount();
 }
 
+Qt::DropActions PlayListModel::supportedDropActions() const
+{
+    return QAbstractTableModel::supportedDropActions() | Qt::MoveAction;
+}
+
 Qt::ItemFlags PlayListModel::flags(const QModelIndex &index) const
 {
-    if (!index.isValid())
-        return Qt::ItemIsEnabled;
+    Qt::ItemFlags defaultFlags = QAbstractTableModel::flags(index);
 
-    return QAbstractTableModel::flags(index) | Qt::ItemIsEditable;
+     if (index.isValid())
+         return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | defaultFlags;
+     else
+         return Qt::ItemIsDropEnabled | defaultFlags;
 }
 
 QVariant PlayListModel::data(const QModelIndex &index, int role) const

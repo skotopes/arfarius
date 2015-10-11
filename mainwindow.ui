@@ -41,6 +41,15 @@
       <property name="acceptDrops">
        <bool>true</bool>
       </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="dragEnabled">
+       <bool>true</bool>
+      </property>
       <property name="dragDropMode">
        <enum>QAbstractItemView::InternalMove</enum>
       </property>
@@ -55,9 +64,6 @@
       </property>
       <property name="showGrid">
        <bool>false</bool>
-      </property>
-      <property name="sortingEnabled">
-       <bool>true</bool>
       </property>
       <attribute name="horizontalHeaderStretchLastSection">
        <bool>true</bool>
