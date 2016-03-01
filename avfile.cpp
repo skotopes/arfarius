@@ -22,6 +22,7 @@ AVFile::AVFile() :
     ffmpeg_init_mutex.lock();
     if (!ffmpeg_init) {
         av_register_all();
+        avformat_network_init();
         avcodec_register_all();
         ffmpeg_init = true;
     }
@@ -166,7 +167,9 @@ void AVFile::decode()
 
             // decode frames till packet contains data
             while (packet.size > 0) {
-                avcodec_get_frame_defaults(&frame);
+                memset(&frame, 0, sizeof(AVFrame));
+                av_frame_unref(&frame);
+
                 int len = avcodec_decode_audio4(codecCtx, &frame, &got_frame, &packet);
                 if (len < 0) {
                     break; // probably corrupted packet
@@ -210,7 +213,7 @@ void AVFile::decode()
             packet.data = packet_data;
         }
         // free packet data, reuse structure
-        av_free_packet(&packet);
+        av_packet_unref(&packet);
         // complete decoding thread shutdown
         if (!decoding) {
             break;

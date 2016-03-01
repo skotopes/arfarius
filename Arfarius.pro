@@ -22,7 +22,8 @@ SOURCES += \
     playlistview.cpp \
     arfariusapplication.cpp \
     qcoreaudio.cpp \
-    avspectrum.cpp
+    avspectrum.cpp \
+    collection.cpp
 
 HEADERS  += \
     avcondition.h \
@@ -44,7 +45,9 @@ HEADERS  += \
     playlistview.h \
     arfariusapplication.h \
     qcoreaudio.h \
-    avspectrum.h
+    avspectrum.h \
+    collection.h \
+    macmediakeys.h
 
 FORMS    += mainwindow.ui
 
@@ -55,8 +58,8 @@ LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag -lfftw3f
 macx {
     LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit
     ICON = Arfarius.icns
-    OBJECTIVE_SOURCES += macsupport.mm
-    HEADERS += macsupport.h
+    OBJECTIVE_SOURCES +=
+    HEADERS +=
     DEFINES += __STDC_CONSTANT_MACROS
     INCLUDEPATH += /usr/local/include/
     QMAKE_INFO_PLIST = Arfarius.plist
@@ -69,4 +72,5 @@ OTHER_FILES += \
 QMAKE_CXXFLAGS_RELEASE -= -O2
 QMAKE_CXXFLAGS_RELEASE += -Os
 
-cache()
+OBJECTIVE_SOURCES += \
+    macmediakeys.mm

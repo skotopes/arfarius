@@ -40,8 +40,7 @@ Player::Player(QObject *parent) :
     _sample_rate = ca->getDeviceSampleRate();
     _channels = 2;
 
-    ring_size = ca->getDeviceBufferSize();
-    ring_size *= 8;
+    ring_size = _sample_rate / 4;
     ring = new MemRing<av_sample_t>(ring_size);
     ring_semaphor = new QSemaphore(ring_size);
 }
@@ -57,8 +56,11 @@ Player::~Player()
     }
 
     if (ring) {
-        delete ring;
-        ring = 0;
+        delete ring; ring = nullptr;
+    }
+
+    if (ring_semaphor) {
+        delete ring_semaphor; ring_semaphor = nullptr;
     }
 }
 

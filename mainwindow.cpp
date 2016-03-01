@@ -9,7 +9,7 @@
 #include <QDebug>
 
 #include "arfariusapplication.h"
-#include "macsupport.h"
+#include "macmediakeys.h"
 #include "playlistmodel.h"
 #include "playlistitem.h"
 
@@ -18,7 +18,7 @@
 MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    platform_support(new MacSupport(this)),
+    mac_media_keys(new MacMediaKeys(this)),
     player(new Player(this)),
     playlist(new PlayListModel(this)),
     current_item(nullptr)
@@ -28,9 +28,9 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
 
     connect(application, SIGNAL( applicationStateChanged(Qt::ApplicationState) ), this, SLOT( applicationStateChanged(Qt::ApplicationState)));
 
-    connect(platform_support, SIGNAL( prev() ), playlist, SLOT(prevItem()));
-    connect(platform_support, SIGNAL( next() ), playlist, SLOT(nextItem()));
-    connect(platform_support, SIGNAL( play() ), player, SLOT(playPause()));
+    connect(mac_media_keys, SIGNAL( prev() ), playlist, SLOT(prevItem()));
+    connect(mac_media_keys, SIGNAL( next() ), playlist, SLOT(nextItem()));
+    connect(mac_media_keys, SIGNAL( play() ), player, SLOT(playPause()));
 
     connect(ui->prevButton, SIGNAL(clicked()), playlist, SLOT(prevItem()));
     connect(ui->nextButton, SIGNAL(clicked()), playlist, SLOT(nextItem()));

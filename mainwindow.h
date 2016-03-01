@@ -11,7 +11,7 @@ namespace Ui {
 class ArfariusApplication;
 class PlayListModel;
 class PlayListItem;
-class MacSupport;
+class MacMediaKeys;
 class Collection;
 
 class MainWindow : public QMainWindow
@@ -26,7 +26,7 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    MacSupport *platform_support;
+    MacMediaKeys *mac_media_keys;
     Player *player;
     PlayListModel *playlist;
     PlayListItem *current_item;

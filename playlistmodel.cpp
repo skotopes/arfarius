@@ -1,6 +1,7 @@
 #include "playlistmodel.h"
 #include "playlistitem.h"
 
+#include <QProgressDialog>
 #include <QDirIterator>
 #include <QtConcurrent>
 #include <QFileInfo>
@@ -33,7 +34,7 @@ Qt::ItemFlags PlayListModel::flags(const QModelIndex &index) const
     Qt::ItemFlags defaultFlags = QAbstractTableModel::flags(index);
 
      if (index.isValid())
-         return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | defaultFlags;
+         return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | Qt::ItemIsEditable | defaultFlags;
      else
          return Qt::ItemIsDropEnabled | defaultFlags;
 }
@@ -155,13 +156,15 @@ void PlayListModel::prevItem()
 
 void PlayListModel::appendUrl(QUrl url)
 {
-    if (url.isLocalFile()) {
-        appendItems(urlToItems(url));
-    }
+    appendUrls(QList<QUrl>{ url });
 }
 
 void PlayListModel::appendUrls(QList<QUrl> urls)
 {
+    QProgressDialog progress("Adding files to playlist...", "Cancel", 0, urls.count());
+    progress.setWindowModality(Qt::ApplicationModal);
+    progress.show();
+
     QList<PlayListItem *> new_items;
     QListIterator<QUrl> urls_iterator(urls);
     while (urls_iterator.hasNext()) {
@@ -169,8 +172,13 @@ void PlayListModel::appendUrls(QList<QUrl> urls)
         if (url.isLocalFile()) {
             new_items += urlToItems(url);
         }
+
+        progress.setValue(progress.value() + 1);
+        if (progress.wasCanceled())
+            break;
     }
 
+    progress.setValue(urls.count());
     appendItems(new_items);
 }
 

@@ -1,4 +1,4 @@
-#include "macsupport.h"
+#include "macmediakeys.h"
 
 #include <exception>
 #include <QWidget>
@@ -15,7 +15,7 @@ static CFMachPortRef _eventPort;
 static CFRunLoopSourceRef _runLoopSource;
 
 CGEventRef tapEventCallback(CGEventTapProxy /*proxy*/, CGEventType type, CGEventRef event, void *refcon) {
-    MacSupport *me = reinterpret_cast<MacSupport*>(refcon);
+    MacMediaKeys *me = reinterpret_cast<MacMediaKeys*>(refcon);
 
     if(type == kCGEventTapDisabledByTimeout)
         CGEventTapEnable(_eventPort, TRUE);
@@ -41,7 +41,7 @@ CGEventRef tapEventCallback(CGEventTapProxy /*proxy*/, CGEventType type, CGEvent
         case NX_KEYTYPE_PLAY:
         case NX_KEYTYPE_FAST:
         case NX_KEYTYPE_REWIND:
-            me->emitKeyEvent(keyCode, keyState);
+            me->onKeyEvent(keyCode, keyState);
             return NULL;
         break;
     }
@@ -49,19 +49,13 @@ CGEventRef tapEventCallback(CGEventTapProxy /*proxy*/, CGEventType type, CGEvent
     return event;
 }
 
-static MacSupport *ms_instance = 0;
+static MacMediaKeys *ms_instance = 0;
 
-NSString * nsStringFromQString(const QString & s)
-{
-    const char * utf8String = s.toUtf8().constData();
-    return [[NSString alloc] initWithUTF8String: utf8String];
-}
-
-MacSupport::MacSupport(QObject *parent):
+MacMediaKeys::MacMediaKeys(QObject *parent):
     QObject(parent)
 {
     if (ms_instance) {
-        qFatal("MacSupport instance is already allocated");
+        qFatal("MacMediaKeys instance is already allocated");
     }
 
     _eventPort = CGEventTapCreate(
@@ -73,17 +67,17 @@ MacSupport::MacSupport(QObject *parent):
         (void *)this
     );
     if (_eventPort == NULL) {
-        qFatal("Fatal Error: Event Tap could not be created");
+        qFatal("MacMediaKeys: Event Tap could not be created");
     }
 
     _runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorSystemDefault, _eventPort, 0);
     if (_runLoopSource == NULL) {
-        qFatal("Fatal Error: Run Loop Source could not be created");
+        qFatal("MacMediaKeys: Run Loop Source could not be created");
     }
 
     CFRunLoopRef runLoop = CFRunLoopGetCurrent();
     if (runLoop == NULL) {
-        qFatal("Fatal Error: Couldn't get current threads Run Loop");
+        qFatal("MacMediaKeys: Couldn't get current threads Run Loop");
     }
 
     CFRunLoopAddSource(runLoop, _runLoopSource, kCFRunLoopCommonModes);
@@ -91,13 +85,13 @@ MacSupport::MacSupport(QObject *parent):
     ms_instance = this;
 }
 
-MacSupport::~MacSupport() {
+MacMediaKeys::~MacMediaKeys() {
     CFRelease(_eventPort);
     CFRelease(_runLoopSource);
     if (ms_instance == this) ms_instance = 0;
 }
 
-void MacSupport::emitKeyEvent(int keycode, int keystate)
+void MacMediaKeys::onKeyEvent(int keycode, int keystate)
 {
     switch (keycode) {
         case NX_KEYTYPE_PLAY:
@@ -113,35 +107,4 @@ void MacSupport::emitKeyEvent(int keycode, int keystate)
                 emit prev();
         break;
     }
-}
-
-void MacSupport::setDockBadge(const QString & badgeText)
-{
-    NSString * badgeString = nsStringFromQString(badgeText);
-    [[NSApp dockTile] setBadgeLabel: badgeString];
-    [badgeString release];
-}
-
-void MacSupport::setDockOverlay(QWidget * overlay)
-{
-    static QWidget * currentOverlay = 0;
-    if (currentOverlay)
-        currentOverlay->deleteLater();
-    currentOverlay = overlay;
-    if (overlay)
-    {
-        NSView * overlayView = (NSView *)overlay->winId();
-        [[NSApp dockTile] setContentView: overlayView];
-        overlay->update();
-    }
-    else
-    {
-        [[NSApp dockTile] setContentView: nil];
-    }
-    [[NSApp dockTile] display];
-}
-
-void MacSupport::requestAttention()
-{
-    [NSApp requestUserAttention: NSInformationalRequest];
 }

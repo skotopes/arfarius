@@ -4,6 +4,7 @@
 #include <QMimeData>
 #include <QModelIndex>
 #include <QMouseEvent>
+#include <QProgressDialog>
 #include <QContextMenuEvent>
 
 #include <QDebug>
