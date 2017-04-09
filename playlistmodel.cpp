@@ -170,7 +170,12 @@ void PlayListModel::appendUrls(QList<QUrl> urls)
     while (urls_iterator.hasNext()) {
         QUrl url = urls_iterator.next();
         if (url.isLocalFile()) {
-            new_items += urlToItems(url);
+            QString extension = url.fileName().split(".").last().toLower();
+            if (extension == "m3u") {
+                new_items += urlsToItems(m3uToUrls(url));
+            } else {
+                new_items += urlToItems(url);
+            }
         }
 
         progress.setValue(progress.value() + 1);
@@ -213,4 +218,31 @@ QList<PlayListItem *> PlayListModel::urlToItems(QUrl url)
     }
 
     return new_items;
+}
+
+QList<PlayListItem *> PlayListModel::urlsToItems(QList<QUrl> urls)
+{
+    QList<PlayListItem *> items;
+    QListIterator<QUrl> urls_iterator(urls);
+    while (urls_iterator.hasNext()) {
+        items += urlToItems(urls_iterator.next());
+    }
+    return items;
+}
+
+QList<QUrl> PlayListModel::m3uToUrls(QUrl url)
+{
+    QList<QUrl> urls;
+    QFile m3u_file(url.path());
+    if (m3u_file.open(QFile::ReadOnly)) {
+        while (true) {
+            QByteArray line = m3u_file.readLine();
+            line.chop(1);
+            if (line.length() == 0) break;
+            if (line.at(0) == '#') continue;
+            qDebug() << line;
+            urls.append(QUrl::fromLocalFile(line));
+        }
+    }
+    return urls;
 }

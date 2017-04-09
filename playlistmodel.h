@@ -42,6 +42,8 @@ private:
     int current;
 
     QList<PlayListItem *> urlToItems(QUrl url);
+    QList<PlayListItem *> urlsToItems(QList<QUrl> urls);
+    QList<QUrl> m3uToUrls(QUrl url);
 
 };
 
