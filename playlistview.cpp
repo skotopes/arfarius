@@ -47,6 +47,11 @@ void PlayListView::contextMenuEvent(QContextMenuEvent * event)
 }
 
 void PlayListView::keyPressEvent(QKeyEvent *event) {
+    if (state() == QAbstractItemView::EditingState) {
+        QTableView::keyPressEvent(event);
+        return;
+    }
+
     if (event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete) {
         QModelIndexList indexes = selectionModel()->selection().indexes();
         QSet<int> itr_set;
@@ -64,7 +69,6 @@ void PlayListView::keyPressEvent(QKeyEvent *event) {
         }
         event->accept();
     } else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
-        qDebug() << this << "keyPressEvent:" << event->key();
         QModelIndexList selection = selectionModel()->selection().indexes();
         if (!selection.isEmpty()) {
             QModelIndex index = selection.first();
