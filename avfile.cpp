@@ -138,12 +138,27 @@ int AVFile::getCodecChannels() {
     return codecCtx->channels;
 }
 
-void AVFile::seekToPercent(float p)
+void AVFile::seekToPercent(float percent)
 {
-    if (0. < p && p < 1.) {
+    if (0. < percent && percent < 1. && formatCtx->duration > 0) {
         AVStream * s = formatCtx->streams[audioStream];
-        _seek_to = av_rescale(p * formatCtx->duration, s->time_base.den, AV_TIME_BASE * s->time_base.num);
+        _seek_to = av_rescale(percent * formatCtx->duration, s->time_base.den, AV_TIME_BASE * s->time_base.num);
     }
+}
+
+void AVFile::seekToSecond(float second)
+{
+    if (getDurationInSeconds() > 0) seekToPercent(second/getDurationInSeconds());
+}
+
+void AVFile::seekBackward(float seconds)
+{
+    seekToSecond(getPositionInSeconds() - seconds);
+}
+
+void AVFile::seekForward(float seconds)
+{
+    seekToSecond(getPositionInSeconds() + seconds);
 }
 
 // Protected

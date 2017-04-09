@@ -35,7 +35,7 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     connect(ui->prevButton, SIGNAL(clicked()), playlist, SLOT(prevItem()));
     connect(ui->nextButton, SIGNAL(clicked()), playlist, SLOT(nextItem()));
     connect(ui->playButton, SIGNAL(clicked()), player, SLOT(playPause()));
-    connect(ui->histogram, SIGNAL(clicked(float)), player, SLOT(seekTo(float)));
+    connect(ui->histogram, SIGNAL(clicked(float)), player, SLOT(seekToPercent(float)));
 
     connect(playlist, SIGNAL(itemUpdated(PlayListItem*)), this, SLOT(updateItem(PlayListItem*)));
     connect(playlist, SIGNAL(itemUpdated(PlayListItem*)), player, SLOT(updateItem(PlayListItem*)));
@@ -82,6 +82,20 @@ void MainWindow::closeEvent(QCloseEvent *e)
         e->accept();
     }
 }
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Left) {
+        player->seekBackward(10.);
+        event->accept();
+    } else if (event->key() == Qt::Key_Right) {
+        player->seekForward(10.);
+        event->accept();
+    } else {
+        QMainWindow::keyPressEvent(event);
+    }
+}
+
 
 void MainWindow::updateState(Player::State s)
 {

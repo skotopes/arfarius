@@ -34,7 +34,10 @@ public:
     int getCodecSamplerate();
     int getCodecChannels();
 
-    void seekToPercent(float p);
+    void seekToPercent(float percent);
+    void seekToSecond(float second);
+    void seekBackward(float seconds);
+    void seekForward(float seconds);
 
     void decode();
     void cancelDecoding();

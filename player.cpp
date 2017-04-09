@@ -180,11 +180,22 @@ void Player::updateItem(PlayListItem *item)
     }
 }
 
-void Player::seekTo(float p)
+void Player::seekToPercent(float p)
 {
     qDebug() << this << "seekTo()" << p;
-    if (file)
-        file->seekToPercent(p);
+    if (file) file->seekToPercent(p);
+}
+
+void Player::seekForward(float seconds)
+{
+    qDebug() << this << "seekForward" << seconds;
+    if (file) file->seekForward(seconds);
+}
+
+void Player::seekBackward(float seconds)
+{
+    qDebug() << this << "seekBackward" << seconds;
+    if (file) file->seekBackward(seconds);
 }
 
 void Player::playPause()

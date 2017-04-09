@@ -12,6 +12,7 @@
 
 PlayListView::PlayListView(QWidget *parent) : QTableView(parent)
 {
+
 }
 
 void PlayListView::dragEnterEvent(QDragEnterEvent *event)
@@ -61,9 +62,27 @@ void PlayListView::keyPressEvent(QKeyEvent *event) {
         while (itr_list_i.hasPrevious()) {
             model()->removeRow(itr_list_i.previous());
         }
+        event->accept();
+    } else if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        qDebug() << this << "keyPressEvent:" << event->key();
+        QModelIndexList selection = selectionModel()->selection().indexes();
+        if (!selection.isEmpty()) {
+            QModelIndex index = selection.first();
+            if (index.isValid()) {
+                PlayListModel * playlist = dynamic_cast<PlayListModel*>(model());
+                if (playlist) {
+                    playlist->clickedItem(index);
+                } else {
+                    qWarning() << this << "Incompatiable model for drag and drop event";
+                }
+            }
+        }
+        event->accept();
+    } else if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right) {
+        event->ignore();
+    } else {
+        QTableView::keyPressEvent(event);
     }
-
-    QTableView::keyPressEvent(event);
 }
 
 void PlayListView::mouseReleaseEvent(QMouseEvent * event)
