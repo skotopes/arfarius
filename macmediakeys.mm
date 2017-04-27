@@ -3,13 +3,14 @@
 #include <exception>
 #include <QWidget>
 #include <QDebug>
+#include <QTimerEvent>
 
 #import <Cocoa/Cocoa.h>
 #import <objc/runtime.h>
 #import <IOKit/hidsystem/ev_keymap.h>
 
-#define NX_KEYSTATE_UP      0x0A
-#define NX_KEYSTATE_DOWN    0x0B
+#define NX_KEYSTATE_DOWN    0x0A
+#define NX_KEYSTATE_UP      0x0B
 
 static CFMachPortRef _eventPort;
 static CFRunLoopSourceRef _runLoopSource;
@@ -38,34 +39,41 @@ CGEventRef tapEventCallback(CGEventTapProxy /*proxy*/, CGEventType type, CGEvent
         return event;
 
     switch (keyCode) {
-        case NX_KEYTYPE_PLAY:
-        case NX_KEYTYPE_FAST:
-        case NX_KEYTYPE_REWIND:
-            me->onKeyEvent(keyCode, keyState);
-            return NULL;
+    case NX_KEYTYPE_PLAY:
+        me->onPlayPauseKey(keyState);
         break;
+    case NX_KEYTYPE_FAST:
+        me->onForwardKey(keyState);
+        break;
+    case NX_KEYTYPE_REWIND:
+        me->onBackwardKey(keyState);
+        break;
+    default:
+        return event;
     }
 
-    return event;
+    return NULL;
 }
 
 static MacMediaKeys *ms_instance = 0;
 
 MacMediaKeys::MacMediaKeys(QObject *parent):
-    QObject(parent)
+    QObject(parent),
+    backward_state(NotPressed), backward_timer_id(0),
+    forward_state(NotPressed), forward_timer_id(0)
 {
     if (ms_instance) {
         qFatal("MacMediaKeys instance is already allocated");
     }
 
     _eventPort = CGEventTapCreate(
-        kCGSessionEventTap,
-        kCGHeadInsertEventTap,
-        kCGEventTapOptionDefault,
-        CGEventMaskBit(NX_SYSDEFINED),
-        tapEventCallback,
-        (void *)this
-    );
+                kCGSessionEventTap,
+                kCGHeadInsertEventTap,
+                kCGEventTapOptionDefault,
+                CGEventMaskBit(NX_SYSDEFINED),
+                tapEventCallback,
+                (void *)this
+                );
     if (_eventPort == NULL) {
         qFatal("MacMediaKeys: Event Tap could not be created");
     }
@@ -91,20 +99,92 @@ MacMediaKeys::~MacMediaKeys() {
     if (ms_instance == this) ms_instance = 0;
 }
 
-void MacMediaKeys::onKeyEvent(int keycode, int keystate)
+void MacMediaKeys::timerEvent(QTimerEvent *event)
 {
-    switch (keycode) {
-        case NX_KEYTYPE_PLAY:
-            if(keystate == NX_KEYSTATE_DOWN)
-                emit play();
-        break;
-        case NX_KEYTYPE_FAST:
-            if(keystate == NX_KEYSTATE_DOWN)
-                emit next();
-        break;
-        case NX_KEYTYPE_REWIND:
-            if(keystate == NX_KEYSTATE_DOWN)
-                emit prev();
-        break;
+    if (event->timerId() == backward_timer_id) {
+        if (backward_state == NotPressed) {
+            qWarning() << this << "timerEvent(): programming error, backward button state is NotPressed";
+        } else if (backward_state == Pressed) {
+            backward_state = PressedEmmiting;
+            emit seekBackward();
+        } else if (backward_state == PressedEmmiting) {
+            emit seekBackward();
+        }
+    } else if (event->timerId() == forward_timer_id) {
+        if (forward_state == NotPressed) {
+            qWarning() << this << "timerEvent(): programming error, forward button state is NotPressed";
+        } else if (forward_state == Pressed) {
+            forward_state = PressedEmmiting;
+            emit seekForward();
+        } else if (forward_state == PressedEmmiting) {
+            emit seekForward();
+        }
+    }
+}
+
+void MacMediaKeys::onBackwardKey(int keystate)
+{
+    if (backward_state == NotPressed) {
+        if (keystate == NX_KEYSTATE_DOWN) {
+            backward_timer_id = startTimer(1000);
+            Q_ASSERT(backward_timer_id > 0);
+            backward_state = Pressed;
+        } else if (keystate == NX_KEYSTATE_UP) {
+            qWarning() << this << "onBackwardKey(): programming error, state is NotPressed, but UP state recieved";
+        }
+    } else if (backward_state == Pressed) {
+        if (keystate == NX_KEYSTATE_DOWN) {
+            qWarning() << this << "onBackwardKey(): programming error, state is Pressed, but DOWN state recieved";
+        } else if (keystate == NX_KEYSTATE_UP) {
+            killTimer(backward_timer_id);
+            backward_timer_id = 0;
+            backward_state = NotPressed;
+            emit backward();
+        }
+    } else if (backward_state == PressedEmmiting) {
+        if (keystate == NX_KEYSTATE_DOWN) {
+            qWarning() << this << "onBackwardKey(): programming error, state is PressedEmmiting, but DOWN state recieved";
+        } else if (keystate == NX_KEYSTATE_UP) {
+            killTimer(backward_timer_id);
+            backward_timer_id = 0;
+            backward_state = NotPressed;
+        }
+    }
+}
+
+void MacMediaKeys::onPlayPauseKey(int keystate)
+{
+    if (keystate == NX_KEYSTATE_UP) {
+        emit playPause();
+    }
+}
+
+void MacMediaKeys::onForwardKey(int keystate)
+{
+    if (forward_state == NotPressed) {
+        if (keystate == NX_KEYSTATE_DOWN) {
+            forward_timer_id = startTimer(1000);
+            Q_ASSERT(forward_timer_id > 0);
+            forward_state = Pressed;
+        } else if (keystate == NX_KEYSTATE_UP) {
+            qWarning() << this << "onForwardKey(): programming error, state is NotPressed, but UP state recieved";
+        }
+    } else if (forward_state == Pressed) {
+        if (keystate == NX_KEYSTATE_DOWN) {
+            qWarning() << this << "onForwardKey(): programming error, state is Pressed, but DOWN state recieved";
+        } else if (keystate == NX_KEYSTATE_UP) {
+            killTimer(forward_timer_id);
+            forward_timer_id = 0;
+            forward_state = NotPressed;
+            emit forward();
+        }
+    } else if (forward_state == PressedEmmiting) {
+        if (keystate == NX_KEYSTATE_DOWN) {
+            qWarning() << this << "onForwardKey(): programming error, state is PressedEmmiting, but DOWN state recieved";
+        } else if (keystate == NX_KEYSTATE_UP) {
+            killTimer(forward_timer_id);
+            forward_timer_id = 0;
+            forward_state = NotPressed;
+        }
     }
 }

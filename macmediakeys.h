@@ -8,16 +8,37 @@ class QColor;
 class MacMediaKeys : public QObject
 {
     Q_OBJECT
+    enum PressState {
+        NotPressed,
+        Pressed,
+        PressedEmmiting
+    };
+
+    PressState backward_state;
+    int backward_timer_id;
+
+    PressState forward_state;
+    int forward_timer_id;
+
 public:
     MacMediaKeys(QObject *parent = 0);
     virtual ~MacMediaKeys();
 
-    void onKeyEvent(int keycode, int keystate);
+    void onPlayPauseKey(int keystate);
+    void onBackwardKey(int keystate);
+    void onForwardKey(int keystate);
+
+protected:
+    void timerEvent(QTimerEvent *event);
 
 signals:
-    void prev();
-    void play();
-    void next();
+    void backward();
+    void seekBackward();
+
+    void playPause();
+
+    void forward();
+    void seekForward();
 };
 
 #endif

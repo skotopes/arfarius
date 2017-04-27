@@ -61,8 +61,8 @@ signals:
 public slots:
     void updateItem(PlayListItem *);
     void seekToPercent(float p);
-    void seekForward(float seconds);
-    void seekBackward(float seconds);
+    void seekForward(float seconds=10.f);
+    void seekBackward(float seconds=10.f);
     void playPause();
     void stop();
 

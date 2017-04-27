@@ -28,9 +28,13 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
 
     connect(application, SIGNAL( applicationStateChanged(Qt::ApplicationState) ), this, SLOT( applicationStateChanged(Qt::ApplicationState)));
 
-    connect(mac_media_keys, SIGNAL( prev() ), playlist, SLOT(prevItem()));
-    connect(mac_media_keys, SIGNAL( next() ), playlist, SLOT(nextItem()));
-    connect(mac_media_keys, SIGNAL( play() ), player, SLOT(playPause()));
+    connect(mac_media_keys, SIGNAL( backward() ), playlist, SLOT(prevItem()));
+    connect(mac_media_keys, SIGNAL( seekBackward() ), player, SLOT(seekBackward()));
+
+    connect(mac_media_keys, SIGNAL( playPause() ), player, SLOT(playPause()));
+
+    connect(mac_media_keys, SIGNAL( forward() ), playlist, SLOT(nextItem()));
+    connect(mac_media_keys, SIGNAL( seekForward() ), player, SLOT(seekForward()));
 
     connect(ui->prevButton, SIGNAL(clicked()), playlist, SLOT(prevItem()));
     connect(ui->nextButton, SIGNAL(clicked()), playlist, SLOT(nextItem()));
