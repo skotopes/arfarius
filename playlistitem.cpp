@@ -129,17 +129,54 @@ QString PlayListItem::getColumnName(int col)
 
 QString PlayListItem::getColumn(int col)
 {
+    if (artist.isEmpty() && title.isEmpty()) {
+
+    }
+
     switch (col) {
     case 0:
-        return artist;
+        return getArtist();
     case 1:
-        return title;
+        return getTitle();
     case 2:
-        return album;
+        return getAlbum();
     case 3:
-        return formatTime(duration);
+        return getFormattedDuration();
     default:
         return "UNKNOWN";
+    }
+}
+
+QString PlayListItem::getArtist()
+{
+    return artist;
+}
+
+QString PlayListItem::getTitle()
+{
+    if (source.isLocalFile() ) {
+        if (artist.isEmpty() && title.isEmpty() && album.isEmpty()) {
+            QFileInfo fileInf(source.toLocalFile());
+            return fileInf.completeBaseName();;
+        } else {
+            return title;
+        }
+    } else {
+        return source.toString();
+    }
+}
+
+QString PlayListItem::getAlbum()
+{
+    return album;
+}
+
+QString PlayListItem::getFormattedDuration()
+{
+    if (source.isLocalFile()) {
+        return formatTime(duration);
+    } else {
+        return "??:??";
     }
 }
 
@@ -294,9 +331,6 @@ void PlayListItem::readTags()
         artist = toQstring(t->artist());
         title = toQstring(t->title());
         album = toQstring(t->album());
-    } else {
-        QFileInfo fileInf(source.toLocalFile());
-        title = fileInf.completeBaseName();
     }
 }
 

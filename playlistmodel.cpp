@@ -200,21 +200,25 @@ QList<PlayListItem *> PlayListModel::urlToItems(QUrl url)
 {
     QList<PlayListItem *> new_items;
 
-    QFileInfo f(url.path());
-    if (f.isDir()) {
-        QDirIterator iterator(url.path(), QDirIterator::Subdirectories);
-        while (iterator.hasNext()) {
-            iterator.next();
-            if (!iterator.fileInfo().isDir()) {
-                new_items += urlToItems(QUrl::fromLocalFile(iterator.filePath()));
+    if (url.isLocalFile()) {
+        QFileInfo f(url.path());
+        if (f.isDir()) {
+            QDirIterator iterator(url.path(), QDirIterator::Subdirectories);
+            while (iterator.hasNext()) {
+                iterator.next();
+                if (!iterator.fileInfo().isDir()) {
+                    new_items += urlToItems(QUrl::fromLocalFile(iterator.filePath()));
+                }
+            }
+        } else {
+            PlayListItem *p = new PlayListItem(url);
+            if (p->isValid()) {
+                p->ensureHistogram();
+                new_items += p;
             }
         }
     } else {
-        PlayListItem *p = new PlayListItem(url);
-        if (p->isValid()) {
-            p->ensureHistogram();
-            new_items += p;
-        }
+        new_items += new PlayListItem(url);
     }
 
     return new_items;
@@ -240,8 +244,7 @@ QList<QUrl> PlayListModel::m3uToUrls(QUrl url)
             line.chop(1);
             if (line.length() == 0) break;
             if (line.at(0) == '#') continue;
-            qDebug() << line;
-            urls.append(QUrl::fromLocalFile(line));
+            urls.append(QUrl::fromUserInput(line));
         }
     }
     return urls;

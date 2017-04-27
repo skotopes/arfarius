@@ -43,6 +43,11 @@ private:
     QString album;
     int     duration;
 
+    QString getArtist();
+    QString getTitle();
+    QString getAlbum();
+    QString getFormattedDuration();
+
     void readTags();
     void writeTags();
     void analyze();
