@@ -5,6 +5,7 @@
 HistogramWidget::HistogramWidget(QWidget *parent)
     : QOpenGLWidget(parent), progress(-1), image(nullptr)
 {
+    setAttribute(Qt::WA_AlwaysStackOnTop);
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent *e)
