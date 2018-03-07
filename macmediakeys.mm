@@ -26,7 +26,7 @@ CGEventRef tapEventCallback(CGEventTapProxy /*proxy*/, CGEventType type, CGEvent
 
     NSEvent *nsEvent = [NSEvent eventWithCGEvent:event];
 
-    if([nsEvent subtype] != 8)
+    if ([nsEvent subtype] != 8)
         return event;
 
     int data = [nsEvent data1];
@@ -59,6 +59,7 @@ static MacMediaKeys *ms_instance = 0;
 
 MacMediaKeys::MacMediaKeys(QObject *parent):
     QObject(parent),
+    long_press_timeout(500), long_press_cycle(500),
     backward_state(NotPressed), backward_timer_id(0),
     forward_state(NotPressed), forward_timer_id(0)
 {
@@ -103,22 +104,30 @@ void MacMediaKeys::timerEvent(QTimerEvent *event)
 {
     if (event->timerId() == backward_timer_id) {
         if (backward_state == NotPressed) {
-            qWarning() << this << "timerEvent(): programming error, backward button state is NotPressed";
+            qCritical("timerEvent(): programming error, backward button state is NotPressed");
         } else if (backward_state == Pressed) {
             backward_state = PressedEmmiting;
+            killTimer(backward_timer_id);
+            backward_timer_id = startTimer(long_press_cycle);
+            Q_ASSERT(backward_timer_id > 0);
             emit seekBackward();
         } else if (backward_state == PressedEmmiting) {
             emit seekBackward();
         }
     } else if (event->timerId() == forward_timer_id) {
         if (forward_state == NotPressed) {
-            qWarning() << this << "timerEvent(): programming error, forward button state is NotPressed";
+            qCritical("timerEvent(): programming error, forward button state is NotPressed");
         } else if (forward_state == Pressed) {
             forward_state = PressedEmmiting;
+            killTimer(forward_timer_id);
+            forward_timer_id = startTimer(long_press_cycle);
+            Q_ASSERT(forward_timer_id > 0);
             emit seekForward();
         } else if (forward_state == PressedEmmiting) {
             emit seekForward();
         }
+    } else {
+        qCritical("timerEvent(): programming error, unknown timer id fired %i", event->timerId());
     }
 }
 
@@ -126,15 +135,15 @@ void MacMediaKeys::onBackwardKey(int keystate)
 {
     if (backward_state == NotPressed) {
         if (keystate == NX_KEYSTATE_DOWN) {
-            backward_timer_id = startTimer(1000);
+            backward_timer_id = startTimer(long_press_timeout);
             Q_ASSERT(backward_timer_id > 0);
             backward_state = Pressed;
         } else if (keystate == NX_KEYSTATE_UP) {
-            qWarning() << this << "onBackwardKey(): programming error, state is NotPressed, but UP state recieved";
+            qCritical("onBackwardKey(): programming error, state is NotPressed, but UP state recieved");
         }
     } else if (backward_state == Pressed) {
         if (keystate == NX_KEYSTATE_DOWN) {
-            qWarning() << this << "onBackwardKey(): programming error, state is Pressed, but DOWN state recieved";
+            qCritical("onBackwardKey(): programming error, state is Pressed, but DOWN state recieved");
         } else if (keystate == NX_KEYSTATE_UP) {
             killTimer(backward_timer_id);
             backward_timer_id = 0;
@@ -143,7 +152,7 @@ void MacMediaKeys::onBackwardKey(int keystate)
         }
     } else if (backward_state == PressedEmmiting) {
         if (keystate == NX_KEYSTATE_DOWN) {
-            qWarning() << this << "onBackwardKey(): programming error, state is PressedEmmiting, but DOWN state recieved";
+            qCritical("onBackwardKey(): programming error, state is PressedEmmiting, but DOWN state recieved");
         } else if (keystate == NX_KEYSTATE_UP) {
             killTimer(backward_timer_id);
             backward_timer_id = 0;
@@ -163,15 +172,15 @@ void MacMediaKeys::onForwardKey(int keystate)
 {
     if (forward_state == NotPressed) {
         if (keystate == NX_KEYSTATE_DOWN) {
-            forward_timer_id = startTimer(1000);
+            forward_timer_id = startTimer(long_press_timeout);
             Q_ASSERT(forward_timer_id > 0);
             forward_state = Pressed;
         } else if (keystate == NX_KEYSTATE_UP) {
-            qWarning() << this << "onForwardKey(): programming error, state is NotPressed, but UP state recieved";
+            qCritical("onForwardKey(): programming error, state is NotPressed, but UP state recieved");
         }
     } else if (forward_state == Pressed) {
         if (keystate == NX_KEYSTATE_DOWN) {
-            qWarning() << this << "onForwardKey(): programming error, state is Pressed, but DOWN state recieved";
+            qCritical("onForwardKey(): programming error, state is Pressed, but DOWN state recieved");
         } else if (keystate == NX_KEYSTATE_UP) {
             killTimer(forward_timer_id);
             forward_timer_id = 0;
@@ -180,7 +189,7 @@ void MacMediaKeys::onForwardKey(int keystate)
         }
     } else if (forward_state == PressedEmmiting) {
         if (keystate == NX_KEYSTATE_DOWN) {
-            qWarning() << this << "onForwardKey(): programming error, state is PressedEmmiting, but DOWN state recieved";
+            qCritical("onForwardKey(): programming error, state is PressedEmmiting, but DOWN state recieved");
         } else if (keystate == NX_KEYSTATE_UP) {
             killTimer(forward_timer_id);
             forward_timer_id = 0;
