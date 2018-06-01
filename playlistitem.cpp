@@ -12,6 +12,7 @@
 
 #include <QCryptographicHash>
 #include <QStandardPaths>
+#include <QStorageInfo>
 #include <QtConcurrent>
 #include <QDataStream>
 #include <QTextCodec>
@@ -60,6 +61,7 @@ TagLib::String toString(QString str) {
 PlayListItem::PlayListItem(QUrl s) :
     QObject(), source(s), artist(), title(), album(), duration(-1)
 {
+
 }
 
 PlayListItem::~PlayListItem()
@@ -95,11 +97,22 @@ QString PlayListItem::getUrlHash()
 }
 
 QString PlayListItem::getUrlString() {
+    QString url;
     if (source.isLocalFile()) {
-        return source.toLocalFile();
+        QStorageInfo storage_info(source.toLocalFile());
+        auto fs_type = storage_info.fileSystemType();
+        qDebug() << this << "getUrlString(): underlying fs is" << fs_type;
+        if (fs_type == "smbfs") {
+            qDebug() << this << "getUrlString(): using async io and caching";
+            url = QString("async:cache:%1").arg(source.toLocalFile());
+        } else {
+            url = source.toLocalFile();
+        }
     } else {
-        return source.toString();
+        url = source.toString();
     }
+
+    return url;
 }
 
 QString PlayListItem::getUrlStringLocal() {

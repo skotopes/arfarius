@@ -106,13 +106,13 @@ void MainWindow::updateState(Player::State s)
     qDebug() << this << "updateState()";
     switch (s) {
     case Player::PLAY:
-        ui->playButton->setText("");
+        ui->playButton->setIcon(QIcon(":/icons/stop.svg"));
         break;
     case Player::PAUSE:
-        ui->playButton->setText("");
+        ui->playButton->setIcon(QIcon(":/icons/play.svg"));
         break;
     case Player::STOP:
-        ui->playButton->setText("");
+        ui->playButton->setIcon(QIcon(":/icons/play.svg"));
         break;
     default:
         break;

@@ -109,6 +109,14 @@ bool PlayListModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
+QStringList PlayListModel::mimeTypes() const
+{
+    QStringList mime_types;
+    mime_types << "url";
+    return mime_types;
+}
+
+
 void PlayListModel::clickedItem(const QModelIndex &index)
 {
     int previous = current;

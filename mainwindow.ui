@@ -109,14 +109,9 @@
             <height>30</height>
            </size>
           </property>
-          <property name="font">
-           <font>
-            <family>FontAwesome</family>
-            <pointsize>20</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string></string>
+          <property name="icon">
+           <iconset resource="assets.qrc">
+            <normaloff>:/icons/play.svg</normaloff>:/icons/play.svg</iconset>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -137,14 +132,9 @@
             <height>30</height>
            </size>
           </property>
-          <property name="font">
-           <font>
-            <family>FontAwesome</family>
-            <pointsize>20</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string></string>
+          <property name="icon">
+           <iconset resource="assets.qrc">
+            <normaloff>:/icons/step-forward.svg</normaloff>:/icons/step-forward.svg</iconset>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -165,14 +155,9 @@
             <height>30</height>
            </size>
           </property>
-          <property name="font">
-           <font>
-            <family>FontAwesome</family>
-            <pointsize>20</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string></string>
+          <property name="icon">
+           <iconset resource="assets.qrc">
+            <normaloff>:/icons/step-backward.svg</normaloff>:/icons/step-backward.svg</iconset>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -235,6 +220,8 @@
    <header>histogramwidget.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="assets.qrc"/>
+ </resources>
  <connections/>
 </ui>

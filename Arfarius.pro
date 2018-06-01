@@ -1,4 +1,4 @@
-QT       += core gui widgets concurrent opengl
+QT += core gui widgets concurrent opengl
 
 TEMPLATE = app
 TARGET = Arfarius
