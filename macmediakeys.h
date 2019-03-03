@@ -24,7 +24,7 @@ class MacMediaKeys : public QObject
     int forward_timer_id;
 
 public:
-    MacMediaKeys(QObject *parent = 0);
+    MacMediaKeys(QObject *parent = nullptr);
     virtual ~MacMediaKeys();
 
     void onPlayPauseKey(int keystate);

@@ -10,23 +10,11 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-
-static AVMutex ffmpeg_init_mutex;
-static volatile bool ffmpeg_init = false;
-
 AVFile::AVFile() :
     AVObject(),
     formatCtx(nullptr), codecCtx(nullptr), swrCtx(nullptr),
     audioStream(-1), decoding(false), _position(0), _seek_to(-1)
 {
-    ffmpeg_init_mutex.lock();
-    if (!ffmpeg_init) {
-        av_register_all();
-        avformat_network_init();
-        avcodec_register_all();
-        ffmpeg_init = true;
-    }
-    ffmpeg_init_mutex.unlock();
 }
 
 AVFile::~AVFile()
@@ -65,10 +53,10 @@ void AVFile::open(const char *url)
     if (formatCtx)
         throw AVException("Programming error: i already did it");
 
-    if (avformat_open_input(&formatCtx, url, 0, 0) < 0)
+    if (avformat_open_input(&formatCtx, url, nullptr, nullptr) < 0)
         throw AVException("Unable to open media");
 
-    if (avformat_find_stream_info(formatCtx, 0) < 0)
+    if (avformat_find_stream_info(formatCtx, nullptr) < 0)
         throw AVException("Unable to find streams in media");
 
     AVCodec *codec;
@@ -90,7 +78,7 @@ void AVFile::close()
 {
     if (codecCtx) {
         avcodec_close(codecCtx);
-        codecCtx = 0;
+        codecCtx = nullptr;
     }
 
     if (formatCtx) {
@@ -263,9 +251,9 @@ void AVFile::_updateSWR()
         codecCtx->sample_fmt != AV_SAMPLE_FMT_FLT ||
         codecCtx->sample_rate != (int)_sample_rate)
     {
-        swrCtx = swr_alloc_set_opts(0, av_get_default_channel_layout(_channels), AV_SAMPLE_FMT_FLT, _sample_rate,
+        swrCtx = swr_alloc_set_opts(nullptr, av_get_default_channel_layout(_channels), AV_SAMPLE_FMT_FLT, _sample_rate,
                                     codecCtx->channel_layout, codecCtx->sample_fmt, codecCtx->sample_rate,
-                                    0, 0);
+                                    0, nullptr);
 
         if (!swrCtx)
             throw AVException("Unable to allocate swresample context");
