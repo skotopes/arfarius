@@ -20,17 +20,17 @@ Arfarius - minimalistic audio player written in c++ with Qt.
 - Metadata store / Collection
 
 
-#Download
+# Download
 
 Latest version: https://github.com/skotopes/arfarius/releases/latest
 
-#Building from source
+# Building from source
 
 Requirements:
 
-* ffmpeg - containers and codecs
-* taglib - work with tags
-* fftw - FFT for spectrum functions
+- ffmpeg - containers and codecs
+- taglib - work with tags
+- fftw - FFT for spectrum functions
 
 Type following command if you are using brew:
 
