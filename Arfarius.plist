@@ -8,14 +8,14 @@
     <string>Arfarius.icns</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
-    <key>CFBundleGetInfoString</key>
-    <string>WMP 0.1, by aku.</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleExecutable</key>
     <string>Arfarius</string>
     <key>CFBundleIdentifier</key>
     <string>com.plooks.Arfarius</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>We intercepting media keys only.</string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>

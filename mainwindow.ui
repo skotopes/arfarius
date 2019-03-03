@@ -72,7 +72,7 @@
        <bool>false</bool>
       </attribute>
       <attribute name="verticalHeaderDefaultSectionSize">
-       <number>20</number>
+       <number>24</number>
       </attribute>
      </widget>
     </item>
@@ -109,10 +109,6 @@
             <height>30</height>
            </size>
           </property>
-          <property name="icon">
-           <iconset resource="assets.qrc">
-            <normaloff>:/icons/play.svg</normaloff>:/icons/play.svg</iconset>
-          </property>
           <property name="flat">
            <bool>true</bool>
           </property>
@@ -132,10 +128,6 @@
             <height>30</height>
            </size>
           </property>
-          <property name="icon">
-           <iconset resource="assets.qrc">
-            <normaloff>:/icons/step-forward.svg</normaloff>:/icons/step-forward.svg</iconset>
-          </property>
           <property name="flat">
            <bool>true</bool>
           </property>
@@ -154,10 +146,6 @@
             <width>35</width>
             <height>30</height>
            </size>
-          </property>
-          <property name="icon">
-           <iconset resource="assets.qrc">
-            <normaloff>:/icons/step-backward.svg</normaloff>:/icons/step-backward.svg</iconset>
           </property>
           <property name="flat">
            <bool>true</bool>
@@ -220,8 +208,6 @@
    <header>histogramwidget.h</header>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="assets.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

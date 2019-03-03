@@ -1,3 +1,5 @@
+include(QtAwesome/QtAwesome.pri)
+
 QT += core gui widgets concurrent opengl
 
 TEMPLATE = app

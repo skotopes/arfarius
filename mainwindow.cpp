@@ -7,6 +7,7 @@
 #include <QList>
 #include <QUrl>
 #include <QDebug>
+#include <QtAwesome.h>
 
 #include "arfariusapplication.h"
 #include "macmediakeys.h"
@@ -17,14 +18,24 @@
 
 MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     QMainWindow(parent),
+    awesome(new QtAwesome(this)),
     ui(new Ui::MainWindow),
     mac_media_keys(new MacMediaKeys(this)),
     player(new Player(this)),
     playlist(new PlayListModel(this)),
     current_item(nullptr)
 {
+    awesome->initFontAwesome();
+
     ui->setupUi(this);
     ui->playList->setModel(playlist);
+    // buttons
+    ui->prevButton->setText(QChar(fa::backward));
+    ui->prevButton->setFont(awesome->font());
+    ui->playButton->setText(QChar(fa::pause));
+    ui->playButton->setFont(awesome->font());
+    ui->nextButton->setText(QChar(fa::forward));
+    ui->nextButton->setFont(awesome->font());
 
     connect(application, SIGNAL( applicationStateChanged(Qt::ApplicationState) ), this, SLOT( applicationStateChanged(Qt::ApplicationState)));
 
@@ -106,13 +117,13 @@ void MainWindow::updateState(Player::State s)
     qDebug() << this << "updateState()";
     switch (s) {
     case Player::PLAY:
-        ui->playButton->setIcon(QIcon(":/icons/stop.svg"));
+        ui->playButton->setText(QChar(fa::pause));
         break;
     case Player::PAUSE:
-        ui->playButton->setIcon(QIcon(":/icons/play.svg"));
+        ui->playButton->setText(QChar(fa::play));
         break;
     case Player::STOP:
-        ui->playButton->setIcon(QIcon(":/icons/play.svg"));
+        ui->playButton->setText(QChar(fa::play));
         break;
     default:
         break;

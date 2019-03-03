@@ -14,8 +14,8 @@ class MacMediaKeys : public QObject
         PressedEmmiting
     };
 
-    quint32 long_press_timeout;
-    quint32 long_press_cycle;
+    int long_press_timeout;
+    int long_press_cycle;
 
     PressState backward_state;
     int backward_timer_id;

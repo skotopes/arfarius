@@ -8,6 +8,7 @@ namespace Ui {
     class MainWindow;
 }
 
+class QtAwesome;
 class ArfariusApplication;
 class PlayListModel;
 class PlayListItem;
@@ -18,7 +19,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(ArfariusApplication *application, QWidget *parent = 0);
+    explicit MainWindow(ArfariusApplication *application, QWidget *parent = nullptr);
     ~MainWindow();
 
 protected:
@@ -26,6 +27,7 @@ protected:
     void keyPressEvent(QKeyEvent *);
 
 private:
+    QtAwesome *awesome;
     Ui::MainWindow *ui;
     MacMediaKeys *mac_media_keys;
     Player *player;

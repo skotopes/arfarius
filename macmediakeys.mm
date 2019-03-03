@@ -29,7 +29,7 @@ CGEventRef tapEventCallback(CGEventTapProxy /*proxy*/, CGEventType type, CGEvent
     if ([nsEvent subtype] != 8)
         return event;
 
-    int data = [nsEvent data1];
+    NSInteger data = [nsEvent data1];
     int keyCode = (data & 0xFFFF0000) >> 16;
     int keyFlags = (data & 0xFFFF);
     int keyState = (keyFlags & 0xFF00) >> 8;
@@ -52,10 +52,10 @@ CGEventRef tapEventCallback(CGEventTapProxy /*proxy*/, CGEventType type, CGEvent
         return event;
     }
 
-    return NULL;
+    return nullptr;
 }
 
-static MacMediaKeys *ms_instance = 0;
+static MacMediaKeys *ms_instance = nullptr;
 
 MacMediaKeys::MacMediaKeys(QObject *parent):
     QObject(parent),
@@ -66,38 +66,45 @@ MacMediaKeys::MacMediaKeys(QObject *parent):
     if (ms_instance) {
         qFatal("MacMediaKeys instance is already allocated");
     }
+    ms_instance = this;
+
+    NSDictionary *options = @{(id) kAXTrustedCheckOptionPrompt : @YES};
+    AXIsProcessTrustedWithOptions((CFDictionaryRef) options);
 
     _eventPort = CGEventTapCreate(
-                kCGSessionEventTap,
-                kCGHeadInsertEventTap,
-                kCGEventTapOptionDefault,
-                CGEventMaskBit(NX_SYSDEFINED),
-                tapEventCallback,
-                (void *)this
-                );
-    if (_eventPort == NULL) {
-        qFatal("MacMediaKeys: Event Tap could not be created");
+        kCGSessionEventTap,
+        kCGHeadInsertEventTap,
+        kCGEventTapOptionDefault,
+        CGEventMaskBit(NX_SYSDEFINED),
+        tapEventCallback,
+        reinterpret_cast<void *>(this)
+    );
+
+    if (_eventPort == nullptr) {
+        qWarning("MacMediaKeys: Event Tap could not be created");
+        return;
     }
 
     _runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorSystemDefault, _eventPort, 0);
-    if (_runLoopSource == NULL) {
-        qFatal("MacMediaKeys: Run Loop Source could not be created");
+    if (_runLoopSource == nullptr) {
+        qWarning("MacMediaKeys: Run Loop Source could not be created");
+        return;
     }
 
     CFRunLoopRef runLoop = CFRunLoopGetCurrent();
-    if (runLoop == NULL) {
-        qFatal("MacMediaKeys: Couldn't get current threads Run Loop");
+    if (runLoop == nullptr) {
+        qWarning("MacMediaKeys: Couldn't get current threads Run Loop");
+        return;
     }
 
     CFRunLoopAddSource(runLoop, _runLoopSource, kCFRunLoopCommonModes);
 
-    ms_instance = this;
 }
 
 MacMediaKeys::~MacMediaKeys() {
-    CFRelease(_eventPort);
-    CFRelease(_runLoopSource);
-    if (ms_instance == this) ms_instance = 0;
+    if (_eventPort) CFRelease(_eventPort);
+    if (_runLoopSource) CFRelease(_runLoopSource);
+    if (ms_instance == this) ms_instance = nullptr;
 }
 
 void MacMediaKeys::timerEvent(QTimerEvent *event)
