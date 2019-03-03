@@ -37,6 +37,8 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     ui->nextButton->setText(QChar(fa::forward));
     ui->nextButton->setFont(awesome->font());
 
+    ui->playList->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+
     connect(application, SIGNAL( applicationStateChanged(Qt::ApplicationState) ), this, SLOT( applicationStateChanged(Qt::ApplicationState)));
 
     connect(mac_media_keys, SIGNAL( backward() ), playlist, SLOT(prevItem()));
