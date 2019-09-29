@@ -32,7 +32,7 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     // buttons
     ui->prevButton->setText(QChar(fa::backward));
     ui->prevButton->setFont(awesome->font());
-    ui->playButton->setText(QChar(fa::pause));
+    ui->playButton->setText(QChar(fa::play));
     ui->playButton->setFont(awesome->font());
     ui->nextButton->setText(QChar(fa::forward));
     ui->nextButton->setFont(awesome->font());
