@@ -100,7 +100,12 @@ bool PlayListModel::removeRows(int row, int count, const QModelIndex &parent)
     if (current_item) {
         current = items.indexOf(current_item);
         if (current == -1) {
-            emit itemUpdated(nullptr);
+            if (items.count() > row) {
+                current = row;
+                emit itemUpdated(items[current]);
+            } else {
+                emit itemUpdated(nullptr);
+            }
         }
     }
 
@@ -159,6 +164,39 @@ void PlayListModel::prevItem()
             emit dataChanged(createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount()));
             emit dataChanged(createIndex(current, 0), createIndex(current, PlayListItem::getColumnsCount()));
         }
+    }
+}
+
+void PlayListModel::save(QString filename) {
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly |QIODevice::Truncate)) {
+        qWarning() << this << "save(): failed to open file";
+        return;
+    }
+
+    PlayListItem *item;
+    foreach (item, items) {
+        file.write(item->getUrlString().toUtf8() + "\n");
+    }
+}
+
+void PlayListModel::gather(QString path) {
+    QDir dir(path);
+    if (!dir.exists()) {
+        qWarning() << this << "gather(): directory doesn't exist";
+        return;
+    }
+
+    PlayListItem *item;
+    foreach (item, items) {
+        if (!item->isLocalFile()) {
+            continue;
+        }
+        auto filename = item->getUrlStringLocal();
+        QFileInfo fileinfo(filename);
+        dir.rename(filename, fileinfo.fileName());
+        item->setUrl(QUrl::fromLocalFile(dir.filePath(fileinfo.fileName())));
+        item->ensureHistogram();
     }
 }
 

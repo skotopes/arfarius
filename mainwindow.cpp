@@ -3,6 +3,7 @@
 
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <QFileDialog>
 #include <QSettings>
 #include <QList>
 #include <QUrl>
@@ -53,6 +54,9 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     connect(ui->nextButton, SIGNAL(clicked()), playlist, SLOT(nextItem()));
     connect(ui->playButton, SIGNAL(clicked()), player, SLOT(playPause()));
     connect(ui->histogram, SIGNAL(clicked(float)), player, SLOT(seekToPercent(float)));
+
+    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(playlistSave()));
+    connect(ui->actionGather, SIGNAL(triggered()), this, SLOT(playlistGather()));
 
     connect(playlist, SIGNAL(itemUpdated(PlayListItem*)), this, SLOT(updateItem(PlayListItem*)));
     connect(playlist, SIGNAL(itemUpdated(PlayListItem*)), player, SLOT(updateItem(PlayListItem*)));
@@ -164,4 +168,22 @@ void MainWindow::applicationStateChanged(Qt::ApplicationState state)
     if (state == Qt::ApplicationActive) {
         show();
     }
+}
+
+void MainWindow::playlistSave() {
+    auto file_name = QFileDialog::getSaveFileName(
+        this,
+        tr("Save M3U playlist"),
+        QString(),
+        tr("M3U Playlist (*.m3u)")
+    );
+    if (!file_name.isEmpty()) playlist->save(file_name);
+}
+
+void MainWindow::playlistGather() {
+    auto path = QFileDialog::getExistingDirectory(
+        this,
+        tr("Directory to gather playlist")
+    );
+    if (!path.isEmpty()) playlist->gather(path);
 }

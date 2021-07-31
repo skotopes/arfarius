@@ -16,6 +16,8 @@ public:
     bool isValid();
     bool isLocalFile();
 
+    QUrl getUrl();
+    void setUrl(QUrl url);
     QString getUrlHash();
     QString getUrlString();
     QString getUrlStringLocal();

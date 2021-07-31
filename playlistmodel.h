@@ -42,9 +42,13 @@ public slots:
     void nextItem();
     void prevItem();
 
+    void save(QString filename);
+    void gather(QString path);
+
     void appendUrl(QUrl url);
     void appendUrls(QList<QUrl> urls);
     void appendItems(QList<PlayListItem *> new_items);
+
 
 private:
     QList<PlayListItem *> items;

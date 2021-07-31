@@ -60,8 +60,8 @@ void PlayListView::keyPressEvent(QKeyEvent *event) {
             itr_set.insert(index.row());
         }
 
-        QList<int> itr_list = itr_set.toList();
-        qSort(itr_list);
+        QList<int> itr_list = itr_set.values();
+        std::sort(itr_list.begin(), itr_list.end());
         QListIterator<int> itr_list_i(itr_list);
         itr_list_i.toBack();
         while (itr_list_i.hasPrevious()) {

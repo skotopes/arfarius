@@ -91,6 +91,14 @@ bool PlayListItem::isLocalFile()
     return source.isLocalFile();
 }
 
+QUrl PlayListItem::getUrl() {
+    return source;
+}
+
+void PlayListItem::setUrl(QUrl url) {
+    source = url;
+}
+
 QString PlayListItem::getUrlHash()
 {
     return QCryptographicHash::hash(getUrlStringLocal().toLocal8Bit(), QCryptographicHash::Sha3_512).toHex();

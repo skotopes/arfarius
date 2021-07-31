@@ -40,6 +40,9 @@ private slots:
     void updateHistogram();
     void applicationStateChanged(Qt::ApplicationState);
 
+    void playlistSave();
+    void playlistGather();
+
 };
 
 #endif // MAINWINDOW_H
