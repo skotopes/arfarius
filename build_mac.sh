@@ -27,7 +27,7 @@ install_name_tool -change /usr/local/Cellar/ffmpeg/4.4_2/lib/libavcodec.58.dylib
 install_name_tool -change /usr/local/Cellar/ffmpeg/4.4_2/lib/libswresample.3.dylib @executable_path/../Frameworks/libswresample.3.dylib $PROJECT.app/Contents/Frameworks/libavformat.58.dylib
 install_name_tool -change /usr/local/Cellar/ffmpeg/4.4_2/lib/libavutil.56.dylib @executable_path/../Frameworks/libavutil.56.dylib $PROJECT.app/Contents/Frameworks/libavformat.58.dylib
 # libhogweed
-install_name_tool -change /usr/local/Cellar/nettle/3.7.3/lib/libnettle.8.dylib @executable_path/../Frameworks/libnettle.6.dylib $PROJECT.app/Contents/Frameworks/libhogweed.6.dylib
+install_name_tool -change /usr/local/Cellar/nettle/3.7.3/lib/libnettle.8.dylib @executable_path/../Frameworks/libnettle.8.dylib $PROJECT.app/Contents/Frameworks/libhogweed.6.dylib
 # libswresample
 install_name_tool -change /usr/local/Cellar/ffmpeg/4.4_2/lib/libavutil.56.dylib @executable_path/../Frameworks/libavutil.56.dylib $PROJECT.app/Contents/Frameworks/libswresample.3.dylib
 # libfftw
