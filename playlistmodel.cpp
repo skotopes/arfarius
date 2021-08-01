@@ -61,7 +61,7 @@ bool PlayListModel::setData(const QModelIndex &index, const QVariant &value, int
 
         i->setColumn(index.column(), value.toString());
 
-        emit(dataChanged(index, index));
+        emit dataChanged(index, index);
         return true;
     }
 
@@ -198,6 +198,11 @@ void PlayListModel::gather(QString path) {
         item->setUrl(QUrl::fromLocalFile(dir.filePath(fileinfo.fileName())));
         item->ensureHistogram();
     }
+}
+
+void PlayListModel::removeCurrent() {
+    qDebug() << this << "removeCurrent()";
+    removeRows(current, 1, QModelIndex());
 }
 
 void PlayListModel::appendUrl(QUrl url)

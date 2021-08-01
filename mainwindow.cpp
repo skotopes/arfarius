@@ -106,11 +106,15 @@ void MainWindow::closeEvent(QCloseEvent *e)
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
+    qDebug() << this << "keyPressEvent():" << event;
     if (event->key() == Qt::Key_Left) {
         player->seekBackward(10.);
         event->accept();
     } else if (event->key() == Qt::Key_Right) {
         player->seekForward(10.);
+        event->accept();
+    } else if (event->key() == Qt::Key_L) {
+        playlist->removeCurrent();
         event->accept();
     } else {
         QMainWindow::keyPressEvent(event);

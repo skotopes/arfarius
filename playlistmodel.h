@@ -44,6 +44,7 @@ public slots:
 
     void save(QString filename);
     void gather(QString path);
+    void removeCurrent();
 
     void appendUrl(QUrl url);
     void appendUrls(QList<QUrl> urls);
