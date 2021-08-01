@@ -94,6 +94,7 @@ bool PlayListModel::removeRows(int row, int count, const QModelIndex &parent)
     }
 
     for (int i = 0; i < count; ++i) {
+        items[row]->deleteLater();
         items.removeAt(row);
     }
 
