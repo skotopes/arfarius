@@ -2,7 +2,9 @@
 #include <QFileOpenEvent>
 
 ArfariusApplication::ArfariusApplication(int & argc, char ** argv) :
-    QApplication(argc, argv)
+    QApplication(argc, argv),
+    decoder_thread_pool(this),
+    analyze_thread_pool(this)
 {
 }
 
@@ -15,4 +17,12 @@ bool ArfariusApplication::event(QEvent *event)
     default:
         return QApplication::event(event);
     }
+}
+
+QThreadPool* ArfariusApplication::getDecoderThreadPool() {
+    return &decoder_thread_pool;
+}
+
+QThreadPool* ArfariusApplication::getAnalyzeThreadPool() {
+    return &analyze_thread_pool;
 }

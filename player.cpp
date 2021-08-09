@@ -1,5 +1,6 @@
 #include "player.h"
 
+#include "arfariusapplication.h"
 #include "playlistmodel.h"
 #include "playlistitem.h"
 
@@ -128,14 +129,17 @@ void Player::ejectFile()
     if (file) {
         file->cancelDecoding();
 
-        eject_future = QtConcurrent::run([this](){
-            av_sample_t *buffer = new av_sample_t[4096];
-            while (state != Player::PLAY && file) {
-                qDebug() << this << "ejectFile(): pumping samples";
-                pull(buffer, 4096);
+        eject_future = QtConcurrent::run(
+            arfariusApp->getDecoderThreadPool(),
+            [this](){
+                av_sample_t *buffer = new av_sample_t[4096];
+                while (state != Player::PLAY && file) {
+                    qDebug() << this << "ejectFile(): pumping samples";
+                    pull(buffer, 4096);
+                }
+                delete [] buffer ;
             }
-            delete [] buffer ;
-        });
+        );
         file_future.waitForFinished();
         eject_future.waitForFinished();
     }
@@ -161,15 +165,18 @@ void Player::updateItem(PlayListItem *item)
         file->setSamplerate(_sample_rate);
         file->setChannels(_channels);
         file->connectOutput(this);
-        file_future = QtConcurrent::run([this](){
-            file->decode();
-            delete file; file = 0;
-            if (quiet) {
-                quiet = false;
-            } else {
-                emit trackEnded();
+        file_future = QtConcurrent::run(
+            arfariusApp->getDecoderThreadPool(),
+            [this](){
+                file->decode();
+                delete file; file = 0;
+                if (quiet) {
+                    quiet = false;
+                } else {
+                    emit trackEnded();
+                }
             }
-        });
+        );
 
         if (state != Player::PLAY) {
             startStream();

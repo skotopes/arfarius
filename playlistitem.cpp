@@ -4,6 +4,7 @@
 #include <taglib/tstring.h>
 #include <taglib/tag.h>
 
+#include "arfariusapplication.h"
 #include "avexception.h"
 #include "avsplitter.h"
 #include "avhistogram.h"
@@ -59,13 +60,17 @@ TagLib::String toString(QString str) {
  */
 
 PlayListItem::PlayListItem(QUrl s) :
-    QObject(), source(s), artist(), title(), album(), duration(-1)
+    QObject(), source(s), artist(), title(), album(), duration(-1), busy(false)
 {
 
 }
 
 PlayListItem::~PlayListItem()
 {
+}
+
+bool PlayListItem::isBusy() {
+    return busy;
 }
 
 bool PlayListItem::isValid()
@@ -235,7 +240,11 @@ bool PlayListItem::hasHistogram()
 void PlayListItem::ensureHistogram()
 {
     if (!hasHistogram()) {
-        QtConcurrent::run([&]{ auto hack = this; analyze(); hack = nullptr; });
+        busy = true;
+        QtConcurrent::run(
+            arfariusApp->getAnalyzeThreadPool(),
+            [this]{ analyze(); busy = false; }
+        );
     }
 }
 

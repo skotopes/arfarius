@@ -1,5 +1,6 @@
 #include "playlistmodel.h"
 #include "playlistitem.h"
+#include "arfariusapplication.h"
 
 #include <QProgressDialog>
 #include <QDirIterator>
@@ -93,9 +94,10 @@ bool PlayListModel::removeRows(int row, int count, const QModelIndex &parent)
         current_item = items[current];
     }
 
-    for (int i = 0; i < count; ++i) {
-        items[row]->deleteLater();
-        items.removeAt(row);
+    for (int i = row; i < row+count; i++) {
+        while(items[i]->isBusy()) arfariusApp->processEvents(QEventLoop::AllEvents, 10);
+        items[i]->deleteLater();
+        items.removeAt(i);
     }
 
     if (current_item) {

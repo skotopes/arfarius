@@ -2,6 +2,7 @@
 #define PLAYLISTITEM_H
 
 #include <QObject>
+#include <QFuture>
 #include <QUrl>
 
 class AVFile;
@@ -13,6 +14,7 @@ public:
     PlayListItem(QUrl s);
     virtual ~PlayListItem();
 
+    bool isBusy();
     bool isValid();
     bool isLocalFile();
 
@@ -44,6 +46,8 @@ private:
     QString title;
     QString album;
     int     duration;
+
+    bool busy;
 
     QString getArtist();
     QString getTitle();
