@@ -329,7 +329,7 @@ QImage * PlayListItem::getHistogrammImage(size_t width, size_t height)
             pos_rms_avg  /= blocks_per_pixel; neg_rms_avg  /= blocks_per_pixel;
             r_avg /= blocks_per_pixel; g_avg /= blocks_per_pixel; b_avg /= blocks_per_pixel;
             // Peaks
-            painter.setPen(QColor(r_avg, g_avg, b_avg, 64));
+            painter.setPen(QColor(r_avg/2, g_avg/2, b_avg/2));
             painter.drawLine(
                 x, hh + pos_peak_avg * hh,
                 x, hh - neg_peak_avg * hh
