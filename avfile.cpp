@@ -4,11 +4,17 @@
 #include "memring.h"
 
 extern "C" {
+
+#include <libavutil/opt.h>
 #include <libavutil/avutil.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswresample/swresample.h>
+
 }
+
+#include <QDebug>
+#define AVFILE_SHADOW_BUFFER_SIZE 192000
 
 AVFile::AVFile() :
     AVObject(),
@@ -160,7 +166,7 @@ void AVFile::decode()
     uint8_t *packet_data;
     av_init_packet(&packet);
 
-    uint8_t * shadow = reinterpret_cast<uint8_t*>(av_malloc(192000 * 4));
+    uint8_t * shadow = reinterpret_cast<uint8_t*>(av_malloc(AVFILE_SHADOW_BUFFER_SIZE * sizeof(float)));
     decoding = true;
     while (av_read_frame(formatCtx, &packet) == 0) {
         if (packet.stream_index == audioStream) {
@@ -185,10 +191,14 @@ void AVFile::decode()
                     got_frame = 0;
 
                     if (swrCtx) {
-                        uint8_t *shadow_array[] = { shadow };
-                        const uint8_t **input_array = (const uint8_t **)frame.extended_data;
+                        if (!frame.extended_data[0]) {
+                            qDebug() << this << "decode(): frame extended data is empty";
+                            break;
+                        }
+
+                        uint8_t* shadow_array[] = { shadow };
                         // todo: check original code^ some nasty shit inside
-                        int ret = swr_convert(swrCtx, shadow_array, 192000, input_array, frame.nb_samples);
+                        int ret = swr_convert(swrCtx, shadow_array, AVFILE_SHADOW_BUFFER_SIZE, const_cast<const uint8_t**>(frame.extended_data), frame.nb_samples);
                         if (ret > 0) {
                             _output->push(reinterpret_cast<float *>(shadow), ret * _channels);
                         }
@@ -251,10 +261,14 @@ void AVFile::_updateSWR()
         codecCtx->sample_fmt != AV_SAMPLE_FMT_FLT ||
         codecCtx->sample_rate != (int)_sample_rate)
     {
+        qDebug() << this << "_updateSWR():"
+                 << "out:" << av_get_default_channel_layout(_channels) << AV_SAMPLE_FMT_FLT << _sample_rate
+                 << "in:"<< codecCtx->channel_layout << codecCtx->sample_fmt << codecCtx->sample_rate;
         swrCtx = swr_alloc_set_opts(nullptr, av_get_default_channel_layout(_channels), AV_SAMPLE_FMT_FLT, _sample_rate,
                                     codecCtx->channel_layout, codecCtx->sample_fmt, codecCtx->sample_rate,
                                     0, nullptr);
-
+//        av_opt_set_int(swrCtx, "resampler", SWR_ENGINE_SWR, 0);
+        av_opt_set_int(swrCtx, "resampler", SWR_ENGINE_SOXR, 0);
         if (!swrCtx)
             throw AVException("Unable to allocate swresample context");
 

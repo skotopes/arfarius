@@ -58,7 +58,7 @@ RESOURCES += assets.qrc
 LIBS += -lavformat -lavutil -lavcodec -lswresample -ltag -lfftw3f
 
 macx {
-    LIBS += -L /usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit
+    LIBS += -L/usr/local/lib -framework Cocoa -framework CoreAudio -framework AudioUnit
     ICON = Arfarius.icns
     OBJECTIVE_SOURCES +=
     HEADERS +=
