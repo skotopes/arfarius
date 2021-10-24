@@ -16,6 +16,8 @@
     <string>com.plooks.Arfarius</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>We intercepting media keys only.</string>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
