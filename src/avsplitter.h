@@ -10,6 +10,9 @@ public:
     AVSplitter();
     virtual ~AVSplitter();
 
+    AVSplitter(const AVSplitter&) = delete;
+    AVSplitter& operator=(const AVSplitter&) = delete;
+
     virtual const char * getName() { return "AVSplitter"; }
 
     virtual size_t pull(float *buffer_ptr, size_t buffer_size);
