@@ -14,8 +14,7 @@ class QSemaphore;
 class QCoreAudio;
 class QTimer;
 
-class Player : public QObject, public AVObject
-{
+class Player : public QObject, public AVObject {
     Q_OBJECT
 
 public:
@@ -25,20 +24,20 @@ public:
         PAUSE
     };
 
-    explicit Player(QObject *parent = 0);
+    explicit Player(QObject* parent = 0);
     virtual ~Player();
 
-    virtual const char * getName();
-    virtual size_t pull(float *buffer_ptr, size_t buffer_size);
-    virtual size_t push(float *buffer_ptr, size_t buffer_size);
+    virtual const char* getName();
+    virtual size_t pull(float* buffer_ptr, size_t buffer_size);
+    virtual size_t push(float* buffer_ptr, size_t buffer_size);
 
 private:
-    QCoreAudio *ca;
-    AVFile *file;
+    QCoreAudio* ca;
+    AVFile* file;
     QFuture<void> file_future;
     QFuture<void> eject_future;
-    MemRing<av_sample_t> *ring;
-    QSemaphore *ring_semaphor;
+    MemRing<av_sample_t>* ring;
+    QSemaphore* ring_semaphor;
     size_t ring_size;
     size_t samples_elapsed;
     State state;
@@ -59,10 +58,13 @@ signals:
     void progressUpdated(float);
 
 public slots:
-    void updateItem(PlayListItem *);
+    void updateItem(PlayListItem*);
     void seekToPercent(float p);
-    void seekForward(float seconds=10.f);
-    void seekBackward(float seconds=10.f);
+    void seekForward(float seconds = 10.f);
+    void seekBackward(float seconds = 10.f);
+
+    void play();
+    void pause();
     void playPause();
     void stop();
 

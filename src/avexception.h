@@ -8,9 +8,9 @@ class AVException : public std::exception {
 std::string error;
 
 public:
-    AVException(std::string s) throw() { error = s; }
-    virtual ~AVException() throw() {}
-    virtual const char* what() const throw() { return error.c_str(); }
+    AVException(std::string s) noexcept : error(std::move(s)) {}
+    virtual ~AVException() noexcept {}
+    virtual const char* what() const noexcept override { return error.c_str(); }
 };
 
 #endif // AVEXCEPTION_H

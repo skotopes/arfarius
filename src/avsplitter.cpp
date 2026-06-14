@@ -42,20 +42,14 @@ void AVSplitter::connectOutput(AVObject *object, bool recursive)
 
 void AVSplitter::disconnectOutput(AVObject *object, bool recursive)
 {
-    bool found = false;
-    std::for_each(
-        _objects.begin(), _objects.end(),
-        [&](AVObject* obj) {
-            if (obj == object)
-                found = true;
-        }
-    );
-
-    if (!found)
+    auto it = std::find(_objects.begin(), _objects.end(), object);
+    if (it == _objects.end())
         throw AVException("disconnectOutput: programming error");
 
     if (recursive)
         object->disconnectInput(this, false);
+
+    _objects.erase(it);
 }
 
 void AVSplitter::setSamplerate(av_sample_rate_t sample_rate)

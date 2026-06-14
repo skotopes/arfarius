@@ -13,7 +13,6 @@ class ArfariusApplication;
 class PlayListModel;
 class PlayListItem;
 class MacMediaKeys;
-class Collection;
 
 class MainWindow : public QMainWindow
 {

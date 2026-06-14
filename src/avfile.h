@@ -7,21 +7,20 @@ struct AVFormatContext;
 struct AVCodecContext;
 struct SwrContext;
 
-class AVFile: public AVObject
-{
+class AVFile : public AVObject {
 public:
     AVFile();
     virtual ~AVFile();
 
-    virtual const char * getName();
+    virtual const char* getName();
 
     virtual void setSamplerate(av_sample_rate_t samplerate);
     virtual void setChannels(av_channels_t channels);
 
-    virtual size_t pull(av_sample_t *buffer_ptr, size_t buffer_size);
-    virtual size_t push(av_sample_t *buffer_ptr, size_t buffer_size);
+    virtual size_t pull(av_sample_t* buffer_ptr, size_t buffer_size);
+    virtual size_t push(av_sample_t* buffer_ptr, size_t buffer_size);
 
-    void open(const char *);
+    void open(const char*);
     void close();
 
     float getDurationInSeconds();
@@ -43,10 +42,10 @@ public:
     void cancelDecoding();
 
 private:
-    AVFormatContext *formatCtx;
-    AVCodecContext *codecCtx;
-    SwrContext *swrCtx;
-    int audioStream;
+    AVFormatContext* formatCtx;
+    AVCodecContext* codecCtx;
+    SwrContext* swrCtx;
+    int audio_stream_id;
     bool decoding;
 
     volatile int64_t _position;

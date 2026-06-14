@@ -16,40 +16,38 @@
 #include <QStorageInfo>
 #include <QtConcurrent>
 #include <QDataStream>
-#include <QTextCodec>
 #include <QFileInfo>
 #include <QPainter>
 #include <QImage>
 #include <QDebug>
 #include <QFile>
+#include <QDir>
 
 /*
  * Helpers
  */
 
-QString formatTime(int time)
-{
-    int h,m,s;
+QString formatTime(int time) {
+    int h, m, s;
 
     s = time % 60;
     m = time / 60 % 60;
     h = time / 60 / 60;
 
-    if (h > 0)
+    if(h > 0)
         return QString("%1:%2:%3").arg(h, 2).arg(m, 2, 10, QChar('0')).arg(s, 2, 10, QChar('0'));
     else
         return QString("%1:%2").arg(m, 2).arg(s, 2, 10, QChar('0'));
 }
 
 QString toQstring(TagLib::String str) {
-    if (str.isLatin1()) {
-        QTextCodec* codec = QTextCodec::codecForName("cp1251");
-        return codec->toUnicode(str.toCString());
+    if(str.isLatin1()) {
+        auto toUtf16 = QStringDecoder("cp1251");
+        return toUtf16(str.toCString(true));
     } else {
         return QString::fromUtf8(str.toCString(true));
     }
 }
-
 
 TagLib::String toString(QString str) {
     return TagLib::String(str.toStdString(), TagLib::String::UTF8);
@@ -59,40 +57,41 @@ TagLib::String toString(QString str) {
  * PlayListItem
  */
 
-PlayListItem::PlayListItem(QUrl s) :
-    QObject(), source(s), artist(), title(), album(), duration(-1), busy(false)
-{
-
+PlayListItem::PlayListItem(QUrl s)
+    : QObject()
+    , source(s)
+    , artist()
+    , title()
+    , album()
+    , duration(-1)
+    , busy(false) {
 }
 
-PlayListItem::~PlayListItem()
-{
+PlayListItem::~PlayListItem() {
 }
 
 bool PlayListItem::isBusy() {
     return busy;
 }
 
-bool PlayListItem::isValid()
-{
+bool PlayListItem::isValid() {
     try {
         AVFile f;
         f.open(getUrlString().toLocal8Bit().constData());
         duration = f.getDurationInSeconds();
-    } catch (AVException &e) {
-        qDebug() << "PlayListItem::isValid() says NOO to "<< source << "because:" << e.what();
+    } catch(AVException& e) {
+        qDebug() << "PlayListItem::isValid() says NOO to " << source << "because:" << e.what();
         return false;
     }
 
-    if (source.isLocalFile()) {
+    if(source.isLocalFile()) {
         readTags();
     }
 
     return true;
 }
 
-bool PlayListItem::isLocalFile()
-{
+bool PlayListItem::isLocalFile() {
     return source.isLocalFile();
 }
 
@@ -104,18 +103,19 @@ void PlayListItem::setUrl(QUrl url) {
     source = url;
 }
 
-QString PlayListItem::getUrlHash()
-{
-    return QCryptographicHash::hash(getUrlStringLocal().toLocal8Bit(), QCryptographicHash::Sha3_512).toHex();
+QString PlayListItem::getUrlHash() {
+    return QCryptographicHash::hash(
+               getUrlStringLocal().toLocal8Bit(), QCryptographicHash::Sha3_512)
+        .toHex();
 }
 
 QString PlayListItem::getUrlString() {
     QString url;
-    if (source.isLocalFile()) {
+    if(source.isLocalFile()) {
         QStorageInfo storage_info(source.toLocalFile());
         auto fs_type = storage_info.fileSystemType();
         qDebug() << this << "getUrlString(): underlying fs is" << fs_type;
-        if (fs_type == "smbfs") {
+        if(fs_type == "smbfs") {
             qDebug() << this << "getUrlString(): using async io and caching";
             url = QString("async:cache:%1").arg(source.toLocalFile());
         } else {
@@ -132,14 +132,12 @@ QString PlayListItem::getUrlStringLocal() {
     return source.toLocalFile();
 }
 
-int PlayListItem::getColumnsCount()
-{
+int PlayListItem::getColumnsCount() {
     return 4;
 }
 
-QString PlayListItem::getColumnName(int col)
-{
-    switch (col) {
+QString PlayListItem::getColumnName(int col) {
+    switch(col) {
     case 0:
         return "Artist";
     case 1:
@@ -153,13 +151,8 @@ QString PlayListItem::getColumnName(int col)
     }
 }
 
-QString PlayListItem::getColumn(int col)
-{
-    if (artist.isEmpty() && title.isEmpty()) {
-
-    }
-
-    switch (col) {
+QString PlayListItem::getColumn(int col) {
+    switch(col) {
     case 0:
         return getArtist();
     case 1:
@@ -173,17 +166,16 @@ QString PlayListItem::getColumn(int col)
     }
 }
 
-QString PlayListItem::getArtist()
-{
+QString PlayListItem::getArtist() {
     return artist;
 }
 
-QString PlayListItem::getTitle()
-{
-    if (source.isLocalFile() ) {
-        if (artist.isEmpty() && title.isEmpty() && album.isEmpty()) {
+QString PlayListItem::getTitle() {
+    if(source.isLocalFile()) {
+        if(artist.isEmpty() && title.isEmpty() && album.isEmpty()) {
             QFileInfo fileInf(source.toLocalFile());
-            return fileInf.completeBaseName();;
+            return fileInf.completeBaseName();
+            ;
         } else {
             return title;
         }
@@ -192,24 +184,21 @@ QString PlayListItem::getTitle()
     }
 }
 
-QString PlayListItem::getAlbum()
-{
+QString PlayListItem::getAlbum() {
     return album;
 }
 
-QString PlayListItem::getFormattedDuration()
-{
-    if (source.isLocalFile()) {
+QString PlayListItem::getFormattedDuration() {
+    if(source.isLocalFile()) {
         return formatTime(duration);
     } else {
         return "??:??";
     }
 }
 
-void PlayListItem::setColumn(int col, QString value)
-{
+void PlayListItem::setColumn(int col, QString value) {
     bool w = true;
-    switch (col) {
+    switch(col) {
     case 0:
         artist = value;
         break;
@@ -224,56 +213,50 @@ void PlayListItem::setColumn(int col, QString value)
         break;
     }
 
-    if (w)
-        writeTags();
+    if(w) writeTags();
 }
 
-bool PlayListItem::hasHistogram()
-{
+bool PlayListItem::hasHistogram() {
     QFile data_file(getHistogramDataPath());
-    if (data_file.size())
-        return true;
+    if(data_file.size()) return true;
 
     return false;
 }
 
-void PlayListItem::ensureHistogram()
-{
-    if (!hasHistogram()) {
+void PlayListItem::ensureHistogram() {
+    if(!hasHistogram()) {
         busy = true;
-        QtConcurrent::run(
-            arfariusApp->getAnalyzeThreadPool(),
-            [this]{ analyze(); busy = false; }
-        );
+        (void)QtConcurrent::run(arfariusApp->getAnalyzeThreadPool(), [this] {
+            analyze();
+            busy = false;
+        });
     }
 }
 
-QString PlayListItem::getHistogramDataPath()
-{
-    return QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/histogram/" + getUrlHash();
+QString PlayListItem::getHistogramDataPath() {
+    return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/histogram/" +
+           getUrlHash();
 }
 
-QImage * PlayListItem::getHistogrammImage(size_t width, size_t height)
-{
+QImage* PlayListItem::getHistogrammImage(size_t width, size_t height) {
     qDebug() << this << "generating histogram image";
-    if (!isLocalFile())
-        return nullptr;
+    if(!isLocalFile()) return nullptr;
 
     QFile data_file(getHistogramDataPath());
-    if (!data_file.open(QIODevice::ReadOnly)) {
+    if(!data_file.open(QIODevice::ReadOnly)) {
         qDebug() << this << "Unable to open histogram data file";
         return nullptr;
     }
 
     qDebug() << this << "Requested image Width:" << width << "Height" << height;
     size_t blocks = data_file.size() / 7 / sizeof(float);
-    if (!blocks) {
+    if(!blocks) {
         return nullptr;
-    } else if (blocks < width) {
+    } else if(blocks < width) {
         width = blocks;
     } else {
         size_t t_blocks = blocks;
-        while (t_blocks > width*2) {
+        while(t_blocks > width * 2) {
             t_blocks /= 2;
         }
         width = t_blocks;
@@ -284,35 +267,36 @@ QImage * PlayListItem::getHistogrammImage(size_t width, size_t height)
 
     QDataStream data(&data_file);
     data.setFloatingPointPrecision(QDataStream::SinglePrecision);
-    QImage *pic = new QImage(width, height, QImage::Format_ARGB32);
-    pic->fill(QColor(0,0,0,0));
+    QImage* pic = new QImage(width, height, QImage::Format_ARGB32);
+    pic->fill(QColor(0, 0, 0, 0));
 
     QPainter painter(pic);
 
-    size_t x=0, p=0;
-    float hh = height/2;
+    size_t x = 0, p = 0;
+    float hh = height / 2;
     float pos_peak, neg_peak, pos_rms, neg_rms, r, g, b;
-    float pos_peak_avg=0, neg_peak_avg=0, pos_rms_avg=0, neg_rms_avg=0, r_avg=0, g_avg=0, b_avg=0;
-    while (true) {
-        if (data.atEnd()) {
+    float pos_peak_avg = 0, neg_peak_avg = 0, pos_rms_avg = 0, neg_rms_avg = 0, r_avg = 0,
+          g_avg = 0, b_avg = 0;
+    while(true) {
+        if(data.atEnd()) {
             qDebug() << this << "Unexpected end" << data_file.pos() << p << blocks_per_pixel;
             break;
         }
         data >> pos_peak >> neg_peak >> pos_rms >> neg_rms;
         data >> r >> g >> b;
         // Gain
-        r = r*0.5;
-        b = b*5.0;
+        r = r * 0.5;
+        b = b * 5.0;
         // find maximum
         float maximum = r;
-        if (g > maximum) {
+        if(g > maximum) {
             maximum = g;
         }
-        if (b > maximum) {
+        if(b > maximum) {
             maximum = b;
         }
         // Rescaling
-        if (maximum) {
+        if(maximum) {
             r = r / maximum * 180 + 30;
             g = g / maximum * 180 + 30;
             b = b / maximum * 180 + 30;
@@ -320,29 +304,30 @@ QImage * PlayListItem::getHistogrammImage(size_t width, size_t height)
             r = g = b = 0;
         }
         // Summ data
-        pos_peak_avg += pos_peak; neg_peak_avg += neg_peak;
-        pos_rms_avg  += pos_rms;  neg_rms_avg  += neg_rms;
-        r_avg += r; g_avg += g; b_avg += b;
+        pos_peak_avg += pos_peak;
+        neg_peak_avg += neg_peak;
+        pos_rms_avg += pos_rms;
+        neg_rms_avg += neg_rms;
+        r_avg += r;
+        g_avg += g;
+        b_avg += b;
         // Commit data to image
-        if (++p == blocks_per_pixel) {
-            pos_peak_avg /= blocks_per_pixel; neg_peak_avg /= blocks_per_pixel;
-            pos_rms_avg  /= blocks_per_pixel; neg_rms_avg  /= blocks_per_pixel;
-            r_avg /= blocks_per_pixel; g_avg /= blocks_per_pixel; b_avg /= blocks_per_pixel;
+        if(++p == blocks_per_pixel) {
+            pos_peak_avg /= blocks_per_pixel;
+            neg_peak_avg /= blocks_per_pixel;
+            pos_rms_avg /= blocks_per_pixel;
+            neg_rms_avg /= blocks_per_pixel;
+            r_avg /= blocks_per_pixel;
+            g_avg /= blocks_per_pixel;
+            b_avg /= blocks_per_pixel;
             // Peaks
-            painter.setPen(QColor(r_avg/2, g_avg/2, b_avg/2));
-            painter.drawLine(
-                x, hh + pos_peak_avg * hh,
-                x, hh - neg_peak_avg * hh
-            );
+            painter.setPen(QColor(r_avg / 2, g_avg / 2, b_avg / 2));
+            painter.drawLine(x, hh + pos_peak_avg * hh, x, hh - neg_peak_avg * hh);
             // RMS
             painter.setPen(QColor(r_avg, g_avg, b_avg));
-            painter.drawLine(
-                x, hh + pos_rms_avg * hh,
-                x, hh - neg_rms_avg * hh
-            );
+            painter.drawLine(x, hh + pos_rms_avg * hh, x, hh - neg_rms_avg * hh);
             // Break the circle
-            if (++x == width)
-                break;
+            if(++x == width) break;
             // zero
             p = 0;
             pos_peak_avg = neg_peak_avg = pos_rms_avg = neg_rms_avg = r_avg = g_avg = b_avg = 0;
@@ -352,25 +337,22 @@ QImage * PlayListItem::getHistogrammImage(size_t width, size_t height)
     return pic;
 }
 
-void PlayListItem::readTags()
-{
+void PlayListItem::readTags() {
     qDebug() << this << "reading tags";
     TagLib::FileRef f(getUrlStringLocal().toLocal8Bit().constData());
-    TagLib::Tag *t = f.tag();
-    if (t && !t->isEmpty() && (!t->artist().isEmpty() && !t->title().isEmpty())) {
+    TagLib::Tag* t = f.tag();
+    if(t && !t->isEmpty() && (!t->artist().isEmpty() && !t->title().isEmpty())) {
         artist = toQstring(t->artist());
         title = toQstring(t->title());
         album = toQstring(t->album());
     }
 }
 
-
-void PlayListItem::writeTags()
-{
+void PlayListItem::writeTags() {
     qDebug() << this << "writing tags";
     TagLib::FileRef f(getUrlStringLocal().toLocal8Bit().constData());
-    if (!f.isNull()) {
-        TagLib::Tag *t = f.tag();
+    if(!f.isNull()) {
+        TagLib::Tag* t = f.tag();
 
         t->setArtist(toString(artist));
         t->setTitle(toString(title));
@@ -382,28 +364,27 @@ void PlayListItem::writeTags()
     }
 }
 
-void PlayListItem::analyze()
-{
+void PlayListItem::analyze() {
     qDebug() << this << "analyzing";
     try {
-        if (!isLocalFile())
-            return;
+        if(!isLocalFile()) return;
 
         QFile data_file(getHistogramDataPath());
-        if (!data_file.open(QIODevice::WriteOnly)) {
-            qDebug() << this << "Unable to open histogram data file for write:" << getHistogramDataPath();
+        if(!data_file.open(QIODevice::WriteOnly)) {
+            qDebug() << this
+                     << "Unable to open histogram data file for write:" << getHistogramDataPath();
             return;
         }
 
         QDataStream data(&data_file);
         data.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
-        size_t h_count=0, s_count=0;
+        size_t h_count = 0, s_count = 0;
 
-        AVFile      file;
-        AVSplitter	splitter;
+        AVFile file;
+        AVSplitter splitter;
         AVHistogram histogram(8192);
-        AVSpectrum  spectrum(8192, AVSpectrum::BlackmanHarris);
+        AVSpectrum spectrum(8192, AVSpectrum::BlackmanHarris);
 
         histogram.dataCallback = [&](float p_p, float n_p, float p_r, float n_r) {
             data << p_p << n_p << p_r << n_r;
@@ -428,32 +409,32 @@ void PlayListItem::analyze()
 
         data_file.close();
         qDebug() << this << "histogram ready";
-    } catch (AVException e) {
+    } catch(AVException e) {
         qDebug() << this << "failed to create histogram" << e.what();
     }
 
     emit histogramUpdated();
 }
 
-AVFile * PlayListItem::getAVFile()
-{
-    AVFile *file = nullptr;
+AVFile* PlayListItem::getAVFile() {
+    AVFile* file = nullptr;
     try {
         file = new AVFile;
         file->open(getUrlString().toLocal8Bit().constData());
     } catch(AVException e) {
         qDebug() << this << "Failed to open file because of" << e.what();
-        delete file; file = nullptr;
+        delete file;
+        file = nullptr;
     }
 
     return file;
 }
 
-bool PlayListItem::ensurePath()
-{
-    QString path = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/histogram/";
+bool PlayListItem::ensurePath() {
+    QString path =
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/histogram/";
     QDir dir(path);
-    if (!dir.exists()) {
+    if(!dir.exists()) {
         qDebug() << "Creating histogram storage" << path;
         QDir::root().mkpath(path);
     }

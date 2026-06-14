@@ -8,7 +8,7 @@
 #include <QList>
 #include <QUrl>
 #include <QDebug>
-#include <QtAwesome.h>
+#include "QtAwesome/QtAwesome.h"
 
 #include "arfariusapplication.h"
 #include "macmediakeys.h"
@@ -17,38 +17,40 @@
 
 #define CONFIG_VERSION 2
 
-MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
-    QMainWindow(parent),
-    awesome(new QtAwesome(this)),
-    ui(new Ui::MainWindow),
-    mac_media_keys(new MacMediaKeys(this)),
-    player(new Player(this)),
-    playlist(new PlayListModel(this)),
-    current_item(nullptr)
-{
+MainWindow::MainWindow(ArfariusApplication* application, QWidget* parent)
+    : QMainWindow(parent)
+    , awesome(new QtAwesome(this))
+    , ui(new Ui::MainWindow)
+    , mac_media_keys(new MacMediaKeys(this))
+    , player(new Player(this))
+    , playlist(new PlayListModel(this))
+    , current_item(nullptr) {
     awesome->initFontAwesome();
 
     ui->setupUi(this);
     ui->playList->setModel(playlist);
     // buttons
-    ui->prevButton->setText(QChar(fa::backward));
+    ui->prevButton->setIcon(awesome->icon(fa::backward));
     ui->prevButton->setFont(awesome->font());
-    ui->playButton->setText(QChar(fa::play));
+    ui->playButton->setIcon(awesome->icon(fa::play));
     ui->playButton->setFont(awesome->font());
-    ui->nextButton->setText(QChar(fa::forward));
+    ui->nextButton->setIcon(awesome->icon(fa::forward));
     ui->nextButton->setFont(awesome->font());
 
     ui->playList->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
-    connect(application, SIGNAL( applicationStateChanged(Qt::ApplicationState) ), this, SLOT( applicationStateChanged(Qt::ApplicationState)));
+    connect(
+        application,
+        SIGNAL(applicationStateChanged(Qt::ApplicationState)),
+        this,
+        SLOT(applicationStateChanged(Qt::ApplicationState)));
 
-    connect(mac_media_keys, SIGNAL( backward() ), playlist, SLOT(prevItem()));
-    connect(mac_media_keys, SIGNAL( seekBackward() ), player, SLOT(seekBackward()));
-
-    connect(mac_media_keys, SIGNAL( playPause() ), player, SLOT(playPause()));
-
-    connect(mac_media_keys, SIGNAL( forward() ), playlist, SLOT(nextItem()));
-    connect(mac_media_keys, SIGNAL( seekForward() ), player, SLOT(seekForward()));
+    connect(mac_media_keys, SIGNAL(backward()), playlist, SLOT(prevItem()));
+    connect(mac_media_keys, SIGNAL(play()), player, SLOT(play()));
+    connect(mac_media_keys, SIGNAL(pause()), player, SLOT(pause()));
+    connect(mac_media_keys, SIGNAL(playPause()), player, SLOT(playPause()));
+    connect(mac_media_keys, SIGNAL(stop()), player, SLOT(stop()));
+    connect(mac_media_keys, SIGNAL(forward()), playlist, SLOT(nextItem()));
 
     connect(ui->prevButton, SIGNAL(clicked()), playlist, SLOT(prevItem()));
     connect(ui->nextButton, SIGNAL(clicked()), playlist, SLOT(nextItem()));
@@ -68,7 +70,7 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     connect(player, SIGNAL(timeComboUpdated(QString)), ui->timeLabel, SLOT(setText(QString)));
 
     QSettings settings;
-    if (settings.value("ConfigVersion", 0).toInt() < CONFIG_VERSION) {
+    if(settings.value("ConfigVersion", 0).toInt() < CONFIG_VERSION) {
         settings.clear();
         settings.setValue("ConfigVersion", CONFIG_VERSION);
     }
@@ -76,27 +78,26 @@ MainWindow::MainWindow(ArfariusApplication *application, QWidget *parent) :
     restoreState(settings.value("MainWindow/state").toByteArray());
     restoreGeometry(settings.value("MainWindow/geometry").toByteArray());
     ui->playList->horizontalHeader()->restoreState(settings.value("PlayList/state").toByteArray());
-    ui->playList->horizontalHeader()->restoreGeometry(settings.value("PlayList/geometry").toByteArray());
+    ui->playList->horizontalHeader()->restoreGeometry(
+        settings.value("PlayList/geometry").toByteArray());
 
     connect(application, SIGNAL(fileDropped(QUrl)), playlist, SLOT(appendUrl(QUrl)));
 
     PlayListItem::ensurePath();
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::closeEvent(QCloseEvent *e)
-{
+void MainWindow::closeEvent(QCloseEvent* e) {
     QSettings settings;
     settings.setValue("PlayList/state", ui->playList->horizontalHeader()->saveState());
     settings.setValue("PlayList/geometry", ui->playList->horizontalHeader()->saveGeometry());
     settings.setValue("MainWindow/state", saveState());
     settings.setValue("MainWindow/geometry", saveGeometry());
 
-    if (!isMinimized()) {
+    if(!isMinimized()) {
         hide();
         e->ignore();
     } else {
@@ -104,16 +105,15 @@ void MainWindow::closeEvent(QCloseEvent *e)
     }
 }
 
-void MainWindow::keyPressEvent(QKeyEvent *event)
-{
+void MainWindow::keyPressEvent(QKeyEvent* event) {
     qDebug() << this << "keyPressEvent():" << event;
-    if (event->key() == Qt::Key_Left) {
+    if(event->key() == Qt::Key_Left) {
         player->seekBackward(10.);
         event->accept();
-    } else if (event->key() == Qt::Key_Right) {
+    } else if(event->key() == Qt::Key_Right) {
         player->seekForward(10.);
         event->accept();
-    } else if (event->key() == Qt::Key_L) {
+    } else if(event->key() == Qt::Key_L) {
         playlist->removeCurrent();
         event->accept();
     } else {
@@ -121,73 +121,69 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
-
-void MainWindow::updateState(Player::State s)
-{
+void MainWindow::updateState(Player::State s) {
     qDebug() << this << "updateState()";
-    switch (s) {
+    switch(s) {
     case Player::PLAY:
-        ui->playButton->setText(QChar(fa::pause));
+        ui->playButton->setIcon(awesome->icon(fa::pause));
+        if(current_item)
+            mac_media_keys->setPlayingState(
+                current_item->getArtist(), current_item->getTitle(), true);
         break;
     case Player::PAUSE:
-        ui->playButton->setText(QChar(fa::play));
+        ui->playButton->setIcon(awesome->icon(fa::play));
+        if(current_item)
+            mac_media_keys->setPlayingState(
+                current_item->getArtist(), current_item->getTitle(), false);
         break;
     case Player::STOP:
-        ui->playButton->setText(QChar(fa::play));
+        ui->playButton->setIcon(awesome->icon(fa::play));
         break;
     default:
         break;
     }
 }
 
-void MainWindow::updateItem(PlayListItem* item)
-{
+void MainWindow::updateItem(PlayListItem* item) {
     qDebug() << this << "updateItem()";
-    if (current_item) {
+    if(current_item) {
         disconnect(current_item, SIGNAL(histogramUpdated()), this, SLOT(updateHistogram()));
     }
     current_item = item;
 
-    if (current_item) {
+    if(current_item) {
         connect(current_item, SIGNAL(histogramUpdated()), this, SLOT(updateHistogram()));
+        mac_media_keys->setPlayingState(current_item->getArtist(), current_item->getTitle(), true);
     }
 
     updateHistogram();
 }
 
-void MainWindow::updateHistogram()
-{
+void MainWindow::updateHistogram() {
     qDebug() << this << "updateHistogram()";
-    if (current_item) {
+    if(current_item) {
         auto r = ((QApplication*)QApplication::instance())->devicePixelRatio();
-        QImage *image = current_item->getHistogrammImage(ui->histogram->width()*r, ui->histogram->height()*r);
+        QImage* image = current_item->getHistogrammImage(
+            ui->histogram->width() * r, ui->histogram->height() * r);
         ui->histogram->updateImage(image);
     } else {
         ui->histogram->updateImage(nullptr);
     }
 }
 
-void MainWindow::applicationStateChanged(Qt::ApplicationState state)
-{
-    if (state == Qt::ApplicationActive) {
+void MainWindow::applicationStateChanged(Qt::ApplicationState state) {
+    if(state == Qt::ApplicationActive) {
         show();
     }
 }
 
 void MainWindow::playlistSave() {
     auto file_name = QFileDialog::getSaveFileName(
-        this,
-        tr("Save M3U playlist"),
-        QString(),
-        tr("M3U Playlist (*.m3u)")
-    );
-    if (!file_name.isEmpty()) playlist->save(file_name);
+        this, tr("Save M3U playlist"), QString(), tr("M3U Playlist (*.m3u)"));
+    if(!file_name.isEmpty()) playlist->save(file_name);
 }
 
 void MainWindow::playlistGather() {
-    auto path = QFileDialog::getExistingDirectory(
-        this,
-        tr("Directory to gather playlist")
-    );
-    if (!path.isEmpty()) playlist->gather(path);
+    auto path = QFileDialog::getExistingDirectory(this, tr("Directory to gather playlist"));
+    if(!path.isEmpty()) playlist->gather(path);
 }

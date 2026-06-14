@@ -7,8 +7,7 @@
 
 class AVFile;
 
-class PlayListItem : public QObject
-{
+class PlayListItem : public QObject {
     Q_OBJECT
 public:
     PlayListItem(QUrl s);
@@ -34,25 +33,25 @@ public:
     void ensureHistogram();
     bool hasHistogram();
     QString getHistogramDataPath();
-    QImage * getHistogrammImage(size_t width, size_t height);
+    QImage* getHistogrammImage(size_t width, size_t height);
 
     // avfile related methods
-    AVFile * getAVFile();
+    AVFile* getAVFile();
     static bool ensurePath();
-
-private:
-    QUrl    source;
-    QString artist;
-    QString title;
-    QString album;
-    int     duration;
-
-    bool busy;
 
     QString getArtist();
     QString getTitle();
     QString getAlbum();
     QString getFormattedDuration();
+
+private:
+    QUrl source;
+    QString artist;
+    QString title;
+    QString album;
+    int duration;
+
+    bool busy;
 
     void readTags();
     void writeTags();

@@ -2,13 +2,19 @@
 #include "avexception.h"
 
 AVObject::AVObject():
-    _input(0), _output(0), _sample_rate(0), _channels(0)
+    _input(nullptr), _output(nullptr), _sample_rate(0), _channels(0)
 {
 }
 
 AVObject::~AVObject() {
-    if (_output) _output->disconnectInput(this);
-    if (_input) _input->disconnectOutput(this);
+    try {
+        if (_output) _output->disconnectInput(this);
+    } catch (...) {
+    }
+    try {
+        if (_input) _input->disconnectOutput(this);
+    } catch (...) {
+    }
 }
 
 const char * AVObject::getRepr()
@@ -18,6 +24,9 @@ const char * AVObject::getRepr()
 
 void AVObject::connectInput(AVObject *object, bool recursive)
 {
+    if (!object) {
+        throw AVException("connectInput: null object");
+    }
     if (_input) {
         throw AVException("connectInput: already connected");
     }
@@ -29,6 +38,9 @@ void AVObject::connectInput(AVObject *object, bool recursive)
 
 void AVObject::connectOutput(AVObject *object, bool recursive)
 {
+    if (!object) {
+        throw AVException("connectOutput: null object");
+    }
     if (_output)
         throw AVException("connectOutput: already connected");
 

@@ -10,7 +10,7 @@ class QCoreAudio : public QObject, public AVObject
     Q_OBJECT
 
 public:
-    explicit QCoreAudio(QObject *parent = 0);
+    explicit QCoreAudio(QObject *parent = nullptr);
     virtual ~QCoreAudio();
 
     virtual const char * getName();
@@ -18,7 +18,7 @@ public:
     virtual size_t push(float *buffer_ptr, size_t buffer_size);
 
 private:
-    AudioUnit device_unit;
+    AudioUnit device_unit = nullptr;
 
     static OSStatus outputCallback(
             void *inRefCon,

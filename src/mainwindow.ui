@@ -224,12 +224,12 @@
   <customwidget>
    <class>PlayListView</class>
    <extends>QTableView</extends>
-   <header>playlistview.h</header>
+   <header>src/playlistview.h</header>
   </customwidget>
   <customwidget>
    <class>HistogramWidget</class>
    <extends>QOpenGLWidget</extends>
-   <header>histogramwidget.h</header>
+   <header>src/histogramwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

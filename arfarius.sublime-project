@@ -1,0 +1,26 @@
+{
+    "folders":
+    [
+        {
+            "path": ".",
+        }
+    ],
+    "settings": {
+        "ClangFormat": {
+            "format_on_save": true
+        },
+        "LSP": {
+            "clangd": {
+                "enabled": true,
+                "initializationOptions": {
+                    // Set `"binary": "custom",` option in LSP-clangd config to use toolchain clangd
+                    "custom_command": ["/usr/bin/clangd"],
+                    "clangd.compile-commands-dir": "build",
+                    "clangd.header-insertion": "never",
+                    "clangd.query-driver": "*",
+                    "clangd.clang-tidy": true,
+                },
+            },
+        },
+   },
+}
