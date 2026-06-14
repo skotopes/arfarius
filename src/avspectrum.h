@@ -21,7 +21,7 @@ public:
     AVSpectrum(size_t window_size=4096, WindowType window_type=Square, float threshold=0);
     virtual ~AVSpectrum();
 
-    const char * getName() { return "AVSpectrogram"; }
+    const char * getName() { return "AVSpectrum"; }
 
     virtual size_t pull(float *buffer_ptr, size_t buffer_size);
     virtual size_t push(float *buffer_ptr, size_t buffer_size);
