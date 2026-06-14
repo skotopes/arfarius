@@ -24,7 +24,7 @@ public:
         PAUSE
     };
 
-    explicit Player(QObject* parent = 0);
+    explicit Player(QObject* parent = nullptr);
     virtual ~Player();
 
     virtual const char* getName();
@@ -39,9 +39,9 @@ private:
     MemRing<av_sample_t>* ring;
     QSemaphore* ring_semaphor;
     size_t ring_size;
-    size_t samples_elapsed;
-    State state;
-    bool quiet;
+    std::atomic<size_t> samples_elapsed;
+    std::atomic<State> state;
+    std::atomic<bool> quiet;
 
     // Stream and DAC
     bool startStream();
