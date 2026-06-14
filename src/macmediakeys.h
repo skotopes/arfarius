@@ -10,7 +10,12 @@ public:
     explicit MacMediaKeys(QObject* parent = nullptr);
     ~MacMediaKeys();
 
-    void setPlayingState(QString artist, QString title, bool playing);
+    MacMediaKeys(const MacMediaKeys&) = delete;
+    MacMediaKeys& operator=(const MacMediaKeys&) = delete;
+    MacMediaKeys(MacMediaKeys&&) = delete;
+    MacMediaKeys& operator=(MacMediaKeys&&) = delete;
+
+    void setPlayingState(const QString &artist, const QString &title, bool playing);
 
 signals:
     void play();
