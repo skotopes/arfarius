@@ -2,6 +2,7 @@
 #define AVFILE_H
 
 #include "avobject.h"
+#include <atomic>
 
 struct AVFormatContext;
 struct AVCodecContext;
@@ -46,10 +47,10 @@ private:
     AVCodecContext* codecCtx;
     SwrContext* swrCtx;
     int audio_stream_id;
-    bool decoding;
+    std::atomic<bool> decoding;
 
-    volatile int64_t _position;
-    volatile int64_t _seek_to;
+    std::atomic<int64_t> _position;
+    std::atomic<int64_t> _seek_to;
 
     void _updateSWR();
 };
