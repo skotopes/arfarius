@@ -30,11 +30,11 @@ MainWindow::MainWindow(ArfariusApplication* application, QWidget* parent)
     ui->setupUi(this);
     ui->playList->setModel(playlist);
     // buttons
-    ui->prevButton->setIcon(awesome->icon(fa::backward));
+    ui->prevButton->setText(QChar::fromUcs2(fa::backward));
     ui->prevButton->setFont(awesome->font());
-    ui->playButton->setIcon(awesome->icon(fa::play));
+    ui->playButton->setText(QChar::fromUcs2(fa::play));
     ui->playButton->setFont(awesome->font());
-    ui->nextButton->setIcon(awesome->icon(fa::forward));
+    ui->nextButton->setText(QChar::fromUcs2(fa::forward));
     ui->nextButton->setFont(awesome->font());
 
     ui->playList->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
@@ -125,19 +125,20 @@ void MainWindow::updateState(Player::State s) {
     qDebug() << this << "updateState()";
     switch(s) {
     case Player::PLAY:
-        ui->playButton->setIcon(awesome->icon(fa::pause));
+        ui->playButton->setText(QChar::fromUcs2(fa::pause));
+
         if(current_item)
             mac_media_keys->setPlayingState(
                 current_item->getArtist(), current_item->getTitle(), true);
         break;
     case Player::PAUSE:
-        ui->playButton->setIcon(awesome->icon(fa::play));
+        ui->playButton->setText(QChar::fromUcs2(fa::play));
         if(current_item)
             mac_media_keys->setPlayingState(
                 current_item->getArtist(), current_item->getTitle(), false);
         break;
     case Player::STOP:
-        ui->playButton->setIcon(awesome->icon(fa::play));
+        ui->playButton->setText(QChar::fromUcs2(fa::play));
         break;
     default:
         break;
