@@ -243,7 +243,7 @@ QString PlayListItem::getHistogramDataPath() {
            getUrlHash();
 }
 
-QImage* PlayListItem::getHistogrammImage(size_t width, size_t height) {
+QImage* PlayListItem::getHistogramImage(size_t width, size_t height) {
     if(!isLocalFile()) return nullptr;
 
     QString dataPath = getHistogramDataPath();

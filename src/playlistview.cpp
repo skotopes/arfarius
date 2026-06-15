@@ -28,7 +28,7 @@ void PlayListView::dropEvent(QDropEvent* event) {
         event->acceptProposedAction();
         playlist->appendUrls(urls);
     } else {
-        qWarning() << this << "Incompatiable model for drag and drop event";
+        qWarning() << this << "Incompatible model for drag and drop event";
     }
 }
 
@@ -87,7 +87,7 @@ void PlayListView::keyPressEvent(QKeyEvent* event) {
                 if(playlist) {
                     playlist->clickedItem(index);
                 } else {
-                    qWarning() << this << "Incompatiable model for drag and drop event";
+                    qWarning() << this << "Incompatible model for drag and drop event";
                 }
             }
         }
@@ -122,7 +122,7 @@ void PlayListView::mouseDoubleClickEvent(QMouseEvent* event) {
         if(playlist) {
             playlist->clickedItem(index);
         } else {
-            qWarning() << this << "Incompatiable model for drag and drop event";
+            qWarning() << this << "Incompatible model for drag and drop event";
         }
         event->accept();
     } else {

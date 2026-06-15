@@ -9,18 +9,8 @@ AVObject::AVObject()
 }
 
 AVObject::~AVObject() {
-    try {
-        if(_output) _output->disconnectInput(this);
-    } catch(...) {
-    }
-    try {
-        if(_input) _input->disconnectOutput(this);
-    } catch(...) {
-    }
-}
-
-const char* AVObject::getRepr() {
-    return getName();
+    if(_output) _output->disconnectInput(this);
+    if(_input) _input->disconnectOutput(this);
 }
 
 void AVObject::connectInput(AVObject* object, bool recursive) {

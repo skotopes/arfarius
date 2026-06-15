@@ -121,7 +121,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event) {
 }
 
 void MainWindow::updateState(Player::State s) {
-    qDebug() << this << "updateState()";
+    qDebug() << this << "updateState()" << s;
     switch(s) {
     case Player::PLAY:
         ui->playButton->setText(QChar::fromUcs2(fa::pause));
@@ -145,7 +145,7 @@ void MainWindow::updateState(Player::State s) {
 }
 
 void MainWindow::updateItem(PlayListItem* item) {
-    qDebug() << this << "updateItem()";
+    qDebug() << this << "updateItem()" << item;
     if(current_item) {
         disconnect(current_item, SIGNAL(histogramUpdated()), this, SLOT(updateHistogram()));
     }
@@ -160,10 +160,10 @@ void MainWindow::updateItem(PlayListItem* item) {
 }
 
 void MainWindow::updateHistogram() {
-    qDebug() << this << "updateHistogram()";
+    qDebug() << this << "updateHistogram()" << current_item;
     if(current_item) {
         auto r = ((QApplication*)QApplication::instance())->devicePixelRatio();
-        QImage* image = current_item->getHistogrammImage(
+        QImage* image = current_item->getHistogramImage(
             ui->histogram->width() * r, ui->histogram->height() * r);
         ui->histogram->updateImage(image);
     } else {

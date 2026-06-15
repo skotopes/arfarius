@@ -12,7 +12,6 @@ public:
     AVObject& operator=(const AVObject&) = delete;
 
     virtual const char* getName() = 0;
-    virtual const char* getRepr();
 
     virtual void connectInput(AVObject* object, bool recursive = true);
     virtual void connectOutput(AVObject* object, bool recursive = true);

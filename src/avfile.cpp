@@ -127,11 +127,6 @@ float AVFile::getPositionInPercents() {
     return pos / duration;
 }
 
-size_t AVFile::getBitrate() {
-    if(!formatCtx) return 0;
-    return formatCtx->bit_rate;
-}
-
 size_t AVFile::getCodecBitrate() {
     if(!codecCtx) return 0;
     return codecCtx->bit_rate;

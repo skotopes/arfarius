@@ -28,8 +28,6 @@ public:
     size_t getDurationInSamples();
     float getPositionInSeconds();
     float getPositionInPercents();
-    size_t getBitrate();
-
     size_t getCodecBitrate();
     int getCodecSamplerate();
     int getCodecChannels();

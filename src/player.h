@@ -37,17 +37,11 @@ private:
     QFuture<void> file_future;
     QFuture<void> eject_future;
     MemRing<av_sample_t>* ring;
-    QSemaphore* ring_semaphor;
+    QSemaphore* ring_semaphore;
     size_t ring_size;
     std::atomic<size_t> samples_elapsed;
     std::atomic<State> state;
     std::atomic<bool> quiet;
-
-    // Stream and DAC
-    bool startStream();
-    bool stopStream();
-
-    // Player state
     void updateState(Player::State);
     void ejectFile();
 

@@ -36,7 +36,7 @@ Player::Player(QObject* parent)
     , file_future()
     , eject_future()
     , ring(nullptr)
-    , ring_semaphor(nullptr)
+    , ring_semaphore(nullptr)
     , ring_size(0)
     , samples_elapsed(0)
     , state(Player::STOP)
@@ -50,7 +50,7 @@ Player::Player(QObject* parent)
 
     ring_size = _sample_rate / 4;
     ring = new MemRing<av_sample_t>(ring_size);
-    ring_semaphor = new QSemaphore(ring_size);
+    ring_semaphore = new QSemaphore(ring_size);
 }
 
 Player::~Player() {
@@ -59,7 +59,7 @@ Player::~Player() {
     }
 
     if(ca) {
-        stopStream();
+        ca->stop();
     }
 
     if(ring) {
@@ -67,9 +67,9 @@ Player::~Player() {
         ring = nullptr;
     }
 
-    if(ring_semaphor) {
-        delete ring_semaphor;
-        ring_semaphor = nullptr;
+    if(ring_semaphore) {
+        delete ring_semaphore;
+        ring_semaphore = nullptr;
     }
 }
 
@@ -79,7 +79,7 @@ const char* Player::getName() {
 
 size_t Player::pull(float* buffer_ptr, size_t buffer_size) {
     size_t ret = ring->pull(buffer_ptr, buffer_size);
-    ring_semaphor->release(ret);
+    ring_semaphore->release(ret);
 
     return ret;
 }
@@ -91,14 +91,14 @@ size_t Player::push(float* buffer_ptr, size_t buffer_size) {
         if(granula_size > ring_size / 8) {
             granula_size = ring_size / 8;
         }
-        ring_semaphor->acquire(granula_size);
+        ring_semaphore->acquire(granula_size);
         ring->push(buffer_ptr, granula_size);
         buffer_size -= granula_size;
         buffer_ptr += granula_size;
     }
 
     samples_elapsed.fetch_add(buffer_size_orig, std::memory_order_relaxed);
-    if(samples_elapsed.load(std::memory_order_relaxed) > (_sample_rate * _channels / 8)) {
+    if(samples_elapsed > (_sample_rate * _channels / 8)) {
         samples_elapsed.store(0, std::memory_order_relaxed);
         QMetaObject::invokeMethod(this, "onProgressTimer", Qt::QueuedConnection);
     }
@@ -106,20 +106,10 @@ size_t Player::push(float* buffer_ptr, size_t buffer_size) {
     return buffer_size_orig;
 }
 
-bool Player::startStream() {
-    ca->start();
-    return true;
-}
-
-bool Player::stopStream() {
-    ca->stop();
-    return true;
-}
-
 void Player::updateState(Player::State s) {
     qDebug() << this << "updateState(): state changed to" << s;
-    state.store(s, std::memory_order_relaxed);
-    emit stateUpdated(state.load(std::memory_order_relaxed));
+    state = s;
+    emit stateUpdated(state);
 }
 
 void Player::ejectFile() {
@@ -146,10 +136,13 @@ void Player::ejectFile() {
 
 void Player::updateItem(PlayListItem* item) {
     qDebug() << this << "updateItem()" << item;
+
+    // intentional condition race injection
+    if(file) {
+        quiet.store(true, std::memory_order_release);
+    }
+
     if(item) {
-        if(file) {
-            quiet.store(true, std::memory_order_release);
-        }
         ejectFile();
 
         file = item->getAVFile();
@@ -172,8 +165,8 @@ void Player::updateItem(PlayListItem* item) {
             }
         });
 
-        if(state.load(std::memory_order_relaxed) != Player::PLAY) {
-            startStream();
+        if(state != Player::PLAY) {
+            ca->start();
             updateState(Player::PLAY);
         }
     } else {
@@ -198,11 +191,11 @@ void Player::seekBackward(float seconds) {
 
 void Player::play() {
     qDebug() << this << "play()";
-    if(state.load(std::memory_order_relaxed) == Player::PAUSE) {
-        startStream();
+    if(state == Player::PAUSE) {
+        ca->start();
         updateState(Player::PLAY);
-    } else if(state.load(std::memory_order_relaxed) == Player::STOP) {
-        startStream();
+    } else if(state == Player::STOP) {
+        ca->start();
         updateState(Player::PLAY);
         if(!file) {
             emit trackEnded();
@@ -212,22 +205,22 @@ void Player::play() {
 
 void Player::pause() {
     qDebug() << this << "pause()";
-    if(state.load(std::memory_order_relaxed) == Player::PLAY) {
-        stopStream();
+    if(state == Player::PLAY) {
+        ca->stop();
         updateState(Player::PAUSE);
     }
 }
 
 void Player::playPause() {
     qDebug() << this << "playPause()";
-    if(state.load(std::memory_order_relaxed) == Player::PLAY) {
-        stopStream();
+    if(state == Player::PLAY) {
+        ca->stop();
         updateState(Player::PAUSE);
-    } else if(state.load(std::memory_order_relaxed) == Player::PAUSE) {
-        startStream();
+    } else if(state == Player::PAUSE) {
+        ca->start();
         updateState(Player::PLAY);
-    } else if(state.load(std::memory_order_relaxed) == Player::STOP) {
-        startStream();
+    } else if(state == Player::STOP) {
+        ca->start();
         updateState(Player::PLAY);
         if(!file) {
             emit trackEnded();
@@ -236,16 +229,16 @@ void Player::playPause() {
 }
 
 void Player::stop() {
-    qDebug() << this << "stop()";
-    if(state.load(std::memory_order_relaxed) == Player::STOP) return;
+    qDebug() << this << "stop()" << state;
+    if(state == Player::STOP) return;
 
     ejectFile();
-    stopStream();
+    ca->stop();
 
     ring->reset();
-    int e = ring_semaphor->available();
+    int e = ring_semaphore->available();
     if(e < (int)ring_size) {
-        ring_semaphor->release(ring_size - e);
+        ring_semaphore->release(ring_size - e);
     }
     updateState(Player::STOP);
     emit timeComboUpdated("=(-_-)=");

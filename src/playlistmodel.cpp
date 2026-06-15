@@ -147,63 +147,53 @@ void PlayListModel::clickedItem(const QModelIndex& index) {
 }
 
 void PlayListModel::nextItem() {
-    if(!items.isEmpty()) {
-        int previous = current;
-        if(++current >= items.size()) {
-            current = -1;
-            emit itemUpdated(nullptr);
-            if(previous >= 0 && previous < items.size()) {
-                emit dataChanged(
-                    createIndex(previous, 0),
-                    createIndex(previous, PlayListItem::getColumnsCount() - 1));
-            }
-        } else {
-            emit itemUpdated(items[current]);
-            if(previous >= 0 && previous < items.size()) {
-                emit dataChanged(
-                    createIndex(previous, 0),
-                    createIndex(previous, PlayListItem::getColumnsCount() - 1));
-            }
-            emit dataChanged(
-                createIndex(current, 0),
-                createIndex(current, PlayListItem::getColumnsCount() - 1));
-        }
-    } else {
+    qDebug() << this << "nextItem()" << current;
+    if(!items.count()) {
         emit itemUpdated(nullptr);
+        return;
+    }
+
+    int previous = current;
+    if(++current >= items.size()) {
+        current = -1;
+        emit itemUpdated(nullptr);
+    } else {
+        emit itemUpdated(items[current]);
+        emit dataChanged(
+            createIndex(current, 0), createIndex(current, PlayListItem::getColumnsCount() - 1));
+    }
+
+    if(previous >= 0) {
+        emit dataChanged(
+            createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount() - 1));
     }
 }
 
 void PlayListModel::prevItem() {
-    if(!items.isEmpty()) {
-        int previous = current;
-        if(--current < 0) {
-            current = items.size() - 1; // wrap to last
-            emit itemUpdated(items[current]);
-            if(previous >= 0 && previous < items.size()) {
-                emit dataChanged(
-                    createIndex(previous, 0),
-                    createIndex(previous, PlayListItem::getColumnsCount() - 1));
-            }
-            emit dataChanged(
-                createIndex(current, 0),
-                createIndex(current, PlayListItem::getColumnsCount() - 1));
-        } else {
-            emit itemUpdated(items[current]);
-            if(previous >= 0 && previous < items.size()) {
-                emit dataChanged(
-                    createIndex(previous, 0),
-                    createIndex(previous, PlayListItem::getColumnsCount() - 1));
-            }
-            emit dataChanged(
-                createIndex(current, 0),
-                createIndex(current, PlayListItem::getColumnsCount() - 1));
-        }
-    } else {
+    qDebug() << this << "prevItem()" << current;
+    if(!items.count()) {
         emit itemUpdated(nullptr);
+        return;
+    }
+
+    int previous = current;
+    if(--current < 0) {
+        current = -1;
+        emit itemUpdated(nullptr);
+    } else {
+        emit itemUpdated(items[current]);
+        emit dataChanged(
+            createIndex(current, 0), createIndex(current, PlayListItem::getColumnsCount() - 1));
+    }
+
+    if(previous >= 0) {
+        emit dataChanged(
+            createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount() - 1));
     }
 }
 
 void PlayListModel::save(QString filename) {
+    qDebug() << this << "save()";
     QFile file(filename);
     if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         qWarning() << this << "save(): failed to open file";
@@ -218,6 +208,7 @@ void PlayListModel::save(QString filename) {
 }
 
 void PlayListModel::gather(QString path) {
+    qDebug() << this << "gather()";
     QDir dir(path);
     if(!dir.exists()) {
         qWarning() << this << "gather(): directory doesn't exist";

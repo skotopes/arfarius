@@ -29,11 +29,11 @@ public:
     QString getColumn(int col);
     void setColumn(int col, QString value);
 
-    // histogramm related methods
+    // histogram related methods
     void ensureHistogram();
     bool hasHistogram();
     QString getHistogramDataPath();
-    QImage* getHistogrammImage(size_t width, size_t height);
+    QImage* getHistogramImage(size_t width, size_t height);
 
     // avfile related methods
     AVFile* getAVFile();
