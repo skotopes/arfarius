@@ -3,23 +3,22 @@
 
 #include <QOpenGLWidget>
 
-class HistogramWidget : public QOpenGLWidget
-{
+class HistogramWidget : public QOpenGLWidget {
     Q_OBJECT
 public:
-    explicit HistogramWidget(QWidget *parent = 0);
-    
+    explicit HistogramWidget(QWidget* parent = nullptr);
+
 protected:
-    void mouseReleaseEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent*);
     void paintGL();
 
 private:
     float progress;
-    QImage *image;
+    QImage* image;
 
 public slots:
     void updateProgress(float);
-    void updateImage(QImage *);
+    void updateImage(QImage*);
 
 signals:
     void clicked(float);

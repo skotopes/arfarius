@@ -1,5 +1,4 @@
 #include "histogramwidget.h"
-#include "playlistitem.h"
 #include <QtGui>
 
 HistogramWidget::HistogramWidget(QWidget* parent)
