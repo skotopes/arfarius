@@ -6,9 +6,12 @@
 #include <QMouseEvent>
 #include <QProgressDialog>
 #include <QContextMenuEvent>
+#include <QDesktopServices>
+#include <QFileInfo>
 
 #include <QDebug>
 #include "playlistmodel.h"
+#include "playlistitem.h"
 
 PlayListView::PlayListView(QWidget *parent) : QTableView(parent)
 {
@@ -38,8 +41,21 @@ void PlayListView::contextMenuEvent(QContextMenuEvent * event)
     QModelIndex index = indexAt(event->pos());
     if (index.isValid()) {
         QMenu menu(this);
-        menu.addAction(QString("show file"));
-        menu.exec(QCursor::pos());
+        auto *showAction = menu.addAction("Show in Finder");
+        QAction *activated = menu.exec(QCursor::pos());
+        if (activated == showAction) {
+            PlayListModel *playlist = dynamic_cast<PlayListModel*>(model());
+            if (playlist && index.row() >= 0 && index.row() < playlist->rowCount()) {
+                PlayListItem *item = playlist->items.value(index.row());
+                if (item) {
+                    QString filePath = item->getUrlStringLocal();
+                    if (!filePath.isEmpty()) {
+                        QFileInfo fi(filePath);
+                        QDesktopServices::openUrl(QUrl::fromLocalFile(fi.absolutePath()));
+                    }
+                }
+            }
+        }
     } else {
         QTableView::contextMenuEvent(event);
     }
