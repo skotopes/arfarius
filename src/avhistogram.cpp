@@ -1,5 +1,4 @@
 #include "avhistogram.h"
-#include "avfile.h"
 #include <cmath>
 
 AVHistogram::AVHistogram(size_t window_size, float threshold)

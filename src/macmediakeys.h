@@ -15,7 +15,7 @@ public:
     MacMediaKeys(MacMediaKeys&&) = delete;
     MacMediaKeys& operator=(MacMediaKeys&&) = delete;
 
-    void setPlayingState(const QString &artist, const QString &title, bool playing);
+    void setPlayingState(const QString& artist, const QString& title, bool playing);
 
 signals:
     void play();

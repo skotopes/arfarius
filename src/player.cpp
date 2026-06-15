@@ -3,7 +3,6 @@
 #include "arfariusapplication.h"
 #include "playlistitem.h"
 
-#include "avexception.h"
 #include "avfile.h"
 #include "qcoreaudio.h"
 

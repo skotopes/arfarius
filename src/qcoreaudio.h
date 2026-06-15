@@ -5,28 +5,27 @@
 #include <AudioUnit/AudioUnit.h>
 #include "avobject.h"
 
-class QCoreAudio : public QObject, public AVObject
-{
+class QCoreAudio : public QObject, public AVObject {
     Q_OBJECT
 
 public:
-    explicit QCoreAudio(QObject *parent = nullptr);
+    explicit QCoreAudio(QObject* parent = nullptr);
     virtual ~QCoreAudio();
 
-    virtual const char * getName();
-    virtual size_t pull(float *buffer_ptr, size_t buffer_size);
-    virtual size_t push(float *buffer_ptr, size_t buffer_size);
+    virtual const char* getName();
+    virtual size_t pull(float* buffer_ptr, size_t buffer_size);
+    virtual size_t push(float* buffer_ptr, size_t buffer_size);
 
 private:
     AudioUnit device_unit = nullptr;
 
     static OSStatus outputCallback(
-            void *inRefCon,
-            AudioUnitRenderActionFlags *ioActionFlags,
-            const AudioTimeStamp *inTimeStamp,
-            UInt32 inBusNumber,
-            UInt32 inNumberFrames,
-            AudioBufferList *ioData);
+        void* inRefCon,
+        AudioUnitRenderActionFlags* ioActionFlags,
+        const AudioTimeStamp* inTimeStamp,
+        UInt32 inBusNumber,
+        UInt32 inNumberFrames,
+        AudioBufferList* ioData);
 
 signals:
 
@@ -40,7 +39,6 @@ public slots:
     void setDeviceSampleRate(Float64 sample_rate);
     UInt32 getDeviceBufferSize();
     void setDeviceBufferSize(UInt32 buffer_size);
-
 };
 
 #endif // QCOREAUDIO_H

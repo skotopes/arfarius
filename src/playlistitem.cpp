@@ -43,15 +43,6 @@ QString formatTime(int time) {
 }
 
 QString toQstring(TagLib::String str) {
-    // TagLib::String::isLatin1() checks for ISO-8859-1 range.
-    // cp1251 is a Windows encoding used for Russian/Cyrillic text.
-    // If TagLib detected ISO-8859-1, use UTF-8 (the safe default for TagLib).
-    // If TagLib detected UTF-8, use UTF-8.
-    // cp1251 is only used as a fallback when TagLib cannot determine encoding.
-    // TagLib::String::isLatin1() returns true for ISO-8859-1 and false for UTF-8.
-    // For cp1251 (Cyrillic), TagLib typically stores as UTF-8, so isLatin1() would be false.
-    // We use cp1251 only as a best-effort fallback for strings TagLib marked as Latin-1
-    // but which contain extended characters that look like cp1251 bytes.
     if(str.isLatin1()) {
         auto toUtf16 = QStringDecoder("cp1251");
         return toUtf16(str.toCString(true));

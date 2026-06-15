@@ -5,26 +5,25 @@
 #include <QThreadPool>
 #include <QUrl>
 
-#define arfariusApp (static_cast<ArfariusApplication *>(QCoreApplication::instance()))
+#define arfariusApp (static_cast<ArfariusApplication*>(QCoreApplication::instance()))
 
-class ArfariusApplication : public QApplication
-{
+class ArfariusApplication : public QApplication {
     Q_OBJECT
 
     QThreadPool decoder_thread_pool;
     QThreadPool analyze_thread_pool;
 
 public:
-    explicit ArfariusApplication(int &argc, char **argv);
+    explicit ArfariusApplication(int& argc, char** argv);
 
-    QThreadPool *getDecoderThreadPool();
-    QThreadPool *getAnalyzeThreadPool();
+    QThreadPool* getDecoderThreadPool();
+    QThreadPool* getAnalyzeThreadPool();
 
 signals:
     void fileDropped(QUrl);
 
 protected:
-    bool event(QEvent *) override;
+    bool event(QEvent*) override;
 };
 
 #endif // ARFARIUSAPPLICATION_H

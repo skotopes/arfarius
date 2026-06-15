@@ -5,7 +5,7 @@
 #include "player.h"
 
 namespace Ui {
-    class MainWindow;
+class MainWindow;
 }
 
 class QtAwesome;
@@ -14,24 +14,23 @@ class PlayListModel;
 class PlayListItem;
 class MacMediaKeys;
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit MainWindow(ArfariusApplication *application, QWidget *parent = nullptr);
+    explicit MainWindow(ArfariusApplication* application, QWidget* parent = nullptr);
     ~MainWindow();
 
 protected:
-    void closeEvent(QCloseEvent *e);
-    void keyPressEvent(QKeyEvent *);
+    void closeEvent(QCloseEvent* e);
+    void keyPressEvent(QKeyEvent*);
 
 private:
-    QtAwesome *awesome;
-    Ui::MainWindow *ui;
-    MacMediaKeys *mac_media_keys;
-    Player *player;
-    PlayListModel *playlist;
-    PlayListItem *current_item;
+    QtAwesome* awesome;
+    Ui::MainWindow* ui;
+    MacMediaKeys* mac_media_keys;
+    Player* player;
+    PlayListModel* playlist;
+    PlayListItem* current_item;
 
 private slots:
     void updateState(Player::State);
@@ -41,7 +40,6 @@ private slots:
 
     void playlistSave();
     void playlistGather();
-
 };
 
 #endif // MAINWINDOW_H

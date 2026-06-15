@@ -2,7 +2,6 @@
 #include "avexception.h"
 
 extern "C" {
-
 #include <libavutil/opt.h>
 #include <libavutil/avutil.h>
 #include <libavutil/channel_layout.h>

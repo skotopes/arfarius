@@ -3,21 +3,19 @@
 
 #include <QTableView>
 
-class PlayListView : public QTableView
-{
+class PlayListView : public QTableView {
 public:
-    PlayListView(QWidget *parent);
+    PlayListView(QWidget* parent);
 
 protected:
-    void dragEnterEvent(QDragEnterEvent *);
-    void dropEvent(QDropEvent *);
+    void dragEnterEvent(QDragEnterEvent*);
+    void dropEvent(QDropEvent*);
 
-    void contextMenuEvent(QContextMenuEvent *);
-    void keyPressEvent(QKeyEvent *);
+    void contextMenuEvent(QContextMenuEvent*);
+    void keyPressEvent(QKeyEvent*);
 
-    void mouseReleaseEvent(QMouseEvent *);
-    void mouseDoubleClickEvent(QMouseEvent *);
-
+    void mouseReleaseEvent(QMouseEvent*);
+    void mouseDoubleClickEvent(QMouseEvent*);
 };
 
 #endif // PLAYLISTVIEW_H

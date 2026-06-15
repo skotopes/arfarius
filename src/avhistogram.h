@@ -8,13 +8,15 @@ class AVHistogram : public AVObject {
 public:
     std::function<void(float, float, float, float)> dataCallback;
 
-    AVHistogram(size_t window_size, float threshold=0);
+    AVHistogram(size_t window_size, float threshold = 0);
     virtual ~AVHistogram();
 
-    const char * getName() { return "AVHistogram"; }
+    const char* getName() {
+        return "AVHistogram";
+    }
 
-    virtual size_t pull(float *buffer_ptr, size_t buffer_size);
-    virtual size_t push(float *buffer_ptr, size_t buffer_size);
+    virtual size_t pull(float* buffer_ptr, size_t buffer_size);
+    virtual size_t push(float* buffer_ptr, size_t buffer_size);
 
 private:
     size_t _window_size;

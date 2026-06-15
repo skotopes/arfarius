@@ -3,8 +3,7 @@
 
 #include <pthread.h>
 
-class AVMutex
-{
+class AVMutex {
 public:
     explicit AVMutex();
     virtual ~AVMutex();
@@ -19,13 +18,18 @@ protected:
     pthread_mutex_t mutex;
 };
 
-class AVLockGuard
-{
+class AVLockGuard {
 public:
-    explicit AVLockGuard(AVMutex& m) : _m(m) { _m.lock(); }
-    ~AVLockGuard() { _m.unlock(); }
+    explicit AVLockGuard(AVMutex& m)
+        : _m(m) {
+        _m.lock();
+    }
+    ~AVLockGuard() {
+        _m.unlock();
+    }
     AVLockGuard(const AVLockGuard&) = delete;
     AVLockGuard& operator=(const AVLockGuard&) = delete;
+
 private:
     AVMutex& _m;
 };
