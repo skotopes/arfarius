@@ -206,7 +206,7 @@ QString PlayListItem::getFormattedDuration() {
     if(source.isLocalFile()) {
         return formatTime(duration);
     } else {
-        return "??";
+        return "??:??";
     }
 }
 
