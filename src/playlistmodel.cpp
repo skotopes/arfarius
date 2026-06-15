@@ -38,13 +38,19 @@ Qt::ItemFlags PlayListModel::flags(const QModelIndex& index) const {
 }
 
 QVariant PlayListModel::data(const QModelIndex& index, int role) const {
+    if(!index.isValid()) return QVariant();
+
+    int row = index.row();
+    if(row < 0 || row >= items.size()) return QVariant();
+
+    PlayListItem* i = items[row];
+    if(!i) return QVariant();
+
     if(role == Qt::DisplayRole) {
-        PlayListItem* i = items[index.row()];
         return i->getColumn(index.column());
-    } else if(role == Qt::BackgroundRole && index.row() == current) {
+    } else if(role == Qt::BackgroundRole && row == current) {
         return QVariant(QColor(152, 209, 117));
     } else if(role == Qt::EditRole) {
-        PlayListItem* i = items[index.row()];
         return i->getColumn(index.column());
     }
 
@@ -53,7 +59,11 @@ QVariant PlayListModel::data(const QModelIndex& index, int role) const {
 
 bool PlayListModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if(index.isValid() && role == Qt::EditRole) {
-        PlayListItem* i = items[index.row()];
+        int row = index.row();
+        if(row < 0 || row >= items.size()) return false;
+
+        PlayListItem* i = items[row];
+        if(!i) return false;
 
         i->setColumn(index.column(), value.toString());
 
@@ -78,6 +88,10 @@ QVariant PlayListModel::headerData(int section, Qt::Orientation orientation, int
 
 bool PlayListModel::removeRows(int row, int count, const QModelIndex& parent) {
     Q_UNUSED(parent)
+
+    if(row < 0 || count <= 0 || row >= items.size()) return false;
+    if(row + count > items.size()) count = items.size() - row;
+
     beginRemoveRows(QModelIndex(), row, row + count - 1);
 
     PlayListItem* current_item = nullptr;
@@ -87,7 +101,7 @@ bool PlayListModel::removeRows(int row, int count, const QModelIndex& parent) {
 
     for(int i = row + count - 1; i >= row; i--) {
         while(items[i]->isBusy())
-            arfariusApp->processEvents(QEventLoop::AllEvents, 10);
+            arfariusApp->processEvents(QEventLoop::AllEvents);
         items[i]->deleteLater();
         items.removeAt(i);
     }
@@ -116,10 +130,15 @@ QStringList PlayListModel::mimeTypes() const {
 }
 
 void PlayListModel::clickedItem(const QModelIndex& index) {
+    if(!index.isValid()) return;
+
+    int row = index.row();
+    if(row < 0 || row >= items.size()) return;
+
     int previous = current;
-    current = index.row();
+    current = row;
     emit itemUpdated(items[current]);
-    if(previous >= 0) {
+    if(previous >= 0 && previous < items.size()) {
         emit dataChanged(
             createIndex(previous, 0), createIndex(previous, PlayListItem::getColumnsCount() - 1));
     }
@@ -128,21 +147,19 @@ void PlayListModel::clickedItem(const QModelIndex& index) {
 }
 
 void PlayListModel::nextItem() {
-    if(!items.count()) {
-        emit itemUpdated(nullptr);
-    } else {
+    if(!items.isEmpty()) {
         int previous = current;
         if(++current >= items.size()) {
             current = -1;
             emit itemUpdated(nullptr);
-            if(previous >= 0) {
+            if(previous >= 0 && previous < items.size()) {
                 emit dataChanged(
                     createIndex(previous, 0),
                     createIndex(previous, PlayListItem::getColumnsCount() - 1));
             }
         } else {
             emit itemUpdated(items[current]);
-            if(previous >= 0) {
+            if(previous >= 0 && previous < items.size()) {
                 emit dataChanged(
                     createIndex(previous, 0),
                     createIndex(previous, PlayListItem::getColumnsCount() - 1));
@@ -151,25 +168,28 @@ void PlayListModel::nextItem() {
                 createIndex(current, 0),
                 createIndex(current, PlayListItem::getColumnsCount() - 1));
         }
+    } else {
+        emit itemUpdated(nullptr);
     }
 }
 
 void PlayListModel::prevItem() {
-    if(!items.count()) {
-        emit itemUpdated(nullptr);
-    } else {
+    if(!items.isEmpty()) {
         int previous = current;
         if(--current < 0) {
-            current = -1;
-            emit itemUpdated(nullptr);
-            if(previous >= 0) {
+            current = items.size() - 1; // wrap to last
+            emit itemUpdated(items[current]);
+            if(previous >= 0 && previous < items.size()) {
                 emit dataChanged(
                     createIndex(previous, 0),
                     createIndex(previous, PlayListItem::getColumnsCount() - 1));
             }
+            emit dataChanged(
+                createIndex(current, 0),
+                createIndex(current, PlayListItem::getColumnsCount() - 1));
         } else {
             emit itemUpdated(items[current]);
-            if(previous >= 0) {
+            if(previous >= 0 && previous < items.size()) {
                 emit dataChanged(
                     createIndex(previous, 0),
                     createIndex(previous, PlayListItem::getColumnsCount() - 1));
@@ -178,6 +198,8 @@ void PlayListModel::prevItem() {
                 createIndex(current, 0),
                 createIndex(current, PlayListItem::getColumnsCount() - 1));
         }
+    } else {
+        emit itemUpdated(nullptr);
     }
 }
 
@@ -188,9 +210,10 @@ void PlayListModel::save(QString filename) {
         return;
     }
 
-    PlayListItem* item;
-    foreach(item, items) {
-        file.write(item->getUrlString().toUtf8() + "\n");
+    for(PlayListItem* item : items) {
+        if(item) {
+            file.write(item->getUrlString().toUtf8() + "\n");
+        }
     }
 }
 
@@ -201,21 +224,26 @@ void PlayListModel::gather(QString path) {
         return;
     }
 
-    PlayListItem* item;
-    foreach(item, items) {
-        if(!item->isLocalFile()) {
+    for(PlayListItem* item : items) {
+        if(!item || !item->isLocalFile()) {
             continue;
         }
-        auto filename = item->getUrlStringLocal();
-        QFileInfo fileinfo(filename);
-        dir.rename(filename, fileinfo.fileName());
-        item->setUrl(QUrl::fromLocalFile(dir.filePath(fileinfo.fileName())));
+        QString src = item->getUrlStringLocal();
+        QFileInfo fileinfo(src);
+        QString destPath = dir.filePath(fileinfo.fileName());
+
+        // Only move if source and destination differ
+        if(src != destPath) {
+            dir.rename(src, destPath);
+            item->setUrl(QUrl::fromLocalFile(destPath));
+        }
         item->ensureHistogram();
     }
 }
 
 void PlayListModel::removeCurrent() {
     qDebug() << this << "removeCurrent()";
+    if(current < 0 || current >= items.size()) return;
     removeRows(current, 1, QModelIndex());
 }
 
@@ -250,11 +278,12 @@ void PlayListModel::appendUrls(QList<QUrl> urls) {
 }
 
 void PlayListModel::appendItems(QList<PlayListItem*> new_items) {
-    if(new_items.length() > 0) {
-        beginInsertRows(QModelIndex(), items.count(), items.count() + new_items.size() - 1);
-        items += new_items;
-        endInsertRows();
-    }
+    if(new_items.isEmpty()) return;
+
+    int start = items.size();
+    beginInsertRows(QModelIndex(), start, start + new_items.size() - 1);
+    items += new_items;
+    endInsertRows();
 }
 
 QList<PlayListItem*> PlayListModel::urlToItems(QUrl url) {
@@ -285,12 +314,12 @@ QList<PlayListItem*> PlayListModel::urlToItems(QUrl url) {
 }
 
 QList<PlayListItem*> PlayListModel::urlsToItems(QList<QUrl> urls) {
-    QList<PlayListItem*> items;
+    QList<PlayListItem*> result;
     QListIterator<QUrl> urls_iterator(urls);
     while(urls_iterator.hasNext()) {
-        items += urlToItems(urls_iterator.next());
+        result += urlToItems(urls_iterator.next());
     }
-    return items;
+    return result;
 }
 
 QList<QUrl> PlayListModel::m3uToUrls(QUrl url) {
