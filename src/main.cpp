@@ -1,6 +1,5 @@
 #include "arfariusapplication.h"
 #include "mainwindow.h"
-#include <QFontDatabase>
 
 int main(int argc, char *argv[])
 {

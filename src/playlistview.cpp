@@ -37,12 +37,11 @@ void PlayListView::contextMenuEvent(QContextMenuEvent * event)
 {
     QModelIndex index = indexAt(event->pos());
     if (index.isValid()) {
-        QMenu *menu = new QMenu(this);
-        menu->addAction(QString("show file"));
-        menu->exec(QCursor::pos());
-        QTableView::contextMenuEvent(event);
+        QMenu menu(this);
+        menu.addAction(QString("show file"));
+        menu.exec(QCursor::pos());
     } else {
-        event->ignore();
+        QTableView::contextMenuEvent(event);
     }
 }
 

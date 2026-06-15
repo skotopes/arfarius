@@ -1,5 +1,5 @@
-#ifndef WMPAPPLICATION_H
-#define WMPAPPLICATION_H
+#ifndef ARFARIUSAPPLICATION_H
+#define ARFARIUSAPPLICATION_H
 
 #include <QApplication>
 #include <QThreadPool>
@@ -16,7 +16,6 @@ class ArfariusApplication : public QApplication
 
 public:
     explicit ArfariusApplication(int &argc, char **argv);
-    bool event(QEvent *);
 
     QThreadPool *getDecoderThreadPool();
     QThreadPool *getAnalyzeThreadPool();
@@ -24,8 +23,8 @@ public:
 signals:
     void fileDropped(QUrl);
 
-public slots:
-
+protected:
+    bool event(QEvent *) override;
 };
 
-#endif // WMPAPPLICATION_H
+#endif // ARFARIUSAPPLICATION_H

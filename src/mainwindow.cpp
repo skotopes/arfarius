@@ -5,7 +5,6 @@
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QSettings>
-#include <QList>
 #include <QUrl>
 #include <QDebug>
 #include "QtAwesome/QtAwesome.h"
@@ -15,7 +14,7 @@
 #include "playlistmodel.h"
 #include "playlistitem.h"
 
-#define CONFIG_VERSION 2
+constexpr int CONFIG_VERSION = 2;
 
 MainWindow::MainWindow(ArfariusApplication* application, QWidget* parent)
     : QMainWindow(parent)
