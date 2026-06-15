@@ -42,5 +42,6 @@ macdeploy: all
 		xattr -cr $(BUILD_DIR)/disk_image/Arfarius.app; \
 		codesign --force -s "$(SIGNING_KEY)" --deep -v $(BUILD_DIR)/disk_image/Arfarius.app; \
 	fi
-	hdiutil create -volname Arfarius -srcfolder $(BUILD_DIR)/disk_image -ov -format UDZO Arfarius.dmg
+	hdiutil create -volname Arfarius -srcfolder $(BUILD_DIR)/disk_image -ov -format UDZO $(BUILD_DIR)/Arfarius.dmg
+	open $(BUILD_DIR)
 

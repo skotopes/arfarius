@@ -8,29 +8,42 @@
     <string>Arfarius.icns</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
-    <key>CFBundleSignature</key>
-    <string>????</string>
     <key>CFBundleExecutable</key>
     <string>Arfarius</string>
     <key>CFBundleIdentifier</key>
     <string>com.plooks.Arfarius</string>
-    <key>UIBackgroundModes</key>
-    <string>audio</string>
-    <key>NSAppleEventsUsageDescription</key>
-    <string>We intercepting media keys only.</string>
+    <key>CFBundleName</key>
+    <string>Arfarius</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
     <key>NSSupportsAutomaticGraphicsSwitching</key>
     <true/>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSHandlerRank</key>
+            <string>Alternate</string>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+                <string>mp3</string>
+                <string>flac</string>
+                <string>ogg</string>
+                <string>m4a</string>
+                <string>aac</string>
+                <string>wav</string>
+                <string>mp4</string>
+                <string>wma</string>
+                <string>webm</string>
+                <string>m3u</string>
+                <string>m3u8</string>
+                <string>pls</string>
+            </array>
             <key>CFBundleTypeOSTypes</key>
             <array>
                 <string>****</string>
-                <string>fold</string>
-                <string>disk</string>
             </array>
-            <key>CFBundleTypeRole</key>
-            <string>Viewer</string>
         </dict>
     </array>
 </dict>
