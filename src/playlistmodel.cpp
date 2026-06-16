@@ -24,15 +24,11 @@ int PlayListModel::columnCount(const QModelIndex& /*parent*/) const {
     return PlayListItem::getColumnsCount();
 }
 
-Qt::DropActions PlayListModel::supportedDropActions() const {
-    return QAbstractTableModel::supportedDropActions() | Qt::MoveAction;
-}
-
 Qt::ItemFlags PlayListModel::flags(const QModelIndex& index) const {
     Qt::ItemFlags defaultFlags = QAbstractTableModel::flags(index);
 
     if(index.isValid())
-        return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | Qt::ItemIsEditable | defaultFlags;
+        return Qt::ItemIsDragEnabled | Qt::ItemIsEditable | defaultFlags;
     else
         return Qt::ItemIsDropEnabled | defaultFlags;
 }
@@ -125,11 +121,40 @@ bool PlayListModel::removeRows(int row, int count, const QModelIndex& parent) {
 
 QStringList PlayListModel::mimeTypes() const {
     QStringList mime_types;
-    mime_types << "url";
+    mime_types << "text/uri-list";
     return mime_types;
 }
 
+Qt::DropActions PlayListModel::supportedDropActions() const {
+    return Qt::MoveAction | Qt::CopyAction;
+}
+
+bool PlayListModel::dropMimeData(
+    const QMimeData* data,
+    Qt::DropAction action,
+    int row,
+    int column,
+    const QModelIndex& parent) {
+    qDebug() << this << "dropMimeData()" << data << action << row << column << parent;
+
+    if(action == Qt::IgnoreAction) return true;
+    if(!(action & supportedDropActions())) return false;
+
+    // External drop: file URIs
+    if(data->hasUrls()) {
+        QList<QUrl> urls = data->urls();
+        if(urls.isEmpty()) return false;
+
+        appendUrlsAt(urls, row);
+        return true;
+    }
+
+    return false;
+}
+
 void PlayListModel::clickedItem(const QModelIndex& index) {
+    qDebug() << this << "clickedItem()" << index;
+
     if(!index.isValid()) return;
 
     int row = index.row();
@@ -243,6 +268,10 @@ void PlayListModel::appendUrl(QUrl url) {
 }
 
 void PlayListModel::appendUrls(QList<QUrl> urls) {
+    appendUrlsAt(urls, items.size());
+}
+
+void PlayListModel::appendUrlsAt(QList<QUrl> urls, int row) {
     QProgressDialog progress("Adding files to playlist...", "Cancel", 0, urls.count());
     progress.setWindowModality(Qt::ApplicationModal);
     progress.show();
@@ -265,15 +294,30 @@ void PlayListModel::appendUrls(QList<QUrl> urls) {
     }
 
     progress.setValue(urls.count());
-    appendItems(new_items);
+
+    appendItemsAt(new_items, row);
 }
 
 void PlayListModel::appendItems(QList<PlayListItem*> new_items) {
     if(new_items.isEmpty()) return;
 
-    int start = items.size();
-    beginInsertRows(QModelIndex(), start, start + new_items.size() - 1);
-    items += new_items;
+    appendItemsAt(new_items, items.size());
+}
+
+void PlayListModel::appendItemsAt(QList<PlayListItem*> new_items, int row) {
+    if(new_items.isEmpty()) return;
+    if(row < 0 || row > items.size()) row = items.size();
+
+    PlayListItem* c = nullptr;
+    if(current >= 0 && current < items.size()) c = items[current];
+
+    beginInsertRows(QModelIndex(), row, row + new_items.size() - 1);
+    for(int i = 0; i < new_items.size(); i++) {
+        items.insert(row + i, new_items[i]);
+    }
+    if(c) {
+        current = items.indexOf(c);
+    }
     endInsertRows();
 }
 

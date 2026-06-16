@@ -1,5 +1,6 @@
 #include "playlistview.h"
 
+#include <QDrag>
 #include <QMenu>
 #include <QMimeData>
 #include <QModelIndex>
@@ -8,6 +9,7 @@
 #include <QContextMenuEvent>
 #include <QDesktopServices>
 #include <QFileInfo>
+#include <QSet>
 
 #include <QDebug>
 #include "playlistmodel.h"
@@ -15,24 +17,18 @@
 
 PlayListView::PlayListView(QWidget* parent)
     : QTableView(parent) {
-}
+    setDragDropMode(QTableView::DragDrop);
+    setDropIndicatorShown(true);
+    setDragEnabled(true);
+    setSelectionBehavior(QAbstractItemView::SelectRows);
 
-void PlayListView::dragEnterEvent(QDragEnterEvent* event) {
-    if(event->mimeData()->hasUrls()) event->acceptProposedAction();
-}
-
-void PlayListView::dropEvent(QDropEvent* event) {
-    PlayListModel* playlist = dynamic_cast<PlayListModel*>(model());
-    if(playlist) {
-        QList<QUrl> urls = event->mimeData()->urls();
-        event->acceptProposedAction();
-        playlist->appendUrls(urls);
-    } else {
-        qWarning() << this << "Incompatible model for drag and drop event";
-    }
+    setAcceptDrops(true);
+    setDefaultDropAction(Qt::MoveAction);
+    setDragDropOverwriteMode(false);
 }
 
 void PlayListView::contextMenuEvent(QContextMenuEvent* event) {
+    qDebug() << this << "contextMenuEvent()" << event;
     QModelIndex index = indexAt(event->pos());
     if(index.isValid()) {
         QMenu menu(this);
@@ -57,7 +53,9 @@ void PlayListView::contextMenuEvent(QContextMenuEvent* event) {
 }
 
 void PlayListView::keyPressEvent(QKeyEvent* event) {
-    if(state() == QAbstractItemView::EditingState) {
+    qDebug() << this << "keyPressEvent()" << event;
+
+    if(state() == QTableView::EditingState) {
         QTableView::keyPressEvent(event);
         return;
     }
@@ -101,7 +99,9 @@ void PlayListView::keyPressEvent(QKeyEvent* event) {
     }
 }
 
-void PlayListView::mouseReleaseEvent(QMouseEvent* event) {
+void PlayListView::mousePressEvent(QMouseEvent* event) {
+    qDebug() << this << "mousePressEvent()" << event;
+
     if(event->modifiers() & Qt::AltModifier) {
         QModelIndex index = indexAt(event->pos());
         if(index.isValid()) {
@@ -116,6 +116,8 @@ void PlayListView::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void PlayListView::mouseDoubleClickEvent(QMouseEvent* event) {
+    qDebug() << this << "mouseDoubleClickEvent()" << event;
+
     QModelIndex index = indexAt(event->pos());
     if(index.isValid()) {
         PlayListModel* playlist = dynamic_cast<PlayListModel*>(model());

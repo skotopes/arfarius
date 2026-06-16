@@ -25,11 +25,14 @@ protected:
 
     // drag'n'drop
     Qt::ItemFlags flags(const QModelIndex& index) const;
-    virtual Qt::DropActions supportedDropActions() const;
-
     QStringList mimeTypes() const;
-    //    QMimeData *mimeData(const QModelIndexList &indexes) const;
-    //    bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent);
+    Qt::DropActions supportedDropActions() const;
+    bool dropMimeData(
+        const QMimeData* data,
+        Qt::DropAction action,
+        int row,
+        int column,
+        const QModelIndex& parent);
 
     // extra
     void clickedItem(const QModelIndex& index = QModelIndex());
@@ -47,7 +50,10 @@ public slots:
 
     void appendUrl(QUrl url);
     void appendUrls(QList<QUrl> urls);
+    void appendUrlsAt(QList<QUrl> urls, int row);
+
     void appendItems(QList<PlayListItem*> new_items);
+    void appendItemsAt(QList<PlayListItem*> new_items, int row);
 
 private:
     QList<PlayListItem*> items;
