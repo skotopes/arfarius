@@ -31,16 +31,24 @@ always:
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: macdeploy 
+.PHONY: macdeploy
 macdeploy: all
 	rm -rf $(BUILD_DIR)/disk_image || true
 	mkdir $(BUILD_DIR)/disk_image
 	ln -s /Applications $(BUILD_DIR)/disk_image/Applications
 	rsync -av $(BUILD_DIR)/Arfarius.app/ $(BUILD_DIR)/disk_image/Arfarius.app/
-	macdeployqt $(BUILD_DIR)/disk_image/Arfarius.app -verbose=1
+	macdeployqt $(BUILD_DIR)/disk_image/Arfarius.app -verbose=1 -no-codesign
 	@if [ -n "$$SIGNING_KEY" ]; then \
 		xattr -cr $(BUILD_DIR)/disk_image/Arfarius.app; \
-		codesign --force -s "$(SIGNING_KEY)" --deep -v $(BUILD_DIR)/disk_image/Arfarius.app; \
+		codesign --force -s "$(SIGNING_KEY)" --deep --options=runtime -v $(BUILD_DIR)/disk_image/Arfarius.app; \
+		(cd $(BUILD_DIR)/disk_image && ditto -c -k --keepParent Arfarius.app ../Arfarius_notarize.zip); \
+		echo "Submitting for notarization (this may take a few minutes)..."; \
+		xcrun notarytool submit $(BUILD_DIR)/Arfarius_notarize.zip \
+			--keychain-profile "arfarius" \
+			--wait; \
+		rm -f $(BUILD_DIR)/Arfarius_notarize.zip; \
+		echo "Stapling notarization ticket..."; \
+		xcrun stapler staple $(BUILD_DIR)/disk_image/Arfarius.app; \
 	fi
 	hdiutil create -volname Arfarius -srcfolder $(BUILD_DIR)/disk_image -ov -format UDZO $(BUILD_DIR)/Arfarius.dmg
 	open $(BUILD_DIR)

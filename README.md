@@ -1,41 +1,43 @@
 # About
 
-Arfarius - minimalistic audio player written in c++ with Qt.
+Arfarius - ultra-minimalistic audio player for MacOS written in C++ with Qt.
 
 # Features
 
 - Made by me for me
-- Plays everything that can be played (backed by ffmpeg)
-- Async and cache throw ffmpeg plugins
-- Histograms with spectrograms
+- Plays absolutely everything that can be played
+- Spectrohistogram for easier track navigation
 - In-line tags editing (alt+click)
-- Made for Mac OS: directly uses core audio, supports media keys
-- Lightweight (as much as Qt allows)
+- Built for MacOS: uses coreaudio, supports media keys
+- Lightweight (as much as Qt and FFmpeg allows)
 
 # ToDo
 
 - Playlist item rearranging
-- Random playing
-- Analyzer Thread Pools
-- Metadata store / Collection
-
+- Collection data store
+- Better UI
+- Get rid of Qt
+- Minimize FFmpeg build: only audio codecs and containers
 
 # Download
 
 Latest version: https://github.com/skotopes/arfarius/releases/latest
 
-# Building from source
+# Requirements
 
-Requirements:
+Install with brew: `brew install taglib ffmpeg fftw cmake qtbase qtsvg`
 
-- ffmpeg - containers and codecs
-- taglib - work with tags
-- fftw - FFT for spectrum functions
+# Compilation
 
-Type following command if you are using brew:
+Build and execute debug version:
 
-```
-brew install taglib ffmpeg fftw
-```
+`make CMAKE_BUILD_TYPE=Debug && ./build/Arfarius.app/Contents/MacOS/Arfarius`
 
-And complete build with qmake.
+
+Build and execute release version:
+
+`make && ./build/Arfarius.app/Contents/MacOS/Arfarius`
+
+Build release and pack dmg:
+
+`make macdeploy`

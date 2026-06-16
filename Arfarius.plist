@@ -11,7 +11,7 @@
     <key>CFBundleExecutable</key>
     <string>Arfarius</string>
     <key>CFBundleIdentifier</key>
-    <string>com.plooks.Arfarius</string>
+    <string>com.plooks.arfarius</string>
     <key>CFBundleName</key>
     <string>Arfarius</string>
     <key>NSHighResolutionCapable</key>
